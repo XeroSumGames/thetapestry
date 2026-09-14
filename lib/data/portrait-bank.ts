@@ -55,6 +55,14 @@ export async function uploadPublicPortrait(
   return { error: null, number: num }
 }
 
+// Private portraits live in their own private:false bucket so reads are
+// RLS-enforced (own-uid only) instead of served unauthenticated like the
+// shared public bank. getPublicUrl() would be readable by anyone with the
+// URL regardless of RLS, so we sign once at upload time and store that
+// URL - verified live that Supabase accepts multi-year signed-URL expiry
+// with no cap, so this needs no periodic re-signing.
+const PRIVATE_PORTRAIT_URL_EXPIRY_SECONDS = 60 * 60 * 24 * 365 * 10 // 10 years
+
 export async function uploadPrivatePortrait(
   supabase: any,
   userId: string,
@@ -65,28 +73,32 @@ export async function uploadPrivatePortrait(
   name: string,
   gender: 'man' | 'woman' | null,
 ): Promise<{ error: string | null }> {
-  const path256 = `private/${userId}/256/${id}.jpg`
-  const path56 = `private/${userId}/56/${id}.jpg`
-  const path32 = `private/${userId}/32/${id}.jpg`
+  const path256 = `${userId}/256/${id}.jpg`
+  const path56 = `${userId}/56/${id}.jpg`
+  const path32 = `${userId}/32/${id}.jpg`
 
   const ups = await Promise.all([
-    supabase.storage.from('portrait-bank').upload(path256, b256, { contentType: 'image/jpeg', upsert: false }),
-    supabase.storage.from('portrait-bank').upload(path56, b56, { contentType: 'image/jpeg', upsert: false }),
-    supabase.storage.from('portrait-bank').upload(path32, b32, { contentType: 'image/jpeg', upsert: false }),
+    supabase.storage.from('portrait-bank-private').upload(path256, b256, { contentType: 'image/jpeg', upsert: false }),
+    supabase.storage.from('portrait-bank-private').upload(path56, b56, { contentType: 'image/jpeg', upsert: false }),
+    supabase.storage.from('portrait-bank-private').upload(path32, b32, { contentType: 'image/jpeg', upsert: false }),
   ])
   const upErr = ups.find((u: any) => u.error)
   if (upErr?.error) return { error: `Upload: ${upErr.error.message}` }
 
-  const url256 = supabase.storage.from('portrait-bank').getPublicUrl(path256).data.publicUrl
-  const url56 = supabase.storage.from('portrait-bank').getPublicUrl(path56).data.publicUrl
-  const url32 = supabase.storage.from('portrait-bank').getPublicUrl(path32).data.publicUrl
+  const [signed256, signed56, signed32] = await Promise.all([
+    supabase.storage.from('portrait-bank-private').createSignedUrl(path256, PRIVATE_PORTRAIT_URL_EXPIRY_SECONDS),
+    supabase.storage.from('portrait-bank-private').createSignedUrl(path56, PRIVATE_PORTRAIT_URL_EXPIRY_SECONDS),
+    supabase.storage.from('portrait-bank-private').createSignedUrl(path32, PRIVATE_PORTRAIT_URL_EXPIRY_SECONDS),
+  ])
+  const signErr = [signed256, signed56, signed32].find((s: any) => s.error)
+  if (signErr?.error) return { error: `Sign: ${signErr.error.message}` }
 
   const { error: insErr } = await supabase.from('portrait_bank').insert({
     name,
     gender: gender ?? null,
-    url_256: url256,
-    url_56: url56,
-    url_32: url32,
+    url_256: signed256.data.signedUrl,
+    url_56: signed56.data.signedUrl,
+    url_32: signed32.data.signedUrl,
     is_private: true,
     created_by: userId,
   })

@@ -36,6 +36,7 @@ import { confirmDeleteByName } from '../lib/confirm-delete'
 import { getModuleForCampaign, archiveModule, type ModuleForCampaign } from '../lib/modules'
 import { SETTINGS } from '../lib/settings'
 import ModulePublishModal from './ModulePublishModal'
+import { reportSupabaseError } from '../lib/supabase-errors'
 
 interface CampaignLite {
   id: string
@@ -177,7 +178,12 @@ export default function StoryActionBar({ campaignId, extraButtons, compact }: Pr
       ? `WARNING: This is the template for "${existingModule.name}". Deleting it disconnects the published module from its source - you won't be able to push new versions of "${existingModule.name}" without re-linking a new source campaign.`
       : undefined
     if (!confirmDeleteByName(campaign.name, warning)) return
-    await supabase.from('campaigns').delete().eq('id', campaignId)
+    const { error } = await supabase.from('campaigns').delete().eq('id', campaignId)
+    if (error) {
+      // Don't navigate away as if the delete worked - surface it + stay put.
+      reportSupabaseError(error, 'StoryActionBar.handleDelete')
+      return
+    }
     router.push('/stories')
   }
 

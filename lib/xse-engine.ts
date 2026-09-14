@@ -259,3 +259,34 @@ char.creationMethod = 'backstory'
   return char
 }
 
+// The exact set of XSECharacter fields the creation wizard is ever allowed
+// to touch. Everything else that can live on a character's `data` blob
+// (inventory, progression_log, session_notes, lastingWounds, relationships,
+// cdp, insightDice, stressLevel, breakingPoint, and any other key accrued
+// during play) is out of scope for the wizard and must be preserved as-is.
+const WIZARD_OWNED_FIELDS = [
+  'name', 'age', 'gender', 'profession', 'height', 'weight', 'physdesc',
+  'photoDataUrl', 'threeWords', 'complication', 'complicationNote',
+  'motivation', 'motivationNote', 'notes', 'creationMethod', 'rapid',
+  'secondary', 'skills', 'weaponPrimary', 'weaponSecondary', 'equipment',
+  'incidentalItem', 'rations',
+] as const satisfies readonly (keyof XSECharacter)[]
+
+/**
+ * Merge a wizard-built character onto an existing character's data blob,
+ * touching only the fields the wizard actually edits. Use this instead of
+ * writing `buildCharacter()`'s output wholesale - it's built from a blank
+ * template, so a raw overwrite silently resets every untyped/runtime field
+ * (inventory, progression log, lasting wounds, CDP, etc.) to blank.
+ */
+export function mergeWizardEdit(
+  base: Record<string, unknown>,
+  character: XSECharacter
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...base }
+  for (const field of WIZARD_OWNED_FIELDS) {
+    merged[field] = character[field]
+  }
+  return merged
+}
+

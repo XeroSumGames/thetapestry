@@ -100,14 +100,22 @@ export default function TradeNegotiationModal({
   // Set once when a Dire Failure / Low Insight outcome fires its
   // relationship-damage callback, so re-renders don't double-apply.
   const [relDamageApplied, setRelDamageApplied] = useState(false)
+  // Permanent lockout once a Dire Failure / Low Insight lands - the badge
+  // copy already says "counterparty walks away from the table", but
+  // nothing enforced that: the Roll button stayed enabled, so a player
+  // could re-roll past a bad result for free until a favorable one
+  // appeared. Once true, this never resets for the life of the modal.
+  const [direLockout, setDireLockout] = useState(false)
 
   // Auto-apply the relationship penalty exactly once when the PC
   // rolls a catastrophic Barter outcome against an NPC. Communities
   // have no per-character CMod, so they're skipped.
   useEffect(() => {
-    if (!outcome || relDamageApplied) return
+    if (!outcome) return
     const isPenaltyOutcome = outcome.pcOutcome === 'Dire Failure' || outcome.pcOutcome === 'Low Insight'
     if (!isPenaltyOutcome) return
+    setDireLockout(true)
+    if (relDamageApplied) return
     if (target.kind !== 'npc') return
     if (!onRelationshipDamage) return
     setRelDamageApplied(true)
@@ -362,9 +370,9 @@ export default function TradeNegotiationModal({
             Cancel
           </button>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={rollOpposed} disabled={rolling || !hasSelections || applying}
-              title={!hasSelections ? 'Select items on both sides first' : 'Roll the opposed Barter check'}
-              style={{ padding: '8px 18px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, cursor: hasSelections && !rolling ? 'pointer' : 'not-allowed', opacity: hasSelections && !rolling ? 1 : 0.5 }}>
+            <button onClick={rollOpposed} disabled={rolling || !hasSelections || applying || direLockout}
+              title={direLockout ? 'The counterparty walked away - this negotiation is over' : !hasSelections ? 'Select items on both sides first' : 'Roll the opposed Barter check'}
+              style={{ padding: '8px 18px', background: '#2a2010', border: '1px solid #5a4a1b', borderRadius: '3px', color: '#EF9F27', fontSize: '14px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 700, cursor: hasSelections && !rolling && !direLockout ? 'pointer' : 'not-allowed', opacity: hasSelections && !rolling && !direLockout ? 1 : 0.5 }}>
               {rolling ? 'Rolling…' : outcome ? '↻ Re-roll Barter' : '🎲 Roll Barter'}
             </button>
             <button onClick={handleApply} disabled={!isAcceptable(outcome) || applying}

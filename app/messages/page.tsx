@@ -5,6 +5,7 @@ import { loginPathForCurrent } from '../../lib/login-redirect'
 import { getCachedAuth } from '../../lib/auth-cache'
 import { renderRichText } from '../../lib/rich-text'
 import { wrapDbChange } from '../../lib/sentry-realtime'
+import { reportSupabaseError } from '../../lib/supabase-errors'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 interface Participant {
@@ -213,11 +214,19 @@ export default function MessagesPage() {
     setSending(true)
     const text = body.trim()
     setBody('')
-    await supabase.from('messages').insert({
+    const { error } = await supabase.from('messages').insert({
       conversation_id: activeConvId,
       sender_user_id: myId,
       body: text,
     })
+    if (error) {
+      // The DM never landed - surface it and RESTORE the typed text so the
+      // message isn't silently lost (was: result discarded + input cleared).
+      reportSupabaseError(error, 'messages.handleSend')
+      setBody(text)
+      setSending(false)
+      return
+    }
     // Update latest_message preview optimistically.
     setConversations(prev => prev.map(c =>
       c.id === activeConvId
@@ -288,7 +297,14 @@ export default function MessagesPage() {
   async function blockUser(otherUserId: string, convId: string) {
     setOpenMenuConvId(null)
     if (!confirm("Block this user? They won't be able to DM you.")) return
-    await supabase.from('user_blocks').insert({ blocker_id: myId, blocked_id: otherUserId })
+    const { error } = await supabase.from('user_blocks').insert({ blocker_id: myId, blocked_id: otherUserId })
+    if (error) {
+      // Block didn't persist - surface it and DON'T archive, so the
+      // conversation staying put signals the block didn't take (was: both
+      // discarded, reinforcing a false "blocked" state).
+      reportSupabaseError(error, 'messages.blockUser')
+      return
+    }
     await archiveConversation(convId)
   }
 

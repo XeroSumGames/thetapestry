@@ -6,8 +6,11 @@ import { getCachedAuth } from '../../lib/auth-cache'
 import { useSearchParams } from 'next/navigation'
 import NpcCard from '../../components/NpcCard'
 import PlayerNpcCard from '../../components/PlayerNpcCard'
+import RollModal, { type RollResult } from '../../components/RollModal'
 import type { CampaignNpc } from '../../components/NpcRoster'
 import { getCampaignNpcById } from '../../lib/data/campaign-npcs'
+import { getOutcome } from '../../lib/roll-helpers'
+import { insertRollLog } from '../../lib/data/roll-log'
 
 export default function NpcSheetPage() {
   const supabase = createClient()
@@ -26,6 +29,74 @@ export default function NpcSheetPage() {
   const [npc, setNpc] = useState<CampaignNpc | null>(null)
   const [loading, setLoading] = useState(true)
   const [isGM, setIsGM] = useState(gmHint === '1')
+  const [userId, setUserId] = useState<string | null>(null)
+  useEffect(() => { (async () => { const { user } = await getCachedAuth(); setUserId(user?.id ?? null) })() }, [])
+  // The viewer's own character in this campaign. Drives PlayerNpcCard's
+  // First Impression CMod AND the private "My Notes" textarea - both gate on
+  // viewingCharacterId, which this route never fetched, so a player saw
+  // neither. Same lookup as app/stories/[id]/page.tsx.
+  const [myCharId, setMyCharId] = useState<string | undefined>(undefined)
+  useEffect(() => {
+    if (!campaignId || !userId) return
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase
+        .from('campaign_members')
+        .select('character_id')
+        .eq('campaign_id', campaignId)
+        .eq('user_id', userId)
+        .maybeSingle()
+      if (!cancelled) setMyCharId((data as any)?.character_id ?? undefined)
+    })()
+    return () => { cancelled = true }
+  }, [campaignId, userId])
+
+  // Lightweight ad-hoc roll for the GM popout. The table page's roll
+  // pipeline (hooks/useRollResolution) is welded to its live combat /
+  // initiative / session state and is not portable here; this popout is
+  // fundamentally a "GM makes an ad-hoc NPC check without the main table
+  // open" convenience, never a combat-turn action. So it resolves its own
+  // 2d6 + AMod + SMod + CMod check via the pure getOutcome() helper and
+  // writes it to the shared roll_log (insertRollLog) so it still lands in
+  // the live rolls feed - but skips turn-order / initiative / action
+  // consumption entirely. Insight dice omitted (an NPC has no PC insight
+  // pool; keeps it lightweight).
+  const [roll, setRoll] = useState<
+    { title: string; eyebrow: string; formula: string; amod: number; smod: number; cmod: number; cmodBreakdown?: { label: string; value: number }[]; rolling: boolean; result: RollResult | null } | null
+  >(null)
+
+  function startNpcRoll(label: string, amod: number, smod: number, weapon?: { weaponName?: string; conditionCmod?: number; traitCmod?: number; traitLabel?: string }) {
+    const breakdown = weapon
+      ? [
+          ...(weapon.conditionCmod ? [{ label: 'Condition', value: weapon.conditionCmod }] : []),
+          ...(weapon.traitCmod ? [{ label: weapon.traitLabel ?? 'Trait', value: weapon.traitCmod }] : []),
+        ]
+      : []
+    const startCmod = weapon ? (weapon.conditionCmod ?? 0) + (weapon.traitCmod ?? 0) : 0
+    setRoll({
+      title: label,
+      eyebrow: weapon ? 'Attack' : 'Check',
+      formula: '2d6 + AMod + SMod + CMod',
+      amod, smod, cmod: startCmod,
+      cmodBreakdown: breakdown.length ? breakdown : undefined,
+      rolling: false, result: null,
+    })
+  }
+
+  async function resolveNpcRoll() {
+    if (!roll || !npc || !campaignId) return
+    setRoll(r => r ? { ...r, rolling: true } : r)
+    const die1 = Math.floor(Math.random() * 6) + 1
+    const die2 = Math.floor(Math.random() * 6) + 1
+    const total = die1 + die2 + roll.amod + roll.smod + roll.cmod
+    const outcome = getOutcome(total, die1, die2)
+    const uid = userId ?? (await getCachedAuth()).user?.id ?? null
+    await insertRollLog({
+      campaign_id: campaignId, user_id: uid, character_name: npc.name,
+      label: roll.title, die1, die2, amod: roll.amod, smod: roll.smod, cmod: roll.cmod, total, outcome,
+    })
+    setRoll(r => r ? { ...r, rolling: false, result: { die1, die2, amod: r.amod, smod: r.smod, cmod: r.cmod, total, outcome } } : r)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -62,7 +133,7 @@ export default function NpcSheetPage() {
     if (typeof window === 'undefined') return
     if (!window.opener) return  // not actually a popout
     try {
-      window.resizeTo(isGM ? 571 : 140, isGM ? 400 : 140)
+      window.resizeTo(isGM ? 571 : 540, isGM ? 400 : 600)
     } catch { /* some browsers block resizeTo on already-shown windows; harmless */ }
   }, [loading, isGM])
 
@@ -119,12 +190,33 @@ export default function NpcSheetPage() {
         <NpcCard
           npc={npc}
           onClose={() => window.close()}
+          onRoll={startNpcRoll}
           // Edit / Map / Publish / Popout hidden in the popout itself - they
           // only make sense back in the table page's Asset panel. Restore and
-          // Stabilize still work because they hit Supabase directly.
+          // Stabilize still work because they hit Supabase directly. onRoll
+          // makes RAPID / skills / weapons clickable -> a lightweight roll
+          // (see startNpcRoll / resolveNpcRoll above).
         />
       ) : (
-        <PlayerNpcCard npc={npc} onClose={() => window.close()} />
+        <PlayerNpcCard npc={npc} onClose={() => window.close()} viewingCharacterId={myCharId} />
+      )}
+      {roll && (
+        <RollModal
+          open
+          onClose={() => setRoll(null)}
+          title={roll.title}
+          eyebrow={roll.eyebrow}
+          rollFormula={roll.formula}
+          amod={roll.amod}
+          smod={roll.smod}
+          cmod={roll.cmod}
+          setCmod={(n) => setRoll(r => r ? { ...r, cmod: n } : r)}
+          cmodBreakdown={roll.cmodBreakdown}
+          result={roll.result}
+          onRoll={resolveNpcRoll}
+          rolling={roll.rolling}
+          onPostRollClose={() => setRoll(null)}
+        />
       )}
     </div>
   )

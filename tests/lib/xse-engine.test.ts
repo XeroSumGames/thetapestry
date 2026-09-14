@@ -4,8 +4,10 @@ import {
   getCumulativeSkills,
   skillStepUp,
   skillStepDown,
+  mergeWizardEdit,
   type StepData,
 } from '../../lib/xse-engine'
+import { createBlankCharacter } from '../../lib/xse-schema'
 
 // Backstory wizard math: each step accumulates attribute and skill
 // deltas. Caps locked: attributes max at 4 (Human Peak), skills max at
@@ -119,5 +121,59 @@ describe('skillStepDown', () => {
   it('respects base even when current would otherwise go lower', () => {
     // If base is 2 (Profession-floored skill), can't drop below 2.
     expect(skillStepDown(2, 2, false)).toBe(2)
+  })
+})
+
+// 2026-08-01 audit: the classic character editor wrote buildCharacter()'s
+// output straight to the `data` column. buildCharacter() starts from
+// createBlankCharacter(), so any editable-in-play field it doesn't itself
+// set (inventory, progression_log, lasting wounds, CDP, ...) silently
+// reset to blank on every save. mergeWizardEdit() is the fix: only the
+// wizard-owned fields move, everything else in the existing blob survives.
+describe('mergeWizardEdit', () => {
+  it('preserves untyped/runtime keys not known to the wizard', () => {
+    const base = {
+      name: 'Old Name',
+      inventory: [{ name: 'Rusty Knife', qty: 1 }],
+      progression_log: [{ note: 'Survived the Ashford raid' }],
+      session_notes: 'GM owes me a favor',
+      lastingWounds: ['Bad Knee'],
+      relationships: [{ npc: 'Marta', cmod: 2 }],
+      cdp: 7,
+      insightDice: 1,
+      stressLevel: 3,
+      breakingPoint: 2,
+    }
+    const wizardChar = { ...createBlankCharacter(), name: 'New Name' }
+    const merged = mergeWizardEdit(base, wizardChar)
+
+    expect(merged.inventory).toEqual(base.inventory)
+    expect(merged.progression_log).toEqual(base.progression_log)
+    expect(merged.session_notes).toBe(base.session_notes)
+    expect(merged.lastingWounds).toEqual(base.lastingWounds)
+    expect(merged.relationships).toEqual(base.relationships)
+    expect(merged.cdp).toBe(7)
+    expect(merged.insightDice).toBe(1)
+    expect(merged.stressLevel).toBe(3)
+    expect(merged.breakingPoint).toBe(2)
+  })
+
+  it('overwrites wizard-owned fields with the freshly built character', () => {
+    const base = { name: 'Old Name', age: '30', notes: 'old concept' }
+    const wizardChar = { ...createBlankCharacter(), name: 'New Name', age: '31', notes: 'new concept' }
+    const merged = mergeWizardEdit(base, wizardChar)
+
+    expect(merged.name).toBe('New Name')
+    expect(merged.age).toBe('31')
+    expect(merged.notes).toBe('new concept')
+  })
+
+  it('starting from an empty base still produces a full wizard-owned field set', () => {
+    const wizardChar = { ...createBlankCharacter(), name: 'Fresh Save' }
+    const merged = mergeWizardEdit({}, wizardChar)
+
+    expect(merged.name).toBe('Fresh Save')
+    expect(merged.rapid).toEqual(wizardChar.rapid)
+    expect(merged.skills).toEqual(wizardChar.skills)
   })
 })

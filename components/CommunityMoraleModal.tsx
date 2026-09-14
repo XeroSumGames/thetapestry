@@ -24,10 +24,12 @@ import {
   logMoraleOutcome,
   logDissolution,
 } from '../lib/community-events'
+import { updateCommunity } from '../lib/data/community'
 import type { Community, Member } from '../lib/types/community'
 import { combinedMemberCount, COMMUNITY_THRESHOLD } from '../lib/community-stage'
 import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 import { OUTCOME } from '../lib/roll-outcomes'
+import { reportSupabaseError } from '../lib/supabase-errors'
 
 // Phase C - Weekly Morale Check modal. Single-button flow: GM fills in
 // ad-hoc CMods / adjusts A/S mods if needed, clicks "Run Weekly Check",
@@ -332,7 +334,14 @@ export default function CommunityMoraleModal({
 
   if (!open) return null
 
-  const memberCount = members.length
+  // NPC-only, matching pickDeparturesWeighted's own candidate pool and the
+  // correct combinedMemberCount call at CampaignCommunity.tsx:1695. The
+  // unfiltered members.length (raw list, includes PC rows via
+  // character_id) double-counted self-founded/GM-added PCs against
+  // pcCount below - inflating totalMemberCount (can trip the 13-member
+  // promotion gate one recruit early) and departCount (over-forcing NPC
+  // departures on a Morale failure), per the 2026-08-01 audit.
+  const memberCount = members.filter(m => !!m.npc_id).length
   const dissolved = community.status === 'dissolved'
   // Status is 'forming' for new communities and nothing auto-promotes it
   // to 'active' - the "Community" chip is driven by the 13+ count, not
@@ -506,7 +515,11 @@ export default function CommunityMoraleModal({
     const now = new Date().toISOString()
 
     // 1) Insert Fed + Clothed resource checks
-    await supabase.from('community_resource_checks').insert([
+    // Errors on these finalize writes were fully swallowed (no try/catch on
+    // the whole fn) - the week's records could silently not land while the
+    // modal reported success. Surface each (observability sweep Batch 1). Not
+    // made transactional here - that atomicity is a separate (Puffer) pass.
+    const { error: rcErr } = await supabase.from('community_resource_checks').insert([
       {
         community_id: community.id, kind: 'fed', week_number: newWeek,
         rolled_by_user_id: userId,
@@ -524,6 +537,7 @@ export default function CommunityMoraleModal({
         cmod_for_next_morale: outcomeToMoraleCmod(clothed.outcome),
       },
     ])
+    if (rcErr) reportSupabaseError(rcErr, 'CommunityMorale.resourceChecks')
 
     // 2) Insert Morale check with full slot snapshot + role distribution
     // snapshot for the Phase D dashboard's role-coverage-over-time chart.
@@ -546,7 +560,7 @@ export default function CommunityMoraleModal({
     const retentionSucceeded = !!retention?.survived
     const reallyDissolves = willDissolve && !retentionSucceeded
 
-    await supabase.from('community_morale_checks').insert({
+    const { error: mcErr } = await supabase.from('community_morale_checks').insert({
       community_id: community.id,
       week_number: newWeek,
       rolled_by_user_id: userId,
@@ -559,14 +573,16 @@ export default function CommunityMoraleModal({
       members_after: reallyDissolves ? 0 : membersAfter,
       role_snapshot: roleSnap,
     })
+    if (mcErr) reportSupabaseError(mcErr, 'CommunityMorale.moraleCheck')
 
     // 3) Apply member consequence
     if (reallyDissolves) {
       // All members marked left with reason=dissolved; community status flips.
-      await supabase.from('community_members')
+      const { error: dissErr } = await supabase.from('community_members')
         .update({ left_at: now, left_reason: 'dissolved' })
         .eq('community_id', community.id)
         .is('left_at', null)
+      if (dissErr) reportSupabaseError(dissErr, 'CommunityMorale.dissolveMembers')
     } else if (departureIds.length > 0) {
       const reasonByPct: Record<number, string> = { 0.25: 'morale_25', 0.50: 'morale_50', 0.75: 'morale_75' }
       const pct = outcomeToDeparturePct(morale.outcome)
@@ -626,6 +642,33 @@ export default function CommunityMoraleModal({
       }
     }
 
+    // 3c) If the departure/dissolution swept away the acknowledged leader,
+    // clear the leader seat - otherwise leader_npc_id/leader_user_id keep
+    // pointing at a departed member forever, and computeClearVoiceCmod
+    // (which checks "is there still an acknowledged leader") stays wrong
+    // on every subsequent Morale Check. The manual Remove/Leave path
+    // (handleRemoveMember) already has this exact check + auto-succession;
+    // this automatic sweep (morale departures, temp-recruit drain, and
+    // dissolution) never did (found in the 2026-08-01 audit). Not running
+    // auto-succession here to keep this fix minimal - a leaderless
+    // community can get a new leader via the existing Set Leader UI.
+    if (!reallyDissolves) {
+      const departedIds = new Set<string>(departureIds)
+      const leaderDeparted = members.some(m => {
+        if (!departedIds.has(m.id)) return false
+        return (
+          (community.leader_npc_id && m.npc_id === community.leader_npc_id)
+          || (community.leader_user_id && m.invited_by_user_id === community.leader_user_id)
+          // Founder's own row never sets invited_by_user_id - matches the
+          // same clause in CampaignCommunity.tsx's handleRemoveMember.
+          || (community.leader_user_id && m.recruitment_type === 'founder' && !!m.character_id)
+        )
+      })
+      if (leaderDeparted) {
+        await updateCommunity(community.id, { leader_user_id: null, leader_npc_id: null })
+      }
+    }
+
     // 4) Update community counters (+ status transition).
     //    'forming' → 'active' on first completed weekly cycle.
     //    Retention success on a 3rd-fail keeps the community active
@@ -636,12 +679,13 @@ export default function CommunityMoraleModal({
     const nextStatus: 'forming' | 'active' | 'dissolved' = reallyDissolves
       ? 'dissolved'
       : (community.status === 'forming' ? 'active' : community.status)
-    await supabase.from('communities').update({
+    const { error: commErr } = await supabase.from('communities').update({
       week_number: newWeek,
       consecutive_failures: finalConsFailures,
       status: nextStatus,
-      ...(reallyDissolves ? { dissolved_at: now } : {}),
+      ...(reallyDissolves ? { dissolved_at: now, leader_user_id: null, leader_npc_id: null } : {}),
     }).eq('id', community.id)
+    if (commErr) reportSupabaseError(commErr, 'CommunityMorale.updateCommunity')
 
     if (reallyDissolves && community.homestead_pin_id) {
       await supabase.from('campaign_pins').update({ revealed: false }).eq('id', community.homestead_pin_id)

@@ -210,6 +210,10 @@ export interface CampaignNpc {
   equipment: { name: string; damage?: number; roll?: string; notes?: string }[] | null
   inventory?: { name: string; qty: number; enc?: number; rarity?: string; notes?: string; custom?: boolean }[] | null
   folder: string | null
+  // Map pin this NPC is stationed at (campaign_pins.id). Lets players
+  // click the pin and open the NPC. Written by the roster's Location
+  // dropdown (GM-only) and by module/seed import.
+  campaign_pin_id: string | null
   hidden_from_players?: boolean
   // Lasting wounds rolled from Table 12 (Distemper Quickstart / canon
   // §06) on a failed Lasting Damage Check. jsonb on the DB side -
@@ -290,6 +294,7 @@ const emptyForm = {
   weapon: null as any,
   weapon2: null as any,
   folder: '' as string,
+  campaign_pin_id: null as string | null,
   // GM-authored inventory - items the player will see when looting
   // this NPC via 🎒 Search Remains. Distinct from `equipment` (the
   // weapon/armor block), and separate from skills.
@@ -310,6 +315,22 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   const [npcStatusFilter, setNpcStatusFilter] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
+  // Campaign map pins for the edit form's Location dropdown (GM only).
+  // Refetched when the form opens so a pin added mid-session appears.
+  const [pins, setPins] = useState<{ id: string; name: string }[]>([])
+  useEffect(() => {
+    if (!isGM || !showForm) return
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase
+        .from('campaign_pins')
+        .select('id, name')
+        .eq('campaign_id', campaignId)
+        .order('name', { ascending: true })
+      if (!cancelled) setPins((data ?? []) as { id: string; name: string }[])
+    })()
+    return () => { cancelled = true }
+  }, [isGM, showForm, campaignId])
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [showPortraitPicker, setShowPortraitPicker] = useState(false)
@@ -422,7 +443,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   // seam: both postgres subs ride one npc_roster_${campaignId} channel and
   // refetch via loadNpcs (handlers stay fresh via the hook's config ref,
   // so the channel only subscribes once per campaign).
-  useCampaignChannel(campaignId, {
+  const { send: sendRosterBroadcast } = useCampaignChannel(campaignId, {
     channelName: campaignId ? `npc_roster_${campaignId}` : undefined,
     postgres: [
       { label: 'npc_roster:campaign_npcs', event: '*', table: 'campaign_npcs', filter: campaignId ? `campaign_id=eq.${campaignId}` : undefined, handler: () => { loadNpcs() } },
@@ -501,6 +522,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       weapon: npc.skills?.weapon ?? null,
       weapon2: npc.skills?.weapon2 ?? null,
       folder: npc.folder ?? '',
+      campaign_pin_id: npc.campaign_pin_id ?? null,
     })
     setEditingId(npc.id)
     setShowForm(true)
@@ -545,6 +567,7 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       complication: form.complication || null,
       three_words: form.threeWords.filter(w => w),
       folder: form.folder.trim() || null,
+      campaign_pin_id: form.campaign_pin_id || null,
       // Strip empty rows the GM may have left while editing - name
       // is the only required field; an item with no name isn't real.
       inventory: form.inventoryEntries.filter(it => it.name.trim()),
@@ -822,7 +845,21 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
   // per-folder Show/Hide buttons delegate here so the npc_relationships +
   // scene_tokens update logic lives in one place.
   async function revealNpcsByIds(npcIds: string[]) {
-    if (!pcEntries || pcEntries.length === 0 || npcIds.length === 0) return
+    if (npcIds.length === 0) return
+    // A reveal with no player characters loaded silently wrote nothing and
+    // looked like a dead button - the GM clicked repeatedly and refreshed.
+    // Say so instead of returning quietly.
+    if (!pcEntries || pcEntries.length === 0) {
+      alert('No player characters are loaded yet, so there is nobody to reveal these NPCs to. Give the table a moment to finish loading and try again.')
+      return
+    }
+    // Flip the RLS gate FIRST. hidden_from_players=true on the NPC row beats
+    // revealed=true on the relationship row, so a reveal that skips this
+    // writes rows the player still cannot read. This used to live only in
+    // revealAllNpcs and quickReveal; the per-card and per-folder Show
+    // buttons skipped it and left NPCs invisible. Doing it here makes every
+    // call site correct by construction.
+    await setNpcsHidden(npcIds, false)
     const { data: existing } = await existingRelationshipsByNpcs(npcIds)
     const seen = new Set<string>((existing ?? []).map((r: any) => `${r.npc_id}|${r.character_id}`))
     const updates = (existing ?? []).map((r: any) => r.id)
@@ -845,12 +882,23 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
       return next
     })
     await setSceneTokensVisibleByNpcs(npcIds, true)
+    sendRosterBroadcast('npcs_revealed', {})
     void logEvent('npc_revealed', { count: npcIds.length, campaign_id: campaignId })
   }
 
   async function hideNpcsByIds(npcIds: string[]) {
     if (npcIds.length === 0) return
+    // Mirror of the reveal path: close the RLS gate as well as clearing the
+    // relationship rows, so Hide then Show cannot leave the two disagreeing.
+    await setNpcsHidden(npcIds, true)
     await hideRelationshipsByNpcs(npcIds)
+    // Hide MUST broadcast. postgres_changes is RLS-filtered per subscriber:
+    // revealing moves the row INTO the player's visibility so their
+    // campaign_npcs subscription fires, but hiding moves it OUT, and the
+    // event is filtered away - the player is never told the NPC is gone and
+    // sits on a stale roster until they refresh. This is why Show worked and
+    // Hide did not. The broadcast is not RLS-filtered, so it always lands.
+    sendRosterBroadcast('npcs_revealed', {})
     setRevealedNpcIds(prev => {
       const next = new Set(prev)
       for (const id of npcIds) next.delete(id)
@@ -865,12 +913,8 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
 
   async function revealAllNpcs() {
     const allIds = npcs.map(n => n.id)
-    // Also flip the RLS gate so the per-PC reveal rows aren't fighting
-    // an opposing hidden_from_players=true on the underlying NPC. The
-    // per-NPC quickReveal already does this; without the same write
-    // here, "Show All" left some NPCs invisible to players even after
-    // their relationship row said revealed=true.
-    await setNpcsHidden(allIds, false)
+    // The RLS gate is flipped inside revealNpcsByIds now, so every reveal
+    // path gets it - this used to be the only place that did.
     await revealNpcsByIds(allIds)
   }
 
@@ -2022,6 +2066,27 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
                   style={{ width: '100px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }} />
               </div>
             </div>
+
+            {/* Location (map pin) - GM only. Links this NPC to a campaign
+                pin so players can click the pin and open the NPC. The
+                campaign_npcs UPDATE RLS is NOT GM-scoped (any campaign
+                member can write campaign_pin_id), so this control is gated
+                to isGM client-side - Puffer flag 2026-08-02. */}
+            {isGM && (
+              <div style={{ marginBottom: '8px' }}>
+                <div style={{ fontSize: '13px', color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.08em', fontFamily: 'Carlito, sans-serif', marginBottom: '2px' }}>Location (map pin)</div>
+                <select value={form.campaign_pin_id ?? ''} onChange={e => setForm(f => ({ ...f, campaign_pin_id: e.target.value || null }))}
+                  style={{ width: '100%', padding: '4px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box', appearance: 'none' }}>
+                  <option value="">Not on the map</option>
+                  {pins.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                {pins.length === 0 && (
+                  <div style={{ fontSize: '13px', color: '#888', marginTop: '2px', fontFamily: 'Carlito, sans-serif' }}>No map pins yet - add pins on the campaign map first.</div>
+                )}
+              </div>
+            )}
 
             {/* Player-visible description - shows on PlayerNpcCard
                 whenever this NPC's tile is opened by a PC. Distinct

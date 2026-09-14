@@ -1,6 +1,6 @@
-# Lane Protocol - three parallel Claude chats (2026-05-24)
+# Lane Protocol - four parallel Claude chats (2026-05-24, hub/spoke model + Comms channel added 2026-08-02)
 
-How the three always-on chats stay harmonious. Drafted by the Playwright/E2E
+How the always-on chats stay harmonious. Drafted by the Playwright/E2E
 lane after a session that hit every coordination failure mode first-hand
 (shared-working-tree clobbers, a duplicated todo section, repeated rebases).
 Routed to Puffer Fish (owns `operating-mode.md` + coordination scaffolding) -
@@ -11,7 +11,110 @@ describes only TWO lanes and should be updated - see bottom).
 
 ---
 
-> **All three lanes align to ONE anchor: [tasks/north-star.md](north-star.md)** - the validated vision. Its whole purpose is to keep the lanes moving the SAME direction with no contradictions or overlaps. Read it, prioritize against it, and lead every handoff with it. (Goal now: TheTapestry stable/polished/fun for the 9/1 Kickstarter; billing ~10/1 post-KS.)
+## Hub & Spoke model (2026-08-02) - governs everything below
+
+Adapted from the pattern Xero validated running TheTableau's Puffer Fish hub.
+**Puffer Fish is the hub; Hunt & Peck and Playwright/E2E are spokes.**
+Live claim + retirement rule: `tasks/HUB-LIVE.md`. Open questions / decisions
+in flight: `tasks/COMMS.md`.
+
+- **Hub (Puffer Fish) is the only chat that reviews, merges, and pushes
+  SQL/RLS/shared-hot-file work to `main`.** It owns integration and
+  cross-file reconciliation for that category of change, and applies
+  anything touching the live database after its own review pass.
+- **Graduated gate, not a blanket one.** Pure UI/feature work in Hunt &
+  Peck's own files can still self-ship straight to `main` exactly like
+  before - the hub gate is specifically for SQL/RLS/`sql/`-touching work
+  and anything in a file the hub has flagged as hot/shared. E2E's spec
+  work is almost purely additive and stays self-ship too. When in doubt,
+  a spoke hands off a SHA rather than assuming self-ship is fine - **the
+  hub reviews the actual diff, not just the spoke's summary**, before
+  confirming a merge, especially for anything SECURITY DEFINER or RLS.
+- **Cross-session coordination is direct, not manually relayed.** Verified
+  2026-08-02 (corrects the "these chats cannot message each other" claim
+  in the original "What this protocol CANNOT do" section below, written
+  2026-05-24 before this tool was in use): the hub uses
+  `mcp__ccd_session_mgmt__send_message` to deliver directly into a spoke's
+  session (arrives as a labeled turn, processed once that session's
+  in-flight work finishes), and a spoke replies the same way back to the
+  hub's session id. `list_sessions` finds a lane's live session id by
+  title/cwd. **Xero does not relay between sessions, ever, unless he
+  explicitly says to** (confirmed 2026-08-02, after he redirected a lane
+  that asked him to pass something along back to using this channel
+  directly) - always use `send_message` yourself, never write "or have
+  Xero relay it" as a fallback in a hand-off message.
+- **Why graduated, not everything through the hub:** even with direct
+  session messaging, hub review of every commit has a real cost
+  independent of how the SHA gets there - reading a diff carefully takes
+  time regardless of transport. Gating EVERYTHING would slow Hunt & Peck's
+  high-frequency day-to-day shipping in proportion to volume, not risk (a
+  button color change doesn't carry the same risk as an RLS policy).
+  Gating the risky category (SQL/RLS/hot-files) captures the real value -
+  the 2026-08-01 audit found ~40 bugs shipped with zero review, several
+  CRITICAL, one bug shape (moderation self-approval) recurring across 7
+  unrelated tables - without slowing routine UI shipping proportionally
+  more than the risk warrants.
+- **Reproduce before claiming fixed.** A spoke reproduces an issue for
+  real (not just by reading code) before handing the hub a SHA. Gate
+  locally first (tsc/tests/arch/font/role/em-dash - the existing
+  pre-commit suite already does this).
+- **Never infer who's hub from who spoke most recently** - always read
+  `tasks/HUB-LIVE.md`. Writing a handoff = immediate retirement; the next
+  hub claim overwrites that file and pings every lane, not just the
+  active one.
+
+## Comms channel (2026-08-02) - the 4th session
+
+A dedicated chat (title "Tapestry | Comms" by convention, matching
+TheTableau's "Tableau | Comms"), adapted from the pattern proven there.
+**Comms owns everything that needs Xero's live/manual attention -
+test plans and open questions - so the hub and spokes don't each
+separately interrupt him.**
+
+- **Owns:** `tasks/COMMS.md` (open questions / decisions in flight / the
+  ANSWERED log - was a shared file any lane could edit before Comms
+  existed; Comms is now its primary maintainer) and
+  `tasks/The Tapestry Smoke Testing.xlsx` (the one living test workbook -
+  every test ask is a new tab in this same file, never a new file, see
+  `reference_e2e_results_dashboard`-adjacent convention in memory).
+- **Does NOT own:** code, SQL, specs - those stay with Puffer Fish / Hunt
+  & Peck / Playwright-E2E exactly as before. Comms is coordination-only.
+- **The loop:** a lane ships something that needs a live/manual verify ->
+  hands it to Comms via direct session message (not to Xero directly) ->
+  Comms **confirms it's actually reachable/testable first** (not blocked
+  by auth, a half-built feature, or a stale deploy - verify before
+  packaging, don't just relay the lane's claim) -> packages it as a new
+  tab in the Smoke Testing workbook, matching the established
+  Item/description/pass-fail/notes format -> pings Xero -> logs the
+  result back into `COMMS.md`'s ANSWERED log and notifies the requesting
+  lane via session message.
+- **Every question for Xero routes through Comms - no exceptions, no
+  "this one's small enough to just ask inline" carve-out.** (Corrected
+  2026-08-03, superseding the exception previously written here - Xero's
+  own words: "if you have questions (ever, on anything) they should be
+  routed to the comms channel. i go there ONLY to answer questions which
+  get lost in your stream of consciousness.") This applies even when
+  Xero is actively present and chatting in the lane that has the
+  question - the point isn't reachability, it's that he manages four
+  parallel chats and needs ONE place to check for anything needing his
+  input, not a scan through a technical session's live narration to find
+  a buried question. A quick clarifying question ("which map did you
+  mean") gets the exact same treatment as a formal product/vision call -
+  it goes to Comms as an OPEN item, Comms tracks it, gets the answer,
+  updates ANSWERED, and notifies whoever was waiting.
+- **Coordinates via the same direct session messaging as the hub/spokes**
+  (`mcp__ccd_session_mgmt__send_message`, target found with
+  `list_sessions`) - Xero does not relay for Comms either, same rule as
+  everywhere else in this document.
+- **What this does NOT change:** status updates, reporting completed
+  work, and answering a question Xero himself just asked directly all
+  stay exactly as they are - this rule is specifically about a lane
+  originating a question FOR Xero, not about replying to him.
+  for all human contact.
+
+---
+
+> **All four sessions align to ONE anchor: [tasks/north-star.md](north-star.md)** - the validated vision. Its whole purpose is to keep everyone moving the SAME direction with no contradictions or overlaps. Read it, prioritize against it, and lead every handoff with it. (Goal now: TheTapestry stable/polished/fun for the 9/1 Kickstarter; billing ~10/1 post-KS.)
 
 ## The three lanes
 
@@ -84,6 +187,11 @@ does today - it works but is fiddly; per-lane worktrees retire the fiddliness.
   don't panic. Never force-push `main`. Never `--no-verify`.
 - The pre-commit hook + gates (tsc, font, role-literal, em-dash, preview-sync,
   arch ratchet, unit tests) run regardless of lane and catch cross-lane breakage.
+- **Under the hub model (above):** this section still describes how EACH
+  chat pushes its own commits (the hub pushes its own reviewed work AND
+  a spoke's cherry-picked SHA the same way). What changed is who's
+  authorized to push SQL/RLS/hot-file spoke work directly - that now
+  routes through the hub first rather than a spoke self-pushing it.
 
 ## Shared-doc discipline (`todo.md`, `lessons.md` - the only files all 3 write)
 
@@ -126,10 +234,64 @@ logged anywhere?" never has to be asked again. (Playwright's own
 view of the last run only, NOT the record.) Mirrored in memory
 `reference_e2e_results_dashboard`.
 
+## Hard-earned rules (adapted from TheTableau's hub, 2026-08-02)
+
+General principles that held up running a hub there - not TheTableau's
+specific bugs, which don't transfer. Cross-referenced against what
+Tapestry has already independently learned the hard way, where it applies:
+
+- **A silent refusal is a bug.** Every guard that blocks an action (an RLS
+  policy, a disabled button, a trigger that no-ops) must surface WHY, or
+  it just looks broken. Tapestry's own version of this: the 2026-08-01
+  audit found several places where a write silently affected 0 rows with
+  no error surfaced to the caller (`tasks/lessons.md`, duplicate-policy
+  entries) - the fix pattern is the same, make the block loud.
+- **Verify second-hand claims by reading the live thing yourself before
+  repeating them - including your own past inferences.** Don't let a
+  plausible-sounding pattern-match stand in for evidence. This is already
+  a standing Tapestry rule (`feedback_accuracy_over_confidence` /
+  `feedback_check_before_quoting_scope` in memory) - the hub model just
+  raises the stakes, since the hub is now vouching for a spoke's diff
+  before merge, not just its own work.
+- **Shared checkout hazard, if it ever comes up:** if multiple sessions
+  share one working directory (not the current worktree-per-lane setup,
+  but worth remembering if that ever changes), stash-dance before every
+  commit and never assume a "stale" reading proves anything without
+  checking the actual mechanism - Tapestry already has its own worktree
+  freshness lesson for this (`tasks/lessons.md`, "Worktree freshness -
+  check the gap before claiming synced").
+- **Don't fight a working pipeline that isn't actually broken.**
+  Cross-check via multiple independent signals (Vercel dashboard, a fresh
+  `curl -sI`, actual deploy logs) before concluding infra is down - a
+  misread cache header or a stale local assumption reads identically to a
+  real outage and wastes a long detour either way.
+- **File ownership is explicit and defensible.** A lane that finds a bug
+  outside its own files flags it (with a ready patch if the fix is small)
+  rather than editing blind - the hub or the real owner takes it. This is
+  the existing tiebreaker rule above, restated for the hub context: a
+  spoke that spots something hub-owned (SQL/RLS/operating docs) writes it
+  up for the hub instead of touching it directly.
+- **Don't pick the first/only-known element of a set when more than one
+  could legitimately exist - resolve by an actual key, not by assuming
+  cardinality.** TheTableau hit this twice from the same root cause
+  (picking `array[0]` when a set could have multiple live members).
+  Tapestry's nearest miss: the audit's repeated finding that a single
+  UPDATE policy assumed "the caller editing their own row" when RLS
+  actually let ANY campaign member match - same class of "assumed a
+  narrower set than what's actually reachable."
+
 ## What this protocol CANNOT do
 
-Be honest: these chats are separate Claude instances that cannot message each
-other. Harmony depends on ALL THREE being given the same kickoff instructions
+**Correction (2026-08-02):** the line below originally said these chats
+"cannot message each other" - that was wrong, or at least became wrong.
+`mcp__ccd_session_mgmt__send_message` delivers directly into another
+session (see "Cross-session coordination" above); `list_sessions` finds
+the target by title/cwd. Kept the original text below for the history -
+the remaining point (harmony still depends on every lane actually reading
+this file, and ceremony has a real cost for a solo dev) still holds
+regardless of transport mechanism.
+
+Be honest: harmony depends on ALL THREE being given the same kickoff instructions
 pointing at this file. A convention only one lane follows is not a convention.
 And for a solo dev, more ceremony than the above is overhead you have to maintain
 x3 - the worktree split (top) and the 2->3 doc update (below) are the real wins;

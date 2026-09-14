@@ -51,27 +51,38 @@ async function fetchAsBlob(url: string): Promise<Blob | null> {
 }
 
 export async function exportGmKit(supabase: SupabaseClient, campaignId: string): Promise<ExportResult> {
-  // Wave 1 - campaign + every directly-filterable table in parallel.
-  const [
-    { data: campaign, error: campErr },
-    { data: pins, error: pinsErr },
-    { data: npcs, error: npcsErr },
-    { data: scenes, error: scenesErr },
-    { data: notes, error: notesErr },
-  ] = await Promise.all([
-    supabase.from('campaigns').select(CAMPAIGN_COLUMNS).eq('id', campaignId).single(),
-    supabase.from('campaign_pins').select('*').eq('campaign_id', campaignId).order('sort_order', { ascending: true, nullsFirst: false }),
-    supabase.from('campaign_npcs').select('*').eq('campaign_id', campaignId).order('sort_order', { ascending: true, nullsFirst: false }),
-    supabase.from('tactical_scenes').select('*').eq('campaign_id', campaignId),
-    supabase.from('campaign_notes').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: true }),
-  ])
+  const { data: campaign, error: campErr } = await supabase.from('campaigns').select(CAMPAIGN_COLUMNS).eq('id', campaignId).single()
   if (campErr || !campaign) return { ok: false, error: campErr?.message ?? 'Campaign not found' }
-  // A swallowed read here would ship a zip whose pins/npcs/scenes/notes
-  // sections are silently empty - a GM's "complete backup" that isn't. Fail
-  // the whole export instead so the loss surfaces at export time, not the day
-  // they need to restore.
-  const contentErr = pinsErr ?? npcsErr ?? scenesErr ?? notesErr
-  if (contentErr) return { ok: false, error: `Export read failed: ${contentErr.message}` }
+  // "GM Kit" is GM-only by name and purpose. Every underlying table's RLS is
+  // member-scoped (not GM-only), so this was previously enforced ONLY by the
+  // client's isGM-gated export button - a non-GM member calling this function
+  // directly got back whatever RLS already let them see (bounded today, but
+  // zero defense-in-depth if any of those tables' RLS ever regresses to an
+  // over-wide policy - the exact bug class fixed repeatedly elsewhere in this
+  // audit). 2026-08-01.
+  const { data: auth } = await supabase.auth.getUser()
+  if (campaign.gm_user_id !== auth.user?.id) return { ok: false, error: 'Only the GM can export this campaign.' }
+
+  // Wave 1 - every directly-filterable table, paginated past the 1000-row
+  // PostgREST default so a pin/NPC/scene/handout-heavy campaign's "complete
+  // backup" isn't silently truncated with no signal in the zip (the same
+  // M17 pagination-truncation bug class already fixed once in the module-
+  // export system - scopedTokens below already had this fix, these four
+  // queries never did). 2026-08-01.
+  let pins: any[], npcs: any[], scenes: any[], notes: any[]
+  try {
+    ;[pins, npcs, scenes, notes] = await Promise.all([
+      fetchAllRows((from, to) => supabase.from('campaign_pins').select('*').eq('campaign_id', campaignId).order('sort_order', { ascending: true, nullsFirst: false }).range(from, to)),
+      fetchAllRows((from, to) => supabase.from('campaign_npcs').select('*').eq('campaign_id', campaignId).order('sort_order', { ascending: true, nullsFirst: false }).range(from, to)),
+      fetchAllRows((from, to) => supabase.from('tactical_scenes').select('*').eq('campaign_id', campaignId).range(from, to)),
+      fetchAllRows((from, to) => supabase.from('campaign_notes').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: true }).range(from, to)),
+    ])
+  } catch (e: any) {
+    // A swallowed read here would ship a zip whose pins/npcs/scenes/notes
+    // sections are silently empty - a GM's "complete backup" that isn't.
+    // Fail the whole export instead so the loss surfaces at export time.
+    return { ok: false, error: `Export read failed: ${e?.message ?? 'unknown'}` }
+  }
 
   // Wave 2 - scene_tokens scoped to THIS campaign's scenes only.
   // Pre-fix this lived in Wave 1 as an UNFILTERED `select('*')`, so every

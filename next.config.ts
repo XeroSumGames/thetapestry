@@ -28,6 +28,24 @@ const nextConfig: NextConfig = {
       // dashboard. Stable production alias, not the hash.
       { source: '/walkingdead-rpg', destination: 'https://walkingdead-rpg.vercel.app' },
       { source: '/walkingdead-rpg/:path*', destination: 'https://walkingdead-rpg.vercel.app/:path*' },
+      // traveller-generator (Mongoose Traveller 2nd Edition). Own repo
+      // (github.com/XeroSumGames/traveller-generator); runs on THIS origin so its
+      // beacon posts page='/traveller-generator' to log-visit for the
+      // /traveller-generator-log dashboard. Stable production alias, not the hash.
+      { source: '/traveller-generator', destination: 'https://traveller-generator.vercel.app' },
+      { source: '/traveller-generator/:path*', destination: 'https://traveller-generator.vercel.app/:path*' },
+      // 2300ad-generator (2300AD, the Mongoose Traveller setting). Own repo
+      // (github.com/XeroSumGames/2300ad-generator); runs on THIS origin so its beacon
+      // posts page='/2300ad-generator' to log-visit for the /2300ad-generator-log
+      // dashboard. Stable production alias, not the hash.
+      { source: '/2300ad-generator', destination: 'https://2300ad-generator.vercel.app' },
+      { source: '/2300ad-generator/:path*', destination: 'https://2300ad-generator.vercel.app/:path*' },
+      // twilight2000-generator (Twilight: 2000 4th Edition, Free League). Own repo
+      // (github.com/XeroSumGames/twilight2000-generator); runs on THIS origin so its
+      // beacon posts page='/twilight2000-generator' to log-visit for the
+      // /twilight2000-generator-log dashboard. Stable production alias, not the hash.
+      { source: '/twilight2000-generator', destination: 'https://twilight2000-generator.vercel.app' },
+      { source: '/twilight2000-generator/:path*', destination: 'https://twilight2000-generator.vercel.app/:path*' },
     ]
   },
   async redirects() {

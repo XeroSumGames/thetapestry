@@ -49,7 +49,9 @@ function avatarColor(id: string) {
 
 interface Thread {
   id: string
-  author_user_id: string
+  // Nullable at runtime: an account self-deletion anonymizes the author
+  // (FK ON DELETE SET NULL), so the thread survives with a null author.
+  author_user_id: string | null
   category: Category
   title: string
   body: string
@@ -147,7 +149,7 @@ export default function ForumsIndexPage() {
     const list = (rows ?? []) as Thread[]
     setHasMore(list.length === PAGE_SIZE)
     if (list.length === 0) { setThreads([]); setLoading(false); return }
-    const authorIds = Array.from(new Set(list.map(t => t.author_user_id)))
+    const authorIds = Array.from(new Set(list.map(t => t.author_user_id).filter((x): x is string => !!x)))
     const campaignIds = Array.from(new Set(list.map(t => t.campaign_id).filter((x): x is string => !!x)))
     const [profRes, campRes] = await Promise.all([
       supabase.from('profiles').select('id, username, avatar_url').in('id', authorIds),
@@ -160,8 +162,8 @@ export default function ForumsIndexPage() {
     const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
     setThreads(list.map(t => ({
       ...t,
-      author_username: nameMap[t.author_user_id] ?? 'Unknown',
-      author_avatar_url: avatarMap[t.author_user_id] ?? null,
+      author_username: t.author_user_id == null ? 'Anonymous' : (nameMap[t.author_user_id] ?? 'Unknown'),
+      author_avatar_url: t.author_user_id == null ? null : (avatarMap[t.author_user_id] ?? null),
       campaign_name: t.campaign_id ? (campMap[t.campaign_id] ?? null) : null,
     })))
     setLoading(false)
@@ -188,7 +190,7 @@ export default function ForumsIndexPage() {
     const list = (rows ?? []) as Thread[]
     setHasMore(false)
     if (list.length === 0) { setThreads([]); setSearching(false); return }
-    const authorIds = Array.from(new Set(list.map(t => t.author_user_id)))
+    const authorIds = Array.from(new Set(list.map(t => t.author_user_id).filter((x): x is string => !!x)))
     const campaignIds = Array.from(new Set(list.map(t => t.campaign_id).filter((x): x is string => !!x)))
     const [profRes, campRes] = await Promise.all([
       supabase.from('profiles').select('id, username, avatar_url').in('id', authorIds),
@@ -201,8 +203,8 @@ export default function ForumsIndexPage() {
     const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
     setThreads(list.map(t => ({
       ...t,
-      author_username: nameMap[t.author_user_id] ?? 'Unknown',
-      author_avatar_url: avatarMap[t.author_user_id] ?? null,
+      author_username: t.author_user_id == null ? 'Anonymous' : (nameMap[t.author_user_id] ?? 'Unknown'),
+      author_avatar_url: t.author_user_id == null ? null : (avatarMap[t.author_user_id] ?? null),
       campaign_name: t.campaign_id ? (campMap[t.campaign_id] ?? null) : null,
     })))
     setSearching(false)
@@ -226,7 +228,7 @@ export default function ForumsIndexPage() {
     const list = (rows ?? []) as Thread[]
     setHasMore(list.length === PAGE_SIZE)
     if (list.length === 0) { setLoadingMore(false); return }
-    const authorIds = Array.from(new Set(list.map(t => t.author_user_id)))
+    const authorIds = Array.from(new Set(list.map(t => t.author_user_id).filter((x): x is string => !!x)))
     const campaignIds = Array.from(new Set(list.map(t => t.campaign_id).filter((x): x is string => !!x)))
     const [profRes, campRes] = await Promise.all([
       supabase.from('profiles').select('id, username, avatar_url').in('id', authorIds),
@@ -239,8 +241,8 @@ export default function ForumsIndexPage() {
     const campMap = Object.fromEntries((campRes.data ?? []).map((c: any) => [c.id, c.name]))
     setThreads(prev => [...prev, ...list.map(t => ({
       ...t,
-      author_username: nameMap[t.author_user_id] ?? 'Unknown',
-      author_avatar_url: avatarMap[t.author_user_id] ?? null,
+      author_username: t.author_user_id == null ? 'Anonymous' : (nameMap[t.author_user_id] ?? 'Unknown'),
+      author_avatar_url: t.author_user_id == null ? null : (avatarMap[t.author_user_id] ?? null),
       campaign_name: t.campaign_id ? (campMap[t.campaign_id] ?? null) : null,
     }))])
     setLoadingMore(false)
@@ -537,7 +539,7 @@ export default function ForumsIndexPage() {
           {visible.map((t, i) => {
             const accent = CATEGORY_ACCENT[t.category]
             const initial = (t.author_username || '?').charAt(0).toUpperCase()
-            const tint = avatarColor(t.author_user_id)
+            const tint = avatarColor(t.author_user_id ?? '')
             const excerpt = t.body.replace(/\s+/g, ' ').trim().slice(0, 140)
             return (
               <a key={t.id} href={`/campfire/forums/${t.id}`}

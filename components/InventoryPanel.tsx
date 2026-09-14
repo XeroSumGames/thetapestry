@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { EQUIPMENT, EquipmentItem } from '../lib/xse-schema'
 import { ALL_WEAPONS, getWeaponByName } from '../lib/weapons'
 import { computeEncumbrance, BASE_ENC_LIMIT } from '../lib/encumbrance'
@@ -103,14 +103,6 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
   const [givingItem, setGivingItem] = useState<InventoryItem | null>(null)
   const [giveQty, setGiveQty] = useState(1)
 
-  // Keep a ref to the latest inventory so confirmGive() can compute its
-  // decrement against fresh state. Without this, a realtime broadcast
-  // that mutates inventory while the give modal is open would have its
-  // change overwritten by the stale closure when the user clicks a
-  // recipient (we'd call onUpdate with the pre-broadcast snapshot).
-  const inventoryRef = useRef(inventory)
-  useEffect(() => { inventoryRef.current = inventory }, [inventory])
-
   const { weaponEnc, invEnc, currentEnc, encLimit, backpackBonus, overloaded } =
     computeEncumbrance(inventory, weaponPrimaryName, weaponSecondaryName, phyMod)
 
@@ -172,27 +164,13 @@ export default function InventoryPanel({ inventory, weaponPrimaryName, weaponSec
     else if (target.kind === 'npc') onGiveToNpc!(item, target.id, qty)
     else if (target.kind === 'community') onGiveToCommunity!(item, target.id, qty)
     else onGiveToVehicle!(item, target.id, qty)
-    // Decrement sender against the latest inventory (read via ref so a
-    // realtime update mid-modal can't be clobbered by a stale snapshot).
-    //
-    // PC -> PC is the exception: the give_item_to_character RPC moves BOTH
-    // sides atomically (it locks + decrements the giver itself), so a client
-    // giver-write here would race the RPC's SELECT ... FOR UPDATE and could
-    // double-decrement the giver. The PC handler reloads the giver's inventory
-    // after the RPC instead. NPC / community / vehicle gives still decrement
-    // here (those receiver-writes don't touch the giver's row).
-    if (target.kind !== 'pc') {
-      const current = inventoryRef.current
-      const idx = current.findIndex(i => i === item || (i.name === item.name && i.custom === item.custom))
-      if (idx >= 0) {
-        const remaining = current[idx].qty - qty
-        if (remaining <= 0) {
-          onUpdate(current.filter((_, j) => j !== idx))
-        } else {
-          onUpdate(current.map((i, j) => j === idx ? { ...i, qty: remaining } : i))
-        }
-      }
-    }
+    // All 4 directions (pc/npc/community/vehicle) now route through an
+    // atomic RPC that decrements the giver AND credits the receiver in one
+    // transaction (give_item_to_character / give_item_character_to_npc /
+    // give_item_character_to_community / give_item_character_to_vehicle -
+    // 2026-08-01 audit). A client-side giver-decrement here would race the
+    // RPC's own row lock and double-decrement the giver. Each onGiveTo*
+    // handler reloads the giver's own inventory after its RPC call instead.
     setGivingItem(null)
   }
 

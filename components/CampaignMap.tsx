@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { reportSupabaseError } from '../lib/supabase-errors'
 import { createClient } from '../lib/supabase-browser'
 import { prepareUpload } from '../lib/safe-upload'
 import { searchNominatimUSFirst } from '../lib/nominatim-search'
@@ -7,6 +8,7 @@ import { osrmCoordsParam, waypointLabel, parseLatLng } from '../lib/campaign-rou
 import { wrapBroadcast, wrapDbChange } from '../lib/sentry-realtime'
 import { wrapCategoryEmojiHtml } from '../lib/pin-categories'
 import { useHiddenPins } from '../lib/use-hidden-pins'
+import { openPopout } from '../lib/popout'
 
 interface CampaignPin {
   id: string
@@ -46,6 +48,7 @@ interface PinNpc {
   campaign_pin_id: string | null
   npc_type: string | null
   status: string
+  hidden_from_players: boolean | null
 }
 
 function escapeHtml(s: string): string {
@@ -197,6 +200,10 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
   // it (vs a straight-line fallback) so flipping the travel-mode
   // dropdown can recompute the ETA without re-hitting OSRM.
   const [routeDistanceMeters, setRouteDistanceMeters] = useState<number | null>(null)
+  // Every bottom-centre map chip is pinned to the same bottom:20px, so any two
+  // visible at once overlap. This flag lets the shared-view chip sit above the
+  // route banner instead of on top of it.
+  const routeBannerUp = routeMode || routeDistanceMeters !== null
   const [routeIsFallback, setRouteIsFallback] = useState(false)
   const [routeShareFlash, setRouteShareFlash] = useState(false)
   useEffect(() => { routeModeRef.current = routeMode }, [routeMode])
@@ -637,7 +644,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     const seq = ++loadSeqRef.current
     const [{ data: pinData }, { data: npcData }] = await Promise.all([
       supabase.from('campaign_pins').select('*').eq('campaign_id', campaignId),
-      supabase.from('campaign_npcs').select('id, name, campaign_pin_id, npc_type, status').eq('campaign_id', campaignId),
+      supabase.from('campaign_npcs').select('id, name, campaign_pin_id, npc_type, status, hidden_from_players').eq('campaign_id', campaignId),
     ])
     if (seq !== loadSeqRef.current) return // superseded by a newer call
     const allPins = pinData ?? []
@@ -657,10 +664,16 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     setPins(visible)
 
     // Group NPCs by pin, filtering out NPCs hidden from non-GM players.
+    // Gate on campaign_npcs.hidden_from_players (the GM's per-NPC map-
+    // visibility flag), NOT revealedNpcIds - that's the per-CHARACTER First
+    // Impression social gate ("has THIS PC formally met THIS NPC"), the wrong
+    // shape for "who is stationed at this location". Using it meant a
+    // GM-visible NPC still showed nothing in the pin popup until every player
+    // had a First Impression roll with it (bug found 2026-08-03).
     const npcsByPin: Record<string, PinNpc[]> = {}
     ;(npcData ?? []).forEach((n: PinNpc) => {
       if (!n.campaign_pin_id) return
-      if (!isGM && revealedNpcIds && !revealedNpcIds.has(n.id)) return
+      if (!isGM && n.hidden_from_players) return
       ;(npcsByPin[n.campaign_pin_id] ??= []).push(n)
     })
 
@@ -706,7 +719,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       const npcSection = npcsHere.length === 0 ? '' :
         `<div style="margin-top:8px;padding-top:6px;border-top:1px solid #2e2e2e;">
            <div style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:3px;">Also Here</div>
-           ${npcsHere.map(n => `<div style="font-size:15px;color:#f5f2ee;${n.status === 'dead' ? 'text-decoration:line-through;opacity:.6;' : ''}">${escapeHtml(n.name)}</div>`).join('')}
+           ${npcsHere.map(n => `<div class="cm-npc-link" data-npc-id="${escapeHtml(n.id)}" title="Open ${escapeHtml(n.name)}" style="font-size:15px;color:#7ab3d4;cursor:pointer;text-decoration:underline;${n.status === 'dead' ? 'opacity:.6;' : ''}">${escapeHtml(n.name)}</div>`).join('')}
          </div>`
       const popupHtml =
         `<div style="font-family:Carlito,sans-serif;min-width:180px;">` +
@@ -716,6 +729,23 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           npcSection +
         `</div>`
       const marker = leaflet.marker([pin.lat, pin.lng], { icon, draggable: isGM }).bindPopup(popupHtml)
+      // Make the "Also Here" NPC names clickable -> open the NPC's sheet
+      // popout (same surface the roster's per-NPC button uses). Wired on
+      // popupopen because the popup is an HTML string, not React; uses
+      // node.onclick (not addEventListener) so re-opening never double-
+      // binds. Players only ever see revealed NPCs here (filtered at
+      // loadPins), and gm=0 renders the player view - no leak.
+      marker.on('popupopen', (e: any) => {
+        const el = e?.popup?.getElement?.()
+        if (!el) return
+        el.querySelectorAll('.cm-npc-link[data-npc-id]').forEach((node: any) => {
+          node.onclick = (ev: Event) => {
+            ev.stopPropagation()
+            const npcId = node.getAttribute('data-npc-id')
+            if (npcId) openPopout(`/npc-sheet?c=${campaignId}&npc=${npcId}&gm=${isGM ? 1 : 0}`, `npc-${npcId}`, { w: 571, h: 400 })
+          }
+        })
+      })
       // Pin markers swallow the click before the map sees it, so the
       // map-level alt-ping and measure-tool handlers never fire when a
       // pin sits where you want to gesture. Strip bindPopup's auto-
@@ -859,7 +889,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
     // Append new pins at the end of the existing sort order.
     const { data: maxRow } = await supabase.from('campaign_pins').select('sort_order').eq('campaign_id', campaignId).order('sort_order', { ascending: false, nullsFirst: false }).limit(1).maybeSingle()
     const nextSort = ((maxRow as any)?.sort_order ?? 0) + 1
-    const { data } = await supabase.from('campaign_pins').insert({
+    const { data, error } = await supabase.from('campaign_pins').insert({
       campaign_id: campaignId,
       name: pinForm.name.trim(),
       lat: newPin.lat,
@@ -871,6 +901,14 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
       revealed: isGM,
       sort_order: nextSort,
     }).select().single()
+
+    if (error || !data) {
+      // Don't show the "submitted" confirmation / reset the form for a pin
+      // that never saved (was: error dropped, success notice shown regardless).
+      reportSupabaseError(error, 'CampaignMap.savePin')
+      setSaving(false)
+      return
+    }
 
     if (data && attachments.length > 0) {
       for (const file of attachments) {
@@ -1447,7 +1485,7 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
           Share Route button. Player view when a GM-shared route is active:
           folds the "GM shared a route" label into this banner to avoid two
           overlapping chips at the same bottom position. */}
-      {(routeMode || routeDistanceMeters !== null) && (
+      {routeBannerUp && (
         <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(26,15,40,0.95)', border: `1px solid ${!isGM && sharedToast === 'GM shared a route' ? '#7ab3d4' : '#a855f7'}`, borderRadius: '3px', color: !isGM && sharedToast === 'GM shared a route' ? '#7ab3d4' : '#a855f7', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '12px', minWidth: '280px', pointerEvents: routeMode ? 'none' : 'auto' }}>
           <span>
             {!isGM && sharedToast === 'GM shared a route'
@@ -1462,8 +1500,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
         </div>
       )}
 
-      {/* Player view-share chip. Only shown for "GM shared a view" — route
-          shares are folded into the route banner above to avoid overlap. */}
+      {/* Player view-share chip. Only shown for "GM shared a view" - route
+          SHARES are folded into the route banner to avoid overlap, but a
+          shared VIEW can coexist with an active route banner, and both were
+          pinned to bottom:20px so they sat on top of each other. Lift this
+          one above the banner whenever the banner is up. */}
       {sharedToast && !isGM && sharedToast === 'GM shared a view' && (
         lastSharedView ? (
           <button
@@ -1473,11 +1514,11 @@ export default function CampaignMap({ campaignId, isGM, setting, mapStyle: defau
               if (lastSharedView.tile && lastSharedView.tile !== mapLayerRef.current) switchLayer(lastSharedView.tile)
               map.flyTo([lastSharedView.lat, lastSharedView.lng], lastSharedView.zoom, { duration: 0.6 })
             }}
-            style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            style={{ position: 'absolute', bottom: routeBannerUp ? '68px' : '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>
             👁 GM shared a view
           </button>
         ) : (
-          <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', bottom: routeBannerUp ? '68px' : '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '8px 16px', background: 'rgba(15,30,46,0.95)', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', pointerEvents: 'none' }}>
             👁 GM shared a view
           </div>
         )

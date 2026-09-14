@@ -198,10 +198,11 @@ export interface TargetLookupCtx {
 export interface AttackCmodCtx extends TargetLookupCtx {
   userId: string | null
   // The pendingRoll label at call time (suppresses the coordinated-effort
-  // bonus on Group Checks). NOTE: the prefill caller passes the PREVIOUS
-  // pendingRoll's label (state lags the new roll within the same tick) - this
-  // is preserved as-was; the useRollResolution rebuild (3c-B3) is where the
-  // stale-closure read gets a real fix.
+  // bonus on Group Checks). Fixed 2026-08-01: the prefill call site
+  // (handleRollRequest in page.tsx) used to read this from state in the
+  // same tick it called setPendingRoll(), seeing the PREVIOUS roll's
+  // label - it now passes the label being set up right now via cmodCtx's
+  // labelOverride param instead of relying on this field's default.
   pendingLabel: string
   coordEffort: CoordEffortState | null
 }

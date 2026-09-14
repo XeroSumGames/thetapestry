@@ -32,6 +32,7 @@ import { Virtuoso } from 'react-virtuoso'
 import { createClient } from '../lib/supabase-browser'
 import { renderRichText } from '../lib/rich-text'
 import { wrapDbChange } from '../lib/sentry-realtime'
+import { reportSupabaseError } from '../lib/supabase-errors'
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -166,7 +167,18 @@ export function useChatPanel({ campaignId, userIdRef, setFeedTab, scrollFeedToBo
       if (!document.hidden) refetch()
     }
     document.addEventListener('visibilitychange', handleVisibility)
-    return () => document.removeEventListener('visibilitychange', handleVisibility)
+    // Low-frequency reconcile poll: subscribe catch-up + visibilitychange
+    // both fire only on (re)mount / tab-return, so a tab left OPEN and
+    // FOCUSED that drops a single postgres_changes chat event would miss
+    // that message until the next resubscribe. A 30s visible-only poll
+    // closes that gap (realtime still delivers the common case sub-second;
+    // the poll is only the guarantee). refetch's refetchSeqRef guard drops
+    // any stale overlap. Mirrors the shipped CampaignMap pin reconcile poll.
+    const reconcile = setInterval(() => { if (!document.hidden) refetch() }, 30000)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      clearInterval(reconcile)
+    }
   }, [campaignId, refetch])
 
   return { messages, clear, refetch }
@@ -393,7 +405,7 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
     }
 
     if (!messageBody.trim()) return
-    await supabase.from('chat_messages').insert({
+    const { error } = await supabase.from('chat_messages').insert({
       campaign_id: campaignId,
       user_id: userId,
       character_name: characterName,
@@ -401,6 +413,13 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
       is_whisper: isWhisper,
       recipient_user_id: recipientUserId,
     })
+    if (error) {
+      // The message never reached the feed. Surface it (console + Sentry) and
+      // KEEP the typed input so the player can retry instead of silently
+      // losing what they wrote. Was: result discarded + input cleared always.
+      reportSupabaseError(error, 'TableChat.send')
+      return
+    }
     setInput('')
   }
 

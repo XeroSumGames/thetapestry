@@ -52,7 +52,7 @@ export default function BeginnersGuideTOC() {
   return (
     <div style={{ background: '#0f0f0f', minHeight: '100vh', padding: '2rem 1rem', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>
       <div style={{ maxWidth: '780px', margin: '0 auto' }}>
-        <Link href="/welcome" style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em', textDecoration: 'none' }}>← Welcome</Link>
+        <Link href="/rules" style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', letterSpacing: '.08em', textDecoration: 'none' }}>← The Rules</Link>
 
         <h1 style={{ fontFamily: 'Carlito, sans-serif', fontSize: '36px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#c0392b', marginTop: '0.5rem', marginBottom: '0.25rem' }}>
           Beginners' Guide

@@ -307,6 +307,7 @@ export default function VehiclePage() {
   const fuelPct = vehicle.fuel_max > 0 ? vehicle.fuel_current / vehicle.fuel_max : 0
 
   async function updateVehicle(updated: Vehicle) {
+    const prev = vehicle
     setVehicle(updated)
     if (!campaignId) return
     // Route through update_vehicle_in_campaign RPC instead of a direct
@@ -317,10 +318,31 @@ export default function VehiclePage() {
     // its vehicles state, and TacticalMap kept rendering aboard
     // tokens. The RPC is SECURITY DEFINER + authorized by campaign
     // membership, with a narrow swap-one-vehicle scope.
+    //
+    // Diff against last-known state and send ONLY the fields that
+    // actually changed. Every call site builds `updated` as
+    // `{ ...vehicle, someField: x }` (a full snapshot of local, possibly
+    // stale state plus one changed field) - sending that whole object
+    // would make the RPC's merge degrade back into a full replace, silently
+    // reverting a concurrent client's write to any OTHER field (lost-update
+    // race - the exact bug this fix closes). The RPC merges (jsonb `||`),
+    // it no longer replaces, so a narrow patch here is what actually makes
+    // that safe.
+    const patch: Record<string, any> = {}
+    if (prev) {
+      for (const key of Object.keys(updated) as (keyof Vehicle)[]) {
+        if (JSON.stringify((updated as any)[key]) !== JSON.stringify((prev as any)[key])) {
+          patch[key as string] = (updated as any)[key]
+        }
+      }
+    } else {
+      Object.assign(patch, updated)
+    }
+    if (Object.keys(patch).length === 0) return
     const { error } = await supabase.rpc('update_vehicle_in_campaign', {
       p_campaign_id: campaignId,
       p_vehicle_id: updated.id,
-      p_new_vehicle: updated as any,
+      p_patch: patch,
     })
     if (error) {
       console.error('[vehicle-popout] updateVehicle RPC failed:', error.message)
@@ -363,19 +385,36 @@ export default function VehiclePage() {
     }
   }
 
+  // Synchronous in-flight guard for applyDamage/adjustWp (same pattern as
+  // rollCheck in useVehicleCheck.tsx) - a very fast double-click before
+  // React re-renders could fire both before either commits. Lower
+  // severity than a rolled check (both calls read the same stale
+  // vehicle.wp_current and compute the same idempotent target, so
+  // update_vehicle_in_campaign's merge doesn't double-apply damage per
+  // se), but still closes the gap for defense-in-depth and avoids a
+  // wasted duplicate network round-trip (per the 2026-08-01 audit).
+  const wpActionInFlightRef = useRef(false)
+
   async function applyDamage() {
-    if (!vehicle || !campaignId || !myUserId) return
-    const built = buildVehicleDamageLog({ vehicle, amount: dmgAmount, campaignId, userId: myUserId })
-    if (!built) return
-    await updateVehicle({ ...vehicle, wp_current: built.newWp })
-    await insertRollLog(built.row)
-    setDmgAmount('')
+    if (!vehicle || !campaignId || !myUserId || wpActionInFlightRef.current) return
+    wpActionInFlightRef.current = true
+    try {
+      const built = buildVehicleDamageLog({ vehicle, amount: dmgAmount, campaignId, userId: myUserId })
+      if (!built) return
+      await updateVehicle({ ...vehicle, wp_current: built.newWp })
+      await insertRollLog(built.row)
+      setDmgAmount('')
+    } finally {
+      wpActionInFlightRef.current = false
+    }
   }
 
   // Quick ±1 WP buttons - use the same log shape as applyDamage so the
   // roll feed shows every WP change, not just ones typed into the field.
   async function adjustWp(delta: number) {
-    if (!vehicle || !campaignId || !myUserId) return
+    if (!vehicle || !campaignId || !myUserId || wpActionInFlightRef.current) return
+    wpActionInFlightRef.current = true
+    try {
     if (delta < 0) {
       const built = buildVehicleDamageLog({ vehicle, amount: -delta, campaignId, userId: myUserId })
       if (!built) return
@@ -393,6 +432,9 @@ export default function VehiclePage() {
         outcome: 'vehicle_repair',
         damage_json: { vehicleId: vehicle.id, vehicleName: vehicle.name, checkKind: 'repair', amount: delta },
       })
+    }
+    } finally {
+      wpActionInFlightRef.current = false
     }
   }
 

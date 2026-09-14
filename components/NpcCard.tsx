@@ -300,31 +300,21 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
         </div>
       )}
 
-      {/* Skills - clickable */}
-      {(skillEntries.length > 0 || onRoll) && (
-        <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', marginBottom: '4px' }}>
-          {skillEntries.filter(s => s.name).map((s, i) => (
-            <span key={i} onClick={() => handleSkillRoll(s.name, s.level)}
-              style={{ fontSize: '13px', padding: '0 4px', background: s.level > 0 ? '#1a2e10' : '#242424', border: `1px solid ${s.level > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '2px', color: s.level > 0 ? '#7fc458' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', cursor: onRoll ? 'pointer' : 'default' }}>
-              {s.name} {sgn(s.level)}
+      {/* Skills - clickable. Full skill list (all of SKILL_ATTR), so the GM
+          can make ANY check from the sheet; untrained skills default to +0
+          (grey), trained ones highlighted green. handleSkillRoll no-ops when
+          onRoll is absent, so this stays a plain read-only list off the table. */}
+      <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', marginBottom: '4px' }}>
+        {Object.keys(SKILL_ATTR).sort().map(name => {
+          const level = getSkillLevel(name)
+          return (
+            <span key={name} onClick={() => handleSkillRoll(name, level)}
+              style={{ fontSize: '13px', padding: '0 4px', background: level > 0 ? '#1a2e10' : '#242424', border: `1px solid ${level > 0 ? '#2d5a1b' : '#3a3a3a'}`, borderRadius: '2px', color: level > 0 ? '#7fc458' : '#f5f2ee', fontFamily: 'Carlito, sans-serif', cursor: onRoll ? 'pointer' : 'default' }}>
+              {name} {sgn(level)}
             </span>
-          ))}
-          {onRoll && (() => {
-            const existing = new Set(skillEntries.map(s => s.name))
-            const combatSkills = [
-              { name: 'Melee Combat', label: 'Melee' },
-              { name: 'Ranged Combat', label: 'Ranged' },
-              { name: 'Demolitions', label: 'Demolitions' },
-            ].filter(s => !existing.has(s.name))
-            return combatSkills.map(s => (
-              <span key={s.name} onClick={() => handleSkillRoll(s.name, getSkillLevel(s.name))}
-                style={{ fontSize: '13px', padding: '0 4px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '2px', color: '#7fc458', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>
-                {s.label} {sgn(getSkillLevel(s.name))}
-              </span>
-            ))
-          })()}
-        </div>
-      )}
+          )
+        })}
+      </div>
 
       {/* GM Notes - truncated */}
       {npc.notes && (
@@ -429,18 +419,26 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
             await supabase.from('campaign_npcs').update({ inventory: next }).eq('id', npc.id)
           }}
           onGiveTo={async (item, targetCharId, qty) => {
-            // Loot transfer: NPC inventory → target PC's character.data.
-            // InventoryPanel decrements the sender side itself (via
-            // onUpdate); we own the receiver side + the cross-user
-            // notification.
-            const { data: charRow } = await supabase.from('characters').select('data').eq('id', targetCharId).single()
-            const targetData = (charRow as any)?.data ?? {}
-            const targetInv: InventoryItem[] = Array.isArray(targetData.inventory) ? targetData.inventory : []
-            const existing = targetInv.find(i => i.name === item.name && (i.custom ?? false) === (item.custom ?? false))
-            const newTargetInv = existing
-              ? targetInv.map(i => i === existing ? { ...i, qty: (i.qty ?? 1) + qty } : i)
-              : [...targetInv, { ...item, qty }]
-            await supabase.from('characters').update({ data: { ...targetData, inventory: newTargetInv } }).eq('id', targetCharId)
+            // Loot transfer: NPC inventory -> target PC's character.data.
+            // Atomic RPC (give_item_npc_to_character) both decrements the
+            // NPC's inventory and credits the PC in one transaction - the
+            // old code here only ever wrote the receiver side, so looting
+            // the same item repeatedly duplicated it for free (no timing
+            // needed - deterministic, found in the 2026-08-01 audit).
+            const { error } = await supabase.rpc('give_item_npc_to_character', {
+              p_giver_npc_id: npc.id,
+              p_target_character_id: targetCharId,
+              p_item_name: item.name,
+              p_item_custom: item.custom ?? false,
+              p_qty: qty,
+            })
+            if (error) { alert(`Give failed: ${error.message}`); return }
+            setInv(prev => {
+              const idx = prev.findIndex(i => i.name === item.name && (i.custom ?? false) === (item.custom ?? false))
+              if (idx < 0) return prev
+              const remaining = (prev[idx].qty ?? 1) - qty
+              return remaining <= 0 ? prev.filter((_, j) => j !== idx) : prev.map((i, j) => j === idx ? { ...i, qty: remaining } : i)
+            })
             // Cross-user notification - RPC bypasses notifications RLS
             // via SECURITY DEFINER. Loot from an NPC reads as "from
             // <NPC name>" so the player sees who they pulled it off.

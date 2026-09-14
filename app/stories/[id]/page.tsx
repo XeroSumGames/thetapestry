@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { reportSupabaseError } from '../../../lib/supabase-errors'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase-browser'
 import { loginPathForCurrent } from '../../../lib/login-redirect'
@@ -89,6 +90,13 @@ export default function CampaignPage() {
   const [myCharacters, setMyCharacters] = useState<Character[]>([])
   const [selectedCharId, setSelectedCharId] = useState<string>('')
   const [assigning, setAssigning] = useState(false)
+  const [observing, setObserving] = useState(false)
+  // Surfaced when a character-assignment write fails. Previously the three
+  // assign paths did `if (!error) { ...update state... }` with no else, so an
+  // RLS / constraint / trigger failure on that write was invisible - no
+  // message, no console.error - and looked exactly like "the button did
+  // nothing" (cost real debugging time on the 2026-08-03 RLS-recursion bug).
+  const [assignError, setAssignError] = useState<string | null>(null)
   const [assignedCharName, setAssignedCharName] = useState<string>('')
   const [assignedPortrait, setAssignedPortrait] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -245,6 +253,7 @@ export default function CampaignPage() {
   async function handleAssignCharacter() {
     if (!selectedCharId || !userId) return
     setAssigning(true)
+    setAssignError(null)
     const { error } = await supabase.from('campaign_members')
       .update({ character_id: selectedCharId })
       .eq('campaign_id', id)
@@ -258,6 +267,9 @@ export default function CampaignPage() {
       }
       const mems = await fetchMembersWithProfiles(supabase, id)
       setMembers(mems)
+    } else {
+      console.error('[handleAssignCharacter] assign failed:', error.message)
+      setAssignError(`Could not assign that survivor: ${error.message}`)
     }
     setAssigning(false)
   }
@@ -265,6 +277,7 @@ export default function CampaignPage() {
   async function handleSelectPregen(seed: PregenSeed) {
     if (!userId || !campaign || creatingPregen) return
     setCreatingPregen(true)
+    setAssignError(null)
     try {
       const char = buildCharacterFromPregen(seed)
       const { data: created, error: charErr } = await supabase
@@ -286,6 +299,9 @@ export default function CampaignPage() {
         setShowPregens(false)
         const mems = await fetchMembersWithProfiles(supabase, id)
         setMembers(mems)
+      } else {
+        console.error('[selectPregen] assign failed:', assignErr.message)
+        setAssignError(`Survivor created but could not be assigned: ${assignErr.message}`)
       }
     } finally {
       setCreatingPregen(false)
@@ -295,6 +311,7 @@ export default function CampaignPage() {
   async function handleSelectLibraryPregen(row: { id: string; name: string; data: any; portrait_url?: string | null }) {
     if (!userId || !campaign || creatingLibraryPregen) return
     setCreatingLibraryPregen(row.id)
+    setAssignError(null)
     try {
       const { data: created, error: charErr } = await createCharacterForUser(userId, row.name, row.data, row.portrait_url)
       if (charErr || !created) { console.error('[LibraryPregen] character create error:', charErr?.message); return }
@@ -307,6 +324,9 @@ export default function CampaignPage() {
         setShowPregens(false)
         const mems = await fetchMembersWithProfiles(supabase, id)
         setMembers(mems)
+      } else {
+        console.error('[selectPregen] assign failed:', assignErr.message)
+        setAssignError(`Survivor created but could not be assigned: ${assignErr.message}`)
       }
     } finally {
       setCreatingLibraryPregen(null)
@@ -336,8 +356,27 @@ export default function CampaignPage() {
     if (!userId || !campaign) return
     if (campaign.gm_user_id === userId) return
     if (!confirm('Leave this story?')) return
-    await supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', userId)
+    const { error } = await supabase.from('campaign_members').delete().eq('campaign_id', id).eq('user_id', userId)
+    if (error) { reportSupabaseError(error, 'stories[id].handleLeave'); return }
     router.push('/stories')
+  }
+
+  // Join THIS campaign as a silent observer and go straight to the table -
+  // saves building a /stories/join?code=X&observer=1 URL by hand. Reuses the
+  // already-resolved inviteCode + the same RPC/destination as the observer
+  // path in app/stories/join/page.tsx.
+  async function handleObserve() {
+    if (!inviteCode || observing) return
+    setObserving(true)
+    const { data, error } = await supabase
+      .rpc('join_campaign_by_invite_code', { p_code: inviteCode, p_observer: true })
+      .single()
+    if (error || !data) {
+      console.error('[handleObserve] join-as-observer failed:', error?.message)
+      setObserving(false)
+      return
+    }
+    router.push(`/stories/${id}/table`)
   }
 
   // GM-or-Thriver: cull a member from the campaign. Deletes their
@@ -657,6 +696,13 @@ export default function CampaignPage() {
                   {rejoining ? 'Rejoining...' : 'Rejoin session'}
                 </button>
               )}
+              {!amObserver && campaign?.gm_user_id !== userId && (
+                <button onClick={handleObserve} disabled={observing || !inviteCode}
+                  title="Join silently as an observer and go watch the table (no survivor, no combat slot)"
+                  style={{ padding: '11px 22px', background: '#1a2e10', border: '1px solid #2d5a1b', borderRadius: '4px', color: '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: observing || !inviteCode ? 'not-allowed' : 'pointer', opacity: observing || !inviteCode ? 0.6 : 1 }}>
+                  {observing ? 'Joining...' : 'Observe'}
+                </button>
+              )}
               {!gmLike && (
                 <button onClick={handleLeave}
                   style={{ padding: '11px 22px', background: 'transparent', border: '1px solid #2e2e2e', borderRadius: '4px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
@@ -715,6 +761,11 @@ export default function CampaignPage() {
                     {assigning ? 'Saving...' : 'Assign'}
                   </button>
                 </div>
+                {assignError && (
+                  <div role="alert" style={{ marginTop: '8px', padding: '6px 10px', background: '#2a1210', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>
+                    {assignError}
+                  </div>
+                )}
               </div>
 
               <div style={{ fontSize: '13px', color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '10px', fontFamily: 'Carlito, sans-serif' }}>Create new survivor</div>

@@ -16,7 +16,9 @@ import AuthorBadge from './AuthorBadge'
 
 interface ReplyRow {
   id: string
-  author_user_id: string
+  // Nullable at runtime: account self-deletion anonymizes reply authors
+  // (FK ON DELETE SET NULL, 944b9e2b), so a reply survives with a null author.
+  author_user_id: string | null
   body: string
   created_at: string
   updated_at: string
@@ -61,7 +63,7 @@ export default function InlineRepliesPanel({
         if (alive) { setReplies([]); setLoading(false) }
         return
       }
-      const ids = Array.from(new Set(list.map(r => r.author_user_id)))
+      const ids = Array.from(new Set(list.map(r => r.author_user_id).filter((x): x is string => !!x)))
       const { data: profs } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
@@ -71,8 +73,8 @@ export default function InlineRepliesPanel({
       if (alive) {
         setReplies(list.map(r => ({
           ...r,
-          author_username: nameMap[r.author_user_id] ?? 'Unknown',
-          author_avatar_url: avatarMap[r.author_user_id] ?? null,
+          author_username: r.author_user_id == null ? 'Anonymous' : (nameMap[r.author_user_id] ?? 'Unknown'),
+          author_avatar_url: r.author_user_id == null ? null : (avatarMap[r.author_user_id] ?? null),
         })))
         setLoading(false)
       }

@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { reportSupabaseError } from '../../lib/supabase-errors'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
 import { getCachedAuth } from '../../lib/auth-cache'
@@ -187,11 +188,11 @@ export default function CampaignsPage() {
   }
 
   if (loading) return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>Loading...</div>
+    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem 1rem', fontFamily: 'Carlito, sans-serif', color: '#f5f2ee' }}>Loading...</div>
   )
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
+    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem 1rem 4rem', fontFamily: 'Carlito, sans-serif' }}>
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', borderBottom: '1px solid #c0392b', paddingBottom: '12px', marginBottom: '1.5rem' }}>
         <div style={{ fontFamily: 'Distemper, Carlito, sans-serif', fontSize: '26px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#f5f2ee', lineHeight: 1.1 }}>
@@ -259,11 +260,24 @@ export default function CampaignsPage() {
         </div>
       )}
 
-      {gmCampaigns.length > 0 && (
-        <div style={{ marginBottom: '2rem' }}>
+      {/* Running as GM | Playing In - two columns on wide viewports, auto-
+          stacked on narrow. Page wrapper widened to maxWidth 1100px
+          (2026-08-05, Xero: "make each column wider" - the cards were
+          cramped at the old 720px page width) specifically so this grid has
+          room to run wide columns instead of the tightest basis that would
+          still technically reach 2 columns. 420px basis + 1fr means each
+          column stretches to ~500px+ on a full-width viewport. Both columns
+          always render (an empty-state card when a list is empty) so the
+          two-column layout holds even when you only GM or only play
+          (2026-08-06, Xero: "even if not playing in a Story, it should always
+          be two columns"). */}
+      {(gmCampaigns.length > 0 || playerCampaigns.length > 0) && (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '1.5rem', alignItems: 'start', marginBottom: '2rem' }}>
+      <div>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '8px', fontFamily: 'Carlito, sans-serif' }}>
             Running as GM
           </div>
+          {gmCampaigns.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {gmCampaigns.map(c => {
               const templateOf = templateModules.get(c.id)
@@ -299,7 +313,8 @@ export default function CampaignsPage() {
                       ? `WARNING: This is the template for "${templateOf}". Deleting it disconnects the published module from its source - you won't be able to push new versions of "${templateOf}" without re-linking a new source campaign.`
                       : undefined
                     if (!confirmDeleteByName(c.name, warning)) return
-                    await supabase.from('campaigns').delete().eq('id', c.id)
+                    const { error } = await supabase.from('campaigns').delete().eq('id', c.id)
+                    if (error) { reportSupabaseError(error, 'stories.deleteCampaign'); return }
                     setGmCampaigns(prev => prev.filter(x => x.id !== c.id))
                   }} style={{ padding: '5px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Delete</button>
                 </div>
@@ -307,14 +322,18 @@ export default function CampaignsPage() {
               )
             })}
           </div>
+          ) : (
+            <div style={{ background: '#141414', border: '1px dashed #2e2e2e', borderRadius: '4px', padding: '1.25rem', fontSize: '13px', color: '#8a8a8a', lineHeight: 1.6 }}>
+              You aren&apos;t running any stories yet. Hit <Link href="/stories/new" style={{ color: '#f5a89a', textDecoration: 'none' }}>New Story</Link> to start one.
+            </div>
+          )}
         </div>
-      )}
 
-      {playerCampaigns.length > 0 && (
-        <div>
+      <div>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#f5f2ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '8px', fontFamily: 'Carlito, sans-serif' }}>
             Playing In
           </div>
+          {playerCampaigns.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {playerCampaigns.map(c => (
               <div key={c.id} style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: '4px', padding: '1rem 1.25rem', borderLeft: '3px solid #7ab3d4' }}>
@@ -330,12 +349,18 @@ export default function CampaignsPage() {
                   <a href={`/stories/${c.id}/table`} target="_blank" rel="noreferrer" style={{ padding: '5px 14px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Launch</a>
                   <a href={`/stories/${c.id}`} style={{ padding: '5px 14px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>Story Page</a>
                   <button onClick={() => { const code = inviteCodes[c.id]; if (!code) { alert('No invite code available.'); return } navigator.clipboard.writeText(`${window.location.origin}/join/${code}`); alert('Invite link copied to clipboard!') }} style={{ padding: '5px 14px', background: '#1a1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Share</button>
-                  <button onClick={async () => { if (!confirm(`Leave ${c.name}?`)) return; await supabase.from('campaign_members').delete().eq('campaign_id', c.id).eq('user_id', userId!); setPlayerCampaigns(prev => prev.filter(x => x.id !== c.id)) }} style={{ padding: '5px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Leave</button>
+                  <button onClick={async () => { if (!confirm(`Leave ${c.name}?`)) return; const { error } = await supabase.from('campaign_members').delete().eq('campaign_id', c.id).eq('user_id', userId!); if (error) { reportSupabaseError(error, 'stories.leaveCampaign'); return } setPlayerCampaigns(prev => prev.filter(x => x.id !== c.id)) }} style={{ padding: '5px 14px', background: 'none', border: '1px solid #7a1f16', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Leave</button>
                 </div>
               </div>
             ))}
           </div>
+          ) : (
+            <div style={{ background: '#141414', border: '1px dashed #2e2e2e', borderRadius: '4px', padding: '1.25rem', fontSize: '13px', color: '#8a8a8a', lineHeight: 1.6 }}>
+              You aren&apos;t playing in any stories yet. <Link href="/stories/join" style={{ color: '#7ab3d4', textDecoration: 'none' }}>Join a Story</Link> with an invite code from your GM.
+            </div>
+          )}
         </div>
+      </div>
       )}
 
       <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #2e2e2e', display: 'flex', gap: '8px' }}>

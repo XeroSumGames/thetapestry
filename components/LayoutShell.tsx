@@ -7,13 +7,13 @@ import { installDebugLog, setDebugContext } from '../lib/debug-log'
 import Sidebar from './Sidebar'
 
 // Pages that ghosts (unauthenticated users) can view
-const PUBLIC_PAGES = ['/', '/map', '/welcome', '/dashboard', '/stories', '/campaigns', '/characters', '/creating-a-character', '/characters/new', '/characters/quick', '/characters/random', '/campfire', '/press']
+const PUBLIC_PAGES = ['/', '/map', '/dashboard', '/stories', '/campaigns', '/characters', '/creating-a-character', '/characters/new', '/characters/quick', '/characters/random', '/campfire', '/press', '/quick-reference']
 // Path prefixes that ghosts can view (matches the path AND any subpath).
 // Used for the SRD rules viewer where every section gets its own subroute.
 const PUBLIC_PREFIXES = ['/rules']
 
 // Pages that always hide the sidebar
-const NO_SIDEBAR_PAGES = ['/login', '/signup', '/firsttimers', '/press']
+const NO_SIDEBAR_PAGES = ['/login', '/signup', '/press']
 // Pages that use their own full-width layout (popouts + the table view).
 // CONVENTION: any new popout route should end in `-sheet` or `-popout`
 // (or live under `/popout/...`) so it's auto-included here without an edit.
@@ -155,7 +155,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   }, [])
 
   if (!checked) {
-    // Sidebar-free public pages (login, signup, press, firsttimers) render
+    // Sidebar-free public pages (login, signup, press) render
     // identically regardless of auth state - no need to blank-screen them
     // while the getCachedAuth round-trip completes.
     if (NO_SIDEBAR_PAGES.includes(pathname)) {
@@ -173,7 +173,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     PUBLIC_PAGES.some(p => pathname === p) ||
     PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/')) ||
     pathname === '/map'
-  if (!isAuthenticated && !isPublicPage && !['/login', '/signup', '/firsttimers'].includes(pathname)) {
+  if (!isAuthenticated && !isPublicPage && !['/login', '/signup'].includes(pathname)) {
     const search = typeof window !== 'undefined' ? window.location.search : ''
     const fullPath = pathname + search
     router.push(`/login?redirect=${encodeURIComponent(fullPath)}`)

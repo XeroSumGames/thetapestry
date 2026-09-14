@@ -98,7 +98,10 @@ interface Props {
   vehicle: Vehicle
   campaignId: string
   canEdit: boolean
-  onUpdate: (vehicle: Vehicle) => void
+  // A narrow patch (id + only the changed fields), not a full vehicle -
+  // the caller merges this server-side; sending a full-vehicle snapshot
+  // would clobber any OTHER field a concurrent client just changed.
+  onUpdate: (patch: Partial<Vehicle> & { id: string }) => void
   // Optional - when omitted, the close ✕ button hides. Used by surfaces
   // that render the card inline (no separate close affordance needed).
   onClose?: () => void
@@ -116,7 +119,7 @@ export default function VehicleCard({ vehicle: v, campaignId, canEdit, onUpdate,
   // without dominating it.
 
   function update(patch: Partial<Vehicle>) {
-    onUpdate({ ...v, ...patch })
+    onUpdate({ id: v.id, ...patch })
   }
 
   const wpPct = v.wp_max > 0 ? v.wp_current / v.wp_max : 1

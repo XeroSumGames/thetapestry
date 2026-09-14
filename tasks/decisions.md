@@ -10,6 +10,79 @@ Newest first.
 
 ---
 
+## 2026-09-01: session notes are intentionally visible to every player in the campaign - NOT a confidentiality bug
+
+**Decision:** all four GM-authored session fields - `gm_summary`, `cliffhanger`, `next_session_notes`, `session_log` - stay readable by every campaign member. Xero's call, in his words: they should be "publicly viewable... by players in the game, at least."
+
+**Context / why this is written down:** raised as a possible confidentiality gap after the 2026-09-01 playtest, when Xero asked "can players see the session notes?" The answer was yes at both layers: the `sessions` read policy is "any campaign_member OR the GM OR is_thriver()" with no column restriction, and `app/stories/[id]/sessions/page.tsx` renders all four fields with no GM gate. It has the exact shape of the confidentiality bugs already fixed this year (portrait-bank, world_npcs moderation, npc_relationships reveal gating), and `next_session_notes` in particular reads like private forward planning - the field a GM would use for "the informant is lying."
+
+**Alternatives considered:** (a) gate `next_session_notes` to the GM in both UI and RLS, leaving the recap public; (b) gate all four; (c) leave as-is.
+
+**Why (c) won:** Xero wants the table to share the record of what happened and what's coming. Distemper's session notes are a group artefact, not a GM screen. He was shown explicitly that this includes "Notes for Next Session" and chose it anyway.
+
+**Scope boundary:** "players in the game" means campaign members. Non-members and unauthenticated visitors still cannot read `sessions`, and that is intended - this decision does NOT make session notes world-readable. If a public campaign-log feature is ever wanted, that is a separate decision and a separate policy.
+
+**What would change our mind:** a GM wanting a genuinely private planning space. The fix then is a NEW GM-only field rather than reclassifying `next_session_notes`, since by then players will be used to seeing it.
+
+**NOTE TO FUTURE AUDITS:** do not "fix" this. A security or stability audit reading the `sessions` policy cold will flag member-wide read of GM-authored text as a leak. It is deliberate. Cite this entry and move on.
+
+## 2026-08-02: 30s visible-tab-only reconcile poll is the standing pattern for realtime dropped-event fallback; budget ceiling set at Beta-500 scale
+
+**Decision:** every realtime feed (postgres_changes subscribe) gets a low-frequency (30s), visible-and-focused-tab-only reconcile poll as a fallback for the rare dropped/missed event, guarded by a `refetchSeqRef`-style sequence guard so the poll never fights a fresher subscribe-driven refetch. Already shipped on CampaignMap, the pin/vehicle polls, and now (HP, `d16b85b1`) RollsFeed + TableChat. Approved as hub: proceed with the same pattern on CampaignPins despite it being realtime-hot - the pattern's safeguards (visible-only, seq-guarded, 30s floor) are what make it safe at that criticality, not a reason to withhold it.
+
+**Alternatives considered:**
+- A. No fallback poll - trust `postgres_changes` subscriptions never drop events. Rejected: the GrumpyBattersby incident is the proof this happens in practice (tab backgrounded/foregrounded, network blip, reconnect race).
+- B. Aggressive poll (5-10s) for faster catch-up. Rejected: multiplies req/s for a rare-edge-case safety net with no proportionate benefit - the dropped-event window this guards against is measured in minutes of a backgrounded tab, not seconds.
+- C. 30s, visible-and-focused-tab-only, seq-guarded (this). Matches the existing accepted pattern, keeps aggregate load low, doesn't compete with normal subscribe-driven updates.
+
+**Why C won:** consistency with prior art (CampaignMap, pins/vehicles) plus the actual failure mode (a tab that WAS backgrounded and missed one event) only needs a slow safety net, not a fast one. At Beta-500 scale, RollsFeed+TableChat's addition is ~34 req/s total, visible-tabs-only - trivial against Supabase's normal request budget and the same order of magnitude as the polls already accepted.
+
+**What would change our mind:** if the NUMBER of features carrying this poll keeps growing (CampaignPins next, PlayerNotes under review) such that the aggregate req/s across all of them starts becoming a real fraction of Beta-500's total request budget, that's the trigger to stop approving per-feature and do one consolidated pass (a single shared low-frequency reconcile heartbeat instead of N independent per-feature pollers, or a real presence-based push mechanism). Not there yet - this entry sets the ceiling to watch, not a current problem.
+
+---
+
+## 2026-08-02: add a dedicated Comms channel as the 4th session, matching TheTableau
+
+**Decision:** Tapestry gains a fourth always-on session, "Tapestry | Comms," adapted from the pattern already running on TheTableau. Comms owns `tasks/COMMS.md` and `tasks/The Tapestry Smoke Testing.xlsx` - it's the channel for anything needing Xero's live/manual attention (test plans, open questions only he can answer), verifying a lane's work is actually reachable/testable before packaging it and pinging him, rather than each lane separately interrupting him with unverified asks. Comms owns no code/SQL/specs. Full role: `tasks/lane-protocol.md` "Comms channel" section.
+
+**Why:** Xero explicitly asked to mirror TheTableau's setup, where he'd already validated the pattern. The concrete gap it closes: today, any of the three code/SQL/spec lanes that ships something needing a live verify pings Xero directly and hopes the test plan it hands him is actually complete/reachable - there's no single place tracking what's been asked, what's answered, or whether an ask was pre-verified before reaching him. Comms centralizes that.
+
+**Alternatives considered:**
+- A. Keep test-plan/question routing ad hoc per lane (status quo). Zero setup cost, but this is exactly the gap Xero is asking to close - no single source of truth for "what's open, what's answered," and no verification step before a test plan lands on his desk.
+- B. Fold the Comms role into the hub (Puffer Fish) instead of a separate session. Fewer sessions to manage, but conflates two different jobs - the hub reviews code/SQL diffs, Comms verifies testability and owns Xero-facing packaging. Mixing them risks the hub's review backlog blocking test-plan delivery or vice versa.
+- C. Dedicated 4th session (chosen), matching TheTableau's validated pattern exactly.
+
+**What would change our mind:** if Comms turns out to be a redundant hop for things Xero would rather hear about immediately and directly (this doc's own note: Comms does NOT replace everyday lane-to-Xero contact, only the formal test-plan/open-question category) - watch for that boundary blurring in practice and narrow Comms' scope further if it does.
+
+---
+
+## 2026-08-02 (correction, same day): cross-session coordination is direct via `mcp__ccd_session_mgmt__send_message`, not manually relayed by Xero
+
+**Correction to the entry immediately below** ("Puffer Fish becomes the review/merge hub"), specifically Alternative B's claim that "these are separate Claude chats that cannot message each other - Xero is the only relay." Xero corrected this directly: the hub tells the other chats what to do and they respond back to the hub - he doesn't carry messages between them. Verified: `mcp__ccd_session_mgmt__send_message` delivers a message directly into another session (found via `list_sessions`, matched by title/cwd - "Tapestry | HP" and "Tapestry | E2E" were both live, running sessions). Used it to deliver the actual hub/spoke rollout message to both lanes in the same turn as writing this correction.
+
+**Does this overturn the graduated-gate conclusion (option C)?** No - kept per below, but the STATED REASON changes. The original doc claimed blanket gating (option B) would fail because it would turn Xero into "a full-time message bus." That's not the real cost anymore - direct session messaging removes the human-relay bottleneck entirely. The reason graduated still wins: hub review of every commit has a real cost independent of how the SHA arrives - reading a diff carefully takes time regardless of transport, and gating everything would slow Hunt & Peck's high-frequency shipping in proportion to volume, not risk. That's the corrected justification for option C; the original entry below is left as-written per this file's own append-only rule (already pushed before the correction landed).
+
+**What would change our mind:** if review-latency-at-volume turns out to be a non-issue in practice (the hub keeps up fine even reviewing everything), blanket gating becomes viable and strictly safer - worth revisiting after a few weeks of real hub-and-spoke usage, not re-litigating from first principles again.
+
+---
+
+## 2026-08-02: Puffer Fish becomes the review/merge hub for SQL/RLS/hot-file work; Hunt & Peck and E2E become spokes
+
+**Decision:** Tapestry's three-lane model moves from "all three chats push to `main` directly" to a hub-and-spoke model, adapted from the pattern Xero ran on TheTableau's Puffer Fish hub. Puffer Fish is the hub - the only chat that reviews, merges, and pushes SQL/RLS/shared-hot-file work to `main`. Hunt & Peck and Playwright/E2E are spokes: each still works in its own worktree/branch (unchanged), still self-ships pure UI/feature/spec-only work exactly as before, but hands the hub a commit SHA for anything SQL/RLS or hub-flagged-hot-file. Live hub claim + retirement rule: `tasks/HUB-LIVE.md`. Open questions/decisions in flight: `tasks/COMMS.md`. Full mechanics: `tasks/lane-protocol.md` "Hub & Spoke model" section.
+
+**Why:** the 2026-08-01 full-codebase audit (3 waves, ~50 fixes total across two sessions) found a large volume of real, live, unreviewed CRITICAL bugs - most strikingly, the same "moderation self-approval" bug shape (a clamp existed on INSERT but not UPDATE, letting content authors self-approve their own pending submissions) recurred independently across 7 unrelated tables over months of unreviewed commits. That's the exact failure class a merge-time review gate exists to catch before it ships, not months later in an audit.
+
+**Alternatives considered:**
+- A. Keep all three lanes pushing directly to `main`, rely on the existing pre-commit gate suite (tsc/tests/arch/font/role/em-dash) + periodic audits to catch drift. Zero added latency, but this IS the status quo that let 7 instances of the same bug ship - the pre-commit suite has no concept of "does this RLS policy actually do what its name claims."
+- B. Gate EVERY commit from every lane through hub review, no exceptions. Maximum safety, but these are separate Claude chats that cannot message each other - Xero is the only relay. Blanket gating would make him a full-time message bus for routine UI fixes too, adding real friction to Hunt & Peck's day-to-day shipping cadence for no proportional safety gain (a button color change doesn't carry the same risk as an RLS policy).
+- C. Graduated gate - hub review required for SQL/RLS/hot-file work only, spokes self-ship everything else (chosen). Captures the real value (every RLS/SQL change gets a second set of eyes before going live) without slowing down the high-frequency, lower-stakes work.
+
+**Why C won:** matches where tonight's actual damage was concentrated (SQL/RLS, not UI) and keeps the relay cost proportional to risk. Puffer Fish already has the deepest SQL/RLS/security context of the three lanes by design, so it's the natural reviewer for that category specifically, not a new burden invented for the hub role.
+
+**What would change our mind:** if the graduated boundary itself turns out to leak (a Hunt & Peck "pure UI" change that actually touches RLS-adjacent logic slips through self-ship and causes a real incident), tighten the hot-file list rather than reverting to blanket gating - the failure mode to watch for is scope-creep in the OTHER direction (the hub becoming a bottleneck that gets bypassed informally, which would be worse than not having the gate at all).
+
+---
+
 ## 2026-07-01: lib/weapons.ts is the single source of truth for weapon DATA; lib/xse-schema.ts derives its weapon catalogs from it
 
 **Decision:** `lib/weapons.ts` (the runtime catalog the game actually uses) is the single source of truth for weapon data. `lib/xse-schema.ts`'s `MELEE_WEAPONS` + `RANGED_WEAPONS` are now DERIVED from it (`RUNTIME_*.map(toMeleeWeapon/toRangedWeapon)` via a damage-string + trait parser), instead of being a second hand-maintained copy. To change weapon data, edit `lib/weapons.ts` only.

@@ -185,7 +185,7 @@ export default function SettingHubPage() {
         title: r.title,
         body: r.body,
         created_at: r.created_at,
-        author_username: nameMap[r.author_user_id] ?? 'Unknown',
+        author_username: r.author_user_id == null ? 'Anonymous' : (nameMap[r.author_user_id] ?? 'Unknown'),
       }))
     setForumThreads(decorate(forumsRes.data ?? []))
     setWarStories(decorate(warStoriesRes.data ?? []))

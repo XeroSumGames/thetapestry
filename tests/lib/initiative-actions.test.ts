@@ -63,15 +63,13 @@ function makeMockSupabase(opts: {
         },
         update(payload: any) {
           calls.push({ op: 'update', table, payload })
-          return {
-            eq(_c: string, _v: any) {
-              return {
-                select(_cols: string) {
-                  return Promise.resolve({ data: opts.update?.data ?? [{ id: 'e1', actions_remaining: 0 }], error: opts.update?.error ?? null })
-                },
-              }
+          const chain: any = {
+            eq(_c: string, _v: any) { return chain },
+            select(_cols: string) {
+              return Promise.resolve({ data: opts.update?.data ?? [{ id: 'e1', actions_remaining: 0 }], error: opts.update?.error ?? null })
             },
           }
+          return chain
         },
         insert(payload: any) {
           calls.push({ op: 'insert', table, payload })

@@ -4,7 +4,6 @@ import { createClient } from '../../../lib/supabase-browser'
 import { getCachedAuth } from '../../../lib/auth-cache'
 import { useRouter } from 'next/navigation'
 import { logFirstEvent } from '../../../lib/events'
-import { setMemberObserver } from '../../../lib/data/campaigns'
 
 export default function JoinCampaignPage() {
   const [code, setCode] = useState('')
@@ -29,12 +28,19 @@ export default function JoinCampaignPage() {
     if (!user) { setError('Not logged in.'); setJoining(false); return }
 
     // invite_code is no longer column-readable (enumeration leak; 2026-06-23).
-    // Look up by exact code via the definer RPC (it trims + uppercases too).
-    const { data: campaign, error: findErr } = await supabase
-      .rpc('find_campaign_by_invite_code', { p_code: code.trim() })
+    // join_campaign_by_invite_code validates the code AND performs the
+    // membership insert atomically server-side (a raw table insert can no
+    // longer join an arbitrary campaign_id regardless of code possession).
+    // It upserts on (campaign_id, user_id), so a re-join reconciles the
+    // observer flag to the CURRENT link both ways - an observer-link re-join
+    // upgrades to observer, a normal-link re-join downgrades a stale
+    // observer back to player (else someone who first joined as observer
+    // stays invisible forever).
+    const { data: campaign, error: joinErr } = await supabase
+      .rpc('join_campaign_by_invite_code', { p_code: code.trim(), p_observer: isObserver })
       .single()
 
-    if (findErr || !campaign) {
+    if (joinErr || !campaign) {
       setError('Invalid invite code. Check with your GM and try again.')
       setJoining(false)
       return
@@ -43,28 +49,6 @@ export default function JoinCampaignPage() {
     // Observers go straight to the table to watch silently; players land
     // at the lobby to assign a survivor first.
     const destination = isObserver ? `/stories/${campaign.id}/table` : `/stories/${campaign.id}`
-
-    const { error: joinErr } = await supabase.from('campaign_members').insert({
-      campaign_id: campaign.id,
-      user_id: user.id,
-      observer: isObserver,
-    })
-
-    if (joinErr) {
-      if (joinErr.code === '23505') {
-        // Already a member. The insert is a no-op on conflict, so the observer
-        // flag would be silently dropped - reconcile the existing seat to the
-        // CURRENT link BOTH ways: an observer-link re-join upgrades to observer,
-        // and a normal-link re-join DOWNGRADES a stale observer back to player
-        // (else someone who first joined as observer stays invisible forever).
-        await setMemberObserver(campaign.id, user.id, isObserver)
-        router.push(destination)
-        return
-      }
-      setError(joinErr.message)
-      setJoining(false)
-      return
-    }
 
     if (!isObserver) logFirstEvent('first_campaign_joined', { campaign_id: campaign.id })
     router.push(destination)

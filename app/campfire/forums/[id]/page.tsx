@@ -30,7 +30,9 @@ const CATEGORY_ACCENT: Record<Category, string> = {
 
 interface Thread {
   id: string
-  author_user_id: string
+  // Nullable at runtime: account self-deletion anonymizes the author
+  // (FK ON DELETE SET NULL), so the thread survives with a null author.
+  author_user_id: string | null
   category: Category
   title: string
   body: string
@@ -94,7 +96,7 @@ export default function ForumThreadPage() {
     setThread(t)
     setReplies(rs)
 
-    const ids = Array.from(new Set([t.author_user_id, ...rs.map(r => r.author_user_id)]))
+    const ids = Array.from(new Set([t.author_user_id, ...rs.map(r => r.author_user_id)].filter((x): x is string => !!x)))
     const { data: profs } = await supabase
       .from('profiles')
       .select('id, username')
@@ -181,15 +183,15 @@ export default function ForumThreadPage() {
     fontSize: '13px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box',
   }
 
-  const renderAuthorRow = (authorId: string, ts: string) => {
+  const renderAuthorRow = (authorId: string | null, ts: string) => {
     const isMe = authorId === myId
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
         <span style={{ fontFamily: 'Carlito, sans-serif', fontSize: '14px', color: '#f5f2ee', letterSpacing: '.04em', textTransform: 'uppercase', fontWeight: 600 }}>
-          {authorNames[authorId] ?? 'Unknown'}
+          {authorId == null ? 'Anonymous' : (authorNames[authorId] ?? 'Unknown')}
         </span>
         <span style={{ fontSize: '13px', color: '#cce0f5' }}>{formatTimestamp(ts)}</span>
-        {!isMe && (
+        {!isMe && authorId != null && (
           <a href={`/messages?dm=${authorId}`}
             style={{ marginLeft: 'auto', padding: '2px 10px', background: '#1a3a5c', border: '1px solid #7ab3d4', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', textDecoration: 'none' }}>
             💬 Message

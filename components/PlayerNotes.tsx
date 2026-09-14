@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, useRef, type ReactNode } from 'react'
 import { createClient } from '../lib/supabase-browser'
 import { wrapBroadcast, wrapDbChange } from '../lib/sentry-realtime'
 import { getCachedAuth } from '../lib/auth-cache'
@@ -58,8 +58,16 @@ export default function PlayerNotes({ campaignId, header }: { campaignId: string
       .subscribe((status: string) => { if (status === 'SUBSCRIBED') void loadShared() })
     function handleVisibility() { if (!document.hidden) void loadShared() }
     document.addEventListener('visibilitychange', handleVisibility)
+    // Low-frequency reconcile poll: the triggers above fire only on
+    // (re)mount / (re)subscribe / tab-return, so a tab left OPEN and
+    // FOCUSED that drops both the postgres_changes event AND the fire-and-
+    // forget gm_notes_updated broadcast shows stale shared notes until
+    // refresh. A 30s visible-only poll closes that gap; loadShared's
+    // loadSeqRef guard drops stale overlap. Standing pattern (decisions.md).
+    const reconcile = setInterval(() => { if (!document.hidden) void loadShared() }, 30000)
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility)
+      clearInterval(reconcile)
       supabase.removeChannel(channel)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,13 +82,20 @@ export default function PlayerNotes({ campaignId, header }: { campaignId: string
     setNotes(data ?? [])
   }
 
+  // Stale-drop guard: loadShared has several concurrent triggers
+  // (postgres_changes, gm_notes_updated broadcast, SUBSCRIBED, visibility,
+  // and now the reconcile poll); this drops a slow reload that resolves
+  // after a newer one. Standing pattern (decisions.md).
+  const loadSeqRef = useRef(0)
   async function loadShared() {
+    const seq = ++loadSeqRef.current
     const { data } = await supabase
       .from('campaign_notes')
       .select('id, title, content, attachments')
       .eq('campaign_id', campaignId)
       .eq('shared', true)
       .order('created_at', { ascending: true })
+    if (seq !== loadSeqRef.current) return // superseded by a newer load
     setSharedNotes((data ?? []).map((n: any) => ({ ...n, attachments: n.attachments ?? [] })))
   }
 

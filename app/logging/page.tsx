@@ -41,9 +41,13 @@ export default function LoggingPage() {
   const [visitors, setVisitors] = useState<VisitorLog[]>([])
   const [visitorFilter, setVisitorFilter] = useState('')
   const [excludeTerms, setExcludeTerms] = useState<string[]>([])
+  const [includeTerms, setIncludeTerms] = useState<string[]>([])
   const [events, setEvents] = useState<UserEvent[]>([])
   const [eventFilter, setEventFilter] = useState('')
   const [eventExcludeTerms, setEventExcludeTerms] = useState<string[]>([])
+  const [eventIncludeTerms, setEventIncludeTerms] = useState<string[]>([])
+  // Shared toggle - which chip list Enter adds to. One preference for both
+  // tabs since only one tab is visible at a time.
   const [visitorCount, setVisitorCount] = useState(0)
   const [eventCount, setEventCount] = useState(0)
   const [signups7d, setSignups7d] = useState(0)
@@ -165,6 +169,95 @@ export default function LoggingPage() {
     }
     load()
   }, [site])
+
+  // Server-side visitor search. The initial load() only pulls the newest 100
+  // rows, and filtering the search box against that capped snapshot meant a
+  // user whose last logged visit had scrolled past row 100 returned ZERO hits
+  // even though the tab count showed 11k+ rows (Xero hit this searching for a
+  // live "Online Now" user - presence is a separate system with no dependency
+  // on visitor_logs, so their last logged visit can be arbitrarily old). When
+  // a term is typed, query the DB directly instead: username lives on profiles
+  // (not visitor_logs), so resolve matching user_ids first, then ilike across
+  // the visitor_logs columns OR user_id in that set. The include/exclude chips
+  // still refine client-side on top of the returned set. Debounced + seq-
+  // guarded (fast typing can't let a slow response clobber a newer one); an
+  // empty term restores the newest 100.
+  const searchMountRef = useRef(false)
+  const searchSeqRef = useRef(0)
+  useEffect(() => {
+    if (!searchMountRef.current) { searchMountRef.current = true; return }
+    // Strip PostgREST-reserved + wildcard chars so the term is a safe literal
+    // substring in the .or() filter (PostgREST parameterizes values, so this
+    // is about not breaking the filter grammar, not SQL injection).
+    const term = visitorFilter.trim().toLowerCase().replace(/[,()"*%\\]/g, '')
+    const handle = setTimeout(async () => {
+      const seq = ++searchSeqRef.current
+      const COLS = 'id, page, site, user_id, is_ghost, ip_address, ip_hash, country_code, region, city, created_at'
+      const applySite = (q: any) =>
+        site === 'all' ? q : site === 'tapestry' ? q.or('site.eq.tapestry,site.is.null') : q.eq('site', site)
+      let q = applySite(supabase.from('visitor_logs').select(COLS).order('created_at', { ascending: false }).limit(term ? 500 : 100))
+      if (term) {
+        const { data: users } = await supabase.from('profiles').select('id').ilike('username', `%${term}%`).limit(500)
+        const uids = (users ?? []).map((u: any) => u.id)
+        // Columns kept in sync with the client haystack (below) so a
+        // server match is never hidden by the client re-filter. (username
+        // is matched via the user_id.in set resolved above.)
+        const parts = [`page.ilike.*${term}*`, `city.ilike.*${term}*`, `country_code.ilike.*${term}*`, `ip_address.ilike.*${term}*`]
+        if (uids.length) parts.push(`user_id.in.(${uids.join(',')})`)
+        q = q.or(parts.join(','))
+      }
+      const { data } = await q
+      if (seq !== searchSeqRef.current) return // superseded by a newer search
+      const rows = data ?? []
+      const rUids = [...new Set(rows.filter((v: any) => v.user_id).map((v: any) => v.user_id))]
+      let nameMap: Record<string, string> = {}
+      if (rUids.length) {
+        const { data: profs } = await supabase.from('profiles').select('id, username').in('id', rUids)
+        nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
+      }
+      if (seq !== searchSeqRef.current) return
+      setVisitors(rows.map((v: any) => ({ ...v, username: v.user_id ? nameMap[v.user_id] : undefined })))
+    }, 300)
+    return () => clearTimeout(handle)
+  }, [visitorFilter, site])
+
+  // Server-side User Events search - same capped-100 bug as the visitor
+  // search above, same fix. username lives on profiles, so resolve matching
+  // user_ids first, then .or() ilike on event_type OR user_id.in(...). NOTE:
+  // metadata is jsonb and PostgREST can't ilike a whole-column text cast, so a
+  // term that appears ONLY inside a metadata payload stays window-bounded
+  // (the client haystack below still matches it within the returned set) -
+  // full metadata search across all rows is what the deferred SQL search RPC
+  // would add. Debounced + seq-guarded; empty term restores the newest 100.
+  const eventSearchMountRef = useRef(false)
+  const eventSearchSeqRef = useRef(0)
+  useEffect(() => {
+    if (!eventSearchMountRef.current) { eventSearchMountRef.current = true; return }
+    const term = eventFilter.trim().toLowerCase().replace(/[,()"*%\\]/g, '')
+    const handle = setTimeout(async () => {
+      const seq = ++eventSearchSeqRef.current
+      let q = supabase.from('user_events').select('id, user_id, event_type, metadata, created_at').order('created_at', { ascending: false }).limit(term ? 500 : 100)
+      if (term) {
+        const { data: users } = await supabase.from('profiles').select('id').ilike('username', `%${term}%`).limit(500)
+        const uids = (users ?? []).map((u: any) => u.id)
+        const parts = [`event_type.ilike.*${term}*`]
+        if (uids.length) parts.push(`user_id.in.(${uids.join(',')})`)
+        q = q.or(parts.join(','))
+      }
+      const { data } = await q
+      if (seq !== eventSearchSeqRef.current) return // superseded by a newer search
+      const rows = data ?? []
+      const rUids = [...new Set(rows.map((e: any) => e.user_id).filter(Boolean))]
+      let nameMap: Record<string, string> = {}
+      if (rUids.length) {
+        const { data: profs } = await supabase.from('profiles').select('id, username').in('id', rUids)
+        nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.username]))
+      }
+      if (seq !== eventSearchSeqRef.current) return
+      setEvents(rows.map((e: any) => ({ ...e, username: nameMap[e.user_id] ?? 'Unknown' })))
+    }, 300)
+    return () => clearTimeout(handle)
+  }, [eventFilter])
 
   // Render visitor map. Inits once, then re-draws its markers whenever the data
   // changes (e.g. switching the site filter) via a dedicated marker layer.
@@ -359,29 +452,46 @@ export default function LoggingPage() {
           <div style={{ padding: '8px 12px', borderBottom: '1px solid #2e2e2e', background: '#111' }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input value={visitorFilter} onChange={e => setVisitorFilter(e.target.value)} placeholder="Search..."
-                style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && visitorFilter.trim()) {
-                    const term = visitorFilter.trim().toLowerCase()
-                    if (!excludeTerms.includes(term)) setExcludeTerms(prev => [...prev, term])
-                    setVisitorFilter('')
-                  }
-                }} />
-              <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Enter = Exclude</span>
+                style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }} />
+              <button onClick={() => { const term = visitorFilter.trim().toLowerCase(); if (term && !includeTerms.includes(term)) setIncludeTerms(prev => [...prev, term]); setVisitorFilter('') }}
+                title="Add the search text as an Include filter"
+                style={{ padding: '4px 10px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                + Include
+              </button>
+              <button onClick={() => { const term = visitorFilter.trim().toLowerCase(); if (term && !excludeTerms.includes(term)) setExcludeTerms(prev => [...prev, term]); setVisitorFilter('') }}
+                title="Add the search text as an Exclude filter"
+                style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                + Exclude
+              </button>
             </div>
-            {excludeTerms.length > 0 && (
+            {(includeTerms.length > 0 || excludeTerms.length > 0) && (
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px', alignItems: 'center' }}>
-                <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>Excluding:</span>
-                {excludeTerms.map(term => (
-                  <button key={term} onClick={() => setExcludeTerms(prev => prev.filter(t => t !== term))}
-                    style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {term} <span style={{ fontSize: '13px' }}>×</span>
+                {includeTerms.length > 0 && (<>
+                  <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>Including:</span>
+                  {includeTerms.map(term => (
+                    <button key={term} onClick={() => setIncludeTerms(prev => prev.filter(t => t !== term))}
+                      style={{ padding: '2px 8px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {term} <span style={{ fontSize: '13px' }}>×</span>
+                    </button>
+                  ))}
+                  <button onClick={() => setIncludeTerms([])}
+                    style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+                    Clear All
                   </button>
-                ))}
-                <button onClick={() => setExcludeTerms([])}
-                  style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
-                  Clear All
-                </button>
+                </>)}
+                {excludeTerms.length > 0 && (<>
+                  <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px', marginLeft: includeTerms.length > 0 ? '10px' : 0 }}>Excluding:</span>
+                  {excludeTerms.map(term => (
+                    <button key={term} onClick={() => setExcludeTerms(prev => prev.filter(t => t !== term))}
+                      style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {term} <span style={{ fontSize: '13px' }}>×</span>
+                    </button>
+                  ))}
+                  <button onClick={() => setExcludeTerms([])}
+                    style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+                    Clear All
+                  </button>
+                </>)}
               </div>
             )}
           </div>
@@ -400,6 +510,7 @@ export default function LoggingPage() {
               {visitors.filter(v => {
                 const haystack = [v.username, v.ip_address, v.page, v.city, v.country_code].filter(Boolean).join(' ').toLowerCase()
                 if (excludeTerms.some(term => haystack.includes(term))) return false
+                if (includeTerms.length > 0 && !includeTerms.some(term => haystack.includes(term))) return false
                 if (!visitorFilter.trim()) return true
                 return haystack.includes(visitorFilter.trim().toLowerCase())
               }).map(v => (
@@ -428,29 +539,46 @@ export default function LoggingPage() {
           <div style={{ padding: '8px 12px', borderBottom: '1px solid #2e2e2e', background: '#111' }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input value={eventFilter} onChange={e => setEventFilter(e.target.value)} placeholder="Search..."
-                style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && eventFilter.trim()) {
-                    const term = eventFilter.trim().toLowerCase()
-                    if (!eventExcludeTerms.includes(term)) setEventExcludeTerms(prev => [...prev, term])
-                    setEventFilter('')
-                  }
-                }} />
-              <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Enter = Exclude</span>
+                style={{ flex: 1, padding: '5px 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none' }} />
+              <button onClick={() => { const term = eventFilter.trim().toLowerCase(); if (term && !eventIncludeTerms.includes(term)) setEventIncludeTerms(prev => [...prev, term]); setEventFilter('') }}
+                title="Add the search text as an Include filter"
+                style={{ padding: '4px 10px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                + Include
+              </button>
+              <button onClick={() => { const term = eventFilter.trim().toLowerCase(); if (term && !eventExcludeTerms.includes(term)) setEventExcludeTerms(prev => [...prev, term]); setEventFilter('') }}
+                title="Add the search text as an Exclude filter"
+                style={{ padding: '4px 10px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                + Exclude
+              </button>
             </div>
-            {eventExcludeTerms.length > 0 && (
+            {(eventIncludeTerms.length > 0 || eventExcludeTerms.length > 0) && (
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px', alignItems: 'center' }}>
-                <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>Excluding:</span>
-                {eventExcludeTerms.map(term => (
-                  <button key={term} onClick={() => setEventExcludeTerms(prev => prev.filter(t => t !== term))}
-                    style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {term} <span style={{ fontSize: '13px' }}>×</span>
+                {eventIncludeTerms.length > 0 && (<>
+                  <span style={{ fontSize: '13px', color: '#7ab3d4', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px' }}>Including:</span>
+                  {eventIncludeTerms.map(term => (
+                    <button key={term} onClick={() => setEventIncludeTerms(prev => prev.filter(t => t !== term))}
+                      style={{ padding: '2px 8px', background: '#0f1a2e', border: '1px solid #2e2e5a', borderRadius: '3px', color: '#7ab3d4', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {term} <span style={{ fontSize: '13px' }}>×</span>
+                    </button>
+                  ))}
+                  <button onClick={() => setEventIncludeTerms([])}
+                    style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+                    Clear All
                   </button>
-                ))}
-                <button onClick={() => setEventExcludeTerms([])}
-                  style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
-                  Clear All
-                </button>
+                </>)}
+                {eventExcludeTerms.length > 0 && (<>
+                  <span style={{ fontSize: '13px', color: '#f5a89a', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase', marginRight: '4px', marginLeft: eventIncludeTerms.length > 0 ? '10px' : 0 }}>Excluding:</span>
+                  {eventExcludeTerms.map(term => (
+                    <button key={term} onClick={() => setEventExcludeTerms(prev => prev.filter(t => t !== term))}
+                      style={{ padding: '2px 8px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {term} <span style={{ fontSize: '13px' }}>×</span>
+                    </button>
+                  ))}
+                  <button onClick={() => setEventExcludeTerms([])}
+                    style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', cursor: 'pointer' }}>
+                    Clear All
+                  </button>
+                </>)}
               </div>
             )}
           </div>
@@ -468,6 +596,7 @@ export default function LoggingPage() {
               {events.filter(e => {
                 const haystack = [e.username, e.event_type, e.metadata ? JSON.stringify(e.metadata) : ''].filter(Boolean).join(' ').toLowerCase()
                 if (eventExcludeTerms.some(term => haystack.includes(term))) return false
+                if (eventIncludeTerms.length > 0 && !eventIncludeTerms.some(term => haystack.includes(term))) return false
                 if (!eventFilter.trim()) return true
                 return haystack.includes(eventFilter.trim().toLowerCase())
               }).map(e => (

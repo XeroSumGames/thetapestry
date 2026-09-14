@@ -8,6 +8,253 @@ When you see a new entry: triage via debug-handoff.md Sec. 4. Most findings will
 
 ---
 
+## 2026-09-08 16:23 UTC — weekly audit
+
+**Sections with findings:** npm audit (new vulns this week: browserslist HIGH, @humanfs/node MODERATE, second brace-expansion CVE)
+
+### npm audit (moderate+)
+
+Total: 8 HIGH, 1 MODERATE. All have fixes available. `next` is the only direct dep.
+
+- `next` HIGH | direct | fix=true | range 9.3.4-canary.0 - 16.3.0-preview.10 | inherited via postcss + sharp
+- `brace-expansion` HIGH | transitive | fix=true | **NEW second CVE**: DoS via unbounded intermediate arrays bypassing CVE-2026-14257 mitigation (CVSS 7.5); 3 affected transitive paths
+- `browserslist` HIGH | transitive | fix=true | **NEW**: (1) unbounded memory growth / no cache eviction causing OOM (CVSS 7.5); (2) prototype write via untrusted `browserslist-stats.json` custom stats (CVSS 7.5)
+- `fast-uri` HIGH | transitive | fix=true | host confusion via backslash authority + skipped IDN canonicalization on scheme-relative refs (CVSS 7.5)
+- `js-yaml` HIGH | transitive | fix=true | quadratic CPU in !!omap resolution (DoS, CVSS 7.5)
+- `nanoid` HIGH | transitive | fix=true | non-secure generator infinite loop on negative size (CVSS 5.9)
+- `postcss` HIGH | transitive | fix=true | XSS via unescaped `</style>` + path traversal via sourceMappingURL (CVSS 6.1–7.5)
+- `sharp` HIGH | transitive | fix=true | inherited libvips CVEs: CVE-2026-33327/33328/35590/35591
+- `@humanfs/node` MODERATE | transitive | fix=true | **NEW**: recursive copy follows symlinks and copies data outside source tree (CWE-22, path traversal)
+
+### Auth / role gates
+- CLEAN. `check-role-literals.mjs` scanned 365 files, 0 offenders. All `isThriver` state values set via `roleIsThriver(profile)` from `lib/auth/roles`. Community page `m.role` comparisons confirmed to be NPC community-member roles (not user auth roles).
+
+### RLS gaps (advisory)
+- Cannot verify from sandbox — no live DB access. Same advisory as prior weeks: run `npm run check:publication` pre-ship to confirm RLS coverage on write paths in `profiles`, `characters`, `campaigns`, `community_members`, `forum_threads`, `war_stories`, `tactical_scenes`, etc.
+
+### File uploads
+- CLEAN. All paths confirmed to route through `prepareUpload()`: war-stories, account-avatars, scene-controls, table/page, session-attachments, module-covers (rumors/[id]/edit — confirmed this week). Canvas-generated portrait-bank blobs use hardcoded `image/jpeg` — acceptable (not user-supplied file type).
+
+### Secrets exposure
+- CLEAN. No hardcoded secrets or committed `.env` files.
+
+### Injection / XSS patterns
+- `app/layout.tsx:56` — `dangerouslySetInnerHTML` with static hardcoded console-override script. Input: static. Safe.
+- `app/stories/[id]/table/page.tsx:8068` — `parent.innerHTML` set to hardcoded GM badge markup on image error. Input: static. Safe.
+- No SQL string concatenation patterns found.
+
+### Rate-limit / DoS
+- CLEAN. Both API routes (`/api/health`, `/api/auth/verify-turnstile`) have Upstash distributed sliding-window rate limits. No unprotected endpoints added.
+
+### Permission boundaries
+- CLEAN. All `isThriver` checks in app code use `roleIsThriver` from `lib/auth/roles`. `isThriverUser()` in `lib/data/feature-checklist.ts` fetches profile row and calls `isThriver(data)` — canonical. `pregens/[id]/edit` and `pregens/` use `getUserRole` → `roleIsThriver` pipeline. No novel bypass shapes.
+
+**Top 3 priorities (Claude's read):**
+1. `next` (direct dep, HIGH) — `npm update next` to ≥16.3.1 (non-preview) clears postcss + sharp cascades; has been flagged 3 consecutive weeks, still unaddressed.
+2. `browserslist` (HIGH, NEW) — prototype write via attacker-controlled custom stats file is the more dangerous of the two new CVEs; transitive via next upgrade path.
+3. `brace-expansion` (HIGH) — second CVE now bypasses the mitigation for the first; affects 3 transitive paths; DoS surface.
+
+---
+
+## 2026-09-01 16:23 UTC — weekly audit
+
+**Sections with findings:** npm audit
+
+### npm audit (moderate+)
+- `next` HIGH | direct dep | fix: upgrade available | title not reported by npm (internal vuln) | cvss=n/a
+- `brace-expansion` HIGH | transitive | fix: true | DoS via unbounded expansion (OOM crash) | cvss=7.5
+- `fast-uri` HIGH | transitive | fix: true | host confusion via backslash authority introducer | cvss=7.5
+- `js-yaml` HIGH | transitive | fix: true | CVE-2026-59870 — quadratic CPU in !!omap (DoS) | cvss=7.5
+- `nanoid` HIGH | transitive | fix: true | non-secure generators loop indefinitely on negative size | cvss=5.9
+- `postcss` HIGH | transitive | fix: true | XSS via unescaped `</style>` in CSS stringify output | cvss=6.1
+- `sharp` HIGH | transitive | fix: true | inherited libvips CVEs: 2026-33327/33328/35590/35591 | cvss=n/a (composite)
+
+### Auth / role gates
+- CLEAN. `check-role-literals.mjs` scanned 365 files, 0 offenders. All isThriver/isSurvivor/isGhost checks route through `lib/auth/roles`.
+
+### RLS gaps (advisory)
+- Cannot verify from sandbox (no live DB access). Tables with write paths: `profiles`, `characters`, `character_states`, `campaigns`, `campaign_members`, `campaign_pins`, `campaign_npcs`, `campaign_notes`, `community_members`, `community_subscriptions`, `forum_threads`, `forum_replies`, `lfg_posts`, `war_stories`, `map_pins`, `tactical_scenes`. Confirm each has RLS via `npm run check:publication` before next ship.
+
+### File uploads
+- CLEAN. All upload paths route through `prepareUpload()` helper (10 MB cap, extension-mapped content-type, filename sanitization). Confirmed: `war-stories`, `scene-controls-popout`, `stories/[id]/table`. Token-creator uploads use canvas-generated blobs with hardcoded `contentType: 'image/jpeg'` (not user-supplied file type — acceptable).
+
+### Secrets exposure
+- CLEAN. No hardcoded API keys, tokens, or passwords found. No committed `.env` files.
+
+### Injection / XSS patterns
+- `app/layout.tsx:56` — `dangerouslySetInnerHTML` with static hardcoded console.log override script. Input: static (not user-controlled). Safe.
+- `app/stories/[id]/table/page.tsx:8068` — `parent.innerHTML` set to hardcoded GM badge markup. Input: static. Safe.
+- No SQL string concatenation patterns found.
+
+### Dependency drift
+- `npm outdated` returned no output. All direct deps within declared semver ranges. No major-version drift detected.
+
+### Rate-limit / DoS
+- `app/api/health/route.ts` — GET, unauthenticated (intentional for uptime monitors). Upstash sliding-window 10 req/min/IP + graceful fallback. OK.
+- `app/api/auth/verify-turnstile/route.ts` — POST. Upstash + in-memory fallback. OK.
+
+### Permission boundaries
+- CLEAN. All `isGM` checks are ownership comparisons (`userId === gm_user_id`). All `isThriver` checks import from `lib/auth/roles`. No raw role string comparisons found.
+
+**Top 3 priorities (Claude's read):**
+1. `next` (direct dep, HIGH) — update Next.js to latest stable; likely resolves cascade of transitive vulns.
+2. `postcss` (HIGH, XSS) — transitive; resolves when next/postcss updated; confirm `npm audit` clean post-upgrade.
+3. `sharp` libvips CVEs (HIGH, composite) — transitive; upgrade resolves; track separately if image pipeline is active.
+
+---
+
+## 2026-08-25 16:30 UTC — weekly audit
+
+**Sections with findings:** npm audit, file uploads (partial), dependency drift
+
+### npm audit (moderate+)
+
+All 7 are HIGH severity, all have fixes available, all are transitive except `next`.
+
+- `next` **HIGH** (direct dep) — vulnerable via `postcss` + `sharp`; range `9.3.4-canary.0 - 16.3.0-preview.10`; fix=true
+- `postcss` **HIGH** (transitive via next) — path traversal via attacker-controlled `sourceMappingURL` in CSS comments (CVSS 7.5 x2); also XSS via unescaped `</style>` in stringify output (CVSS 6.1); fix=true
+- `sharp` **HIGH** (transitive via next) — 4 libvips CVEs: CVE-2026-33327/33328/35590/35591; affects image processing at runtime; fix=true
+- `nanoid` **HIGH** (transitive) — non-secure generators loop indefinitely with zero/negative size (DoS, CVSS 5.9); fix=true
+- `brace-expansion` **HIGH** (transitive) — fix=true
+- `fast-uri` **HIGH** (transitive) — fix=true
+- `js-yaml` **HIGH** (transitive) — fix=true
+
+Run `npm audit fix` in a Hunt & Peck branch to clear; verify build passes and no breaking changes before merging.
+
+### File uploads (partial advisory)
+
+Most upload paths use `prepareUpload()` from `lib/safe-upload` (size cap + filename sanitization + extension-mapped contentType). Paths confirmed safe: `account-avatars`, `war-stories`, `module-covers`, `tactical-maps`, `session-attachments`, `campaign-covers`.
+
+Paths that bypass `prepareUpload`:
+- `lib/data/npc-roster.ts:216` — uploads internally-generated canvas blob directly; hardcoded `contentType: 'image/jpeg'`, no byte-cap at upload layer
+- `lib/data/portrait-bank.ts:35-37, 81-83` — same pattern (internally generated JPEG blobs, no explicit size ceiling at upload layer)
+
+Low urgency (blobs are app-generated, not raw user file input), but no upload-layer size floor means an upstream canvas bug could push oversized blobs silently.
+
+### Dependency drift
+
+Priority packages have minor/patch updates available (0 major versions behind):
+- `next` — pending patch (also the npm-audit vector)
+- `@supabase/supabase-js` latest 2.112.4
+- `@supabase/ssr` latest 0.12.5
+- `react` / `react-dom` latest 19.2.8
+
+Bundle with the audit-fix run.
+
+**Top 3 priorities:**
+1. `sharp` libvips 4 CVEs (runtime image-processing, app accepts user image uploads) — `npm audit fix`
+2. `postcss` path traversal CVSS 7.5 — same `npm audit fix` run
+3. `lib/data/npc-roster.ts:216` + `portrait-bank.ts` — add byte-ceiling guard before upload call (low urgency)
+
+---
+
+## 2026-08-18 16:23 UTC — weekly audit
+
+**Sections with findings:** npm audit (all 7 HIGH carry-overs, none new, none resolved)
+
+**Closed since last audit (2026-08-11):** `app/api/health/route.ts` rate-limit carry-over — CLOSED. Code has Upstash 10 req/min sliding window in place (per inline comment: "security-audit 2026-07-28 fix"); prior audit missed the shipped fix. 13th consecutive audit deferred item resolved.
+
+**Sections clean this cycle:** auth/role gates (guardrail: 365 files, 0 violations; community-member `.role === 'gatherer'/'maintainer'/'safety'/'unassigned'` at `app/stories/[id]/community/page.tsx:148-151` are labor-role comparisons, not auth-role checks — correct; `pregenRole === 'thriver'` at `app/characters/[id]/edit/page.tsx:174` traced to DB role check via `roleIsThriver` — canonical), RLS gaps (advisory; no DB access from sandbox; `sql/` has extensive RLS coverage; no new tables without matching SQL files identified), file uploads (all paths through `prepareUpload` helper — avatar, war-stories, session-attachments, tactical-maps, scene-controls; size cap + content-type whitelist + filename sanitization confirmed in `lib/safe-upload.ts`), secrets exposure (no committed `.env` files; no hardcoded tokens or keys in source), injection/XSS (`dangerouslySetInnerHTML` at `app/layout.tsx:56` is a static console.log override — not user-controlled; `innerHTML` at `app/stories/[id]/table/page.tsx:8068` is a hardcoded 'GM' label — static; no SQL string concatenation patterns found), dependency drift (no direct deps ≥2 major versions behind), rate-limit/DoS (both API routes rate-limited — verify-turnstile: Upstash 30/min; health: Upstash 10/min), permission boundaries (all `isThriver`/`isGM` checks route through `lib/auth/roles.ts` helpers; no novel raw-role-comparison shapes found).
+
+### npm audit (moderate+)
+
+**CARRY-OVER (all unchanged from 2026-08-11 — no new, none resolved):**
+- `brace-expansion` <=5.0.7 — HIGH — CVSS 7.5 — DoS via unbounded expansion OOM — transitive via eslint chain (dev-only) — fix: breaking eslint major bump
+- `fast-uri` — HIGH — CVSS 7.5 — host confusion via backslash authority introducer — transitive — fix: available
+- `js-yaml` — HIGH — CVE-2026-59870 — Quadratic CPU in !!omap resolution — transitive — fix: available — 2nd consecutive
+- `nanoid` — HIGH — non-secure generators loop indefinitely with negative size — transitive — fix: available — 2nd consecutive
+- `next` — HIGH — isDirect: true — via postcss + sharp transitive chain — fix: available (may be breaking)
+- `postcss` — HIGH — CVSS 6.1 — XSS via unescaped `</style>` in CSS stringify — transitive via `next` — fix: available — low runtime risk (build-time only)
+- `sharp` — HIGH — libvips CVEs (CVE-2026-33327/33328/35590/35591) — transitive — fix: available — 3rd consecutive
+
+**Top 3 priorities:**
+1. `sharp` HIGH (3rd consecutive) — libvips CVEs; runtime image-processing lib; upgrade path needed.
+2. `js-yaml` HIGH CVE-2026-59870 (2nd consecutive) — Quadratic CPU DoS; fix available; resolve before launch.
+3. `next` HIGH (direct dep) — postcss XSS chain; fix available; blocking a broader dep-upgrade pass.
+
+---
+
+## 2026-08-11 16:23 UTC — weekly audit
+
+**Sections with findings:** npm audit (2 new HIGH advisories), rate-limit / DoS (carry-over), dependency drift (carry-over)
+
+**Closed since last audit (2026-08-04):** nothing closed this cycle.
+
+**Sections clean this cycle:** auth/role gates (guardrail: 359 files, 0 violations; `profile.role` at `app/vehicle/page.tsx:117` is a comment; `isThriver` state in campfire pages set via `roleIsThriver(profile)` — canonical; community_members `.role === 'gatherer'/'maintainer'/'safety'/'unassigned'` at `app/stories/[id]/community/page.tsx:148-151` are labor-role comparisons, not auth-role checks — correct), RLS gaps (advisory; no DB access from sandbox; `sql/` directory has extensive RLS coverage; no new tables identified without matching SQL files), file uploads (all paths still confirmed through `prepareUpload` helper — size cap, filename sanitization, content-type whitelisting all in place), secrets exposure (no committed .env files; no hardcoded tokens or keys in source), injection/XSS (`dangerouslySetInnerHTML` at `app/layout.tsx:56` is a static inline script — not user-controlled; `innerHTML` at `app/stories/[id]/table/page.tsx:8056` sets a hardcoded 'GM' fallback label in an `onError` handler — static, not user-controlled; no SQL string concatenation patterns found), rate-limit API routes (only 2 routes: `verify-turnstile` has Upstash sliding window + in-memory fallback; `health` carry-over noted below), permission boundaries (all `isThriver`/`isGM` checks confirmed routed through `lib/auth/roles.ts` helpers).
+
+### npm audit (moderate+)
+
+**NEW HIGH:**
+- `js-yaml` — HIGH — CVE-2026-59870 — "Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — fix not backported" — transitive — fix: available (was GONE as of 2026-07-28; reappeared as distinct new advisory)
+- `nanoid` — HIGH — "non-secure generators can loop indefinitely with negative size" — transitive — fix: available
+
+**CARRY-OVER (unchanged from 2026-08-04):**
+- `fast-uri` — HIGH — CVSS 7.5 — host confusion via backslash authority introducer — transitive — fix: available
+- `sharp` — HIGH — libvips CVEs (CVE-2026-33327/33328/35590/35591) — transitive — fix: available
+- `postcss` — HIGH — CVSS 6.1 — XSS via unescaped `</style>` in CSS stringify — transitive via `next` — low runtime risk (build-time only)
+- `next` — HIGH — isDirect: true — via postcss chain — fix: available (breaking)
+- `brace-expansion` <=5.0.7 — HIGH — CVSS 7.5 — DoS via OOM — transitive via eslint chain (dev-only) — fix: breaking eslint major bump
+
+### Rate-limit / DoS
+
+- `app/api/health/route.ts` — GET, unauthenticated — DB ping cached 10s — **no HTTP-level rate limit — 12th consecutive audit carry-over** — Upstash sliding window (10 req/min per IP) needed before paid launch.
+
+### Dependency drift
+
+(Major-version drift: packages show as MISSING in sandbox — no node_modules installed; versions from package.json. `leaflet-control-geocoder` 3.3.1 → 4.0.0, 1 major behind. No priority packages at ≥2 major versions behind.)
+
+- `@supabase/supabase-js` — carry-over — auth-adjacent; changelog review before bump.
+- `@supabase/ssr` — carry-over — auth-adjacent staleness rising (12th consecutive).
+- `@upstash/ratelimit` / `@upstash/redis` — carry-over.
+
+**Top 3 priorities:**
+1. `sharp` HIGH — libvips CVEs still unfixed; image-processing lib with runtime exposure — 2nd consecutive audit.
+2. `js-yaml` HIGH CVE-2026-59870 — NEW re-entry with distinct advisory; fix available; resolve before it compounds.
+3. `app/api/health/route.ts` — 12 audits deferred; unauthenticated DB-ping endpoint; Upstash 10/min sliding window is a 20-line fix, hard deadline before paid launch.
+
+---
+
+## 2026-08-04 16:23 UTC — weekly audit
+
+**Sections with findings:** npm audit (2 new HIGH advisories), rate-limit / DoS (carry-over), dependency drift (carry-over)
+
+**Closed since last audit (2026-07-28):** nothing new closed this cycle.
+
+**Sections clean this cycle:** auth/role gates (guardrail: 360 files, 0 violations; `profile.role` at `app/vehicle/page.tsx:117` is a comment, not a check; `isThriverUser` at `app/ape-log/page.tsx:50` is confirmed to internally call `isThriver` from `lib/auth/roles`), RLS gaps (advisory — no DB access from sandbox; sql/ has extensive RLS coverage across all tables touched in app code; no new tables found without matching SQL files), file uploads (all paths confirmed through `prepareUpload` — avatar, war-stories, session-attachments, tactical-maps; portrait-bank and NPC portraits upload canvas-rendered JPEG blobs, not raw user files — type/size bounded by canvas pipeline), secrets exposure (no committed .env/.env.local files; no hardcoded tokens or API keys found in source), injection/XSS (`dangerouslySetInnerHTML` at `app/layout.tsx:56` is a static inline script — not user-controlled; `innerHTML` at `app/stories/[id]/table/page.tsx:8056` sets a hardcoded static 'GM' label — not user-controlled; no SQL string concatenation patterns found), permission boundaries (all `isThriver`/`isGM` checks route through canonical helpers from `lib/auth/roles.ts`; no novel raw-role-comparison shapes found).
+
+### npm audit (moderate+)
+
+**NEW HIGH:**
+- `fast-uri` — HIGH — CVSS 7.5 — "host confusion via backslash authority introducer" — transitive — fix: available
+- `sharp` — HIGH — CVSS listed as 0 (preliminary/pending) — "inherited libvips vulnerabilities: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591" — transitive — fix: available
+
+**SEVERITY CHANGE (was moderate, now HIGH in npm output):**
+- `postcss` — HIGH — CVSS 6.1 — XSS via unescaped `</style>` in CSS stringify — transitive via `next` — fix: available (may require next major bump) — low runtime risk (build-time only; app does not process user CSS at runtime)
+- `next` — HIGH — isDirect: true — via postcss chain — fix: available (breaking advisory; hold pending next upgrade path)
+
+**CARRY-OVER (unchanged):**
+- `brace-expansion` <=5.0.7 — HIGH — CVSS 7.5 — DoS via unbounded expansion OOM — transitive via eslint chain (dev-only) — fix: breaking eslint major bump
+
+### Rate-limit / DoS
+
+- `app/api/health/route.ts` — GET, unauthenticated — DB ping cached 10s — **no HTTP-level rate limit — 11th consecutive audit carry-over** — Upstash sliding window (10 req/min per IP) needed before paid launch.
+
+### Dependency drift
+
+(Major-version drift: `npm outdated` returned no packages ≥2 major versions behind this cycle.)
+
+- `@supabase/supabase-js` — 2.100.1 installed → 2.111.0 latest — **11th consecutive audit carry-over** — auth-adjacent; changelog review before bump.
+- `@supabase/ssr` — 0.9.0 installed → 0.12.4 latest — **11th consecutive audit carry-over** — auth-adjacent staleness rising.
+- `@upstash/ratelimit` — behind (2.0.8 latest) — rate-limiting surface; review before bump.
+- `@upstash/redis` — behind (1.38.0 latest) — pairs with ratelimit dep.
+
+**Top 3 priorities:**
+1. `sharp` HIGH — libvips CVEs (CVE-2026-33327/33328/35590/35591) — NEW — fix available; run `npm audit fix` scoped to sharp; image-processing lib with runtime exposure.
+2. `fast-uri` HIGH CVSS 7.5 — NEW host-confusion vulnerability — fix available; transitive but CVSS warrants prompt patching.
+3. `app/api/health/route.ts` — 11 audits deferred; Upstash 10/min sliding window is a 20-line fix, hard deadline before paid launch.
+
+---
+
 ## 2026-07-28 16:23 UTC — weekly audit
 
 **Sections with findings:** npm audit (new brace-expansion advisory, eslint chain HIGH), rate-limit / DoS (carry-over), dependency drift (carry-over)

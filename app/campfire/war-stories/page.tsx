@@ -35,7 +35,9 @@ interface Attachment {
 
 interface Story {
   id: string
-  author_user_id: string
+  // Nullable at runtime: account self-deletion anonymizes the author
+  // (FK ON DELETE SET NULL), so the story survives with a null author.
+  author_user_id: string | null
   campaign_id: string | null
   title: string
   body: string
@@ -162,7 +164,7 @@ export default function WarStoriesPage() {
     setHasMore(list.length === PAGE_SIZE)
     if (list.length === 0) { setStories([]); setLoading(false); return }
 
-    const authorIds = Array.from(new Set(list.map(s => s.author_user_id)))
+    const authorIds = Array.from(new Set(list.map(s => s.author_user_id).filter((x): x is string => !!x)))
     const campaignIds = Array.from(new Set(list.map(s => s.campaign_id).filter((x): x is string => !!x)))
 
     const [profRes, campRes] = await Promise.all([
@@ -178,8 +180,8 @@ export default function WarStoriesPage() {
     setStories(list.map(s => ({
       ...s,
       attachments: Array.isArray(s.attachments) ? s.attachments : [],
-      author_username: nameMap[s.author_user_id] ?? 'Unknown',
-      author_avatar_url: avatarMap[s.author_user_id] ?? null,
+      author_username: s.author_user_id == null ? 'Anonymous' : (nameMap[s.author_user_id] ?? 'Unknown'),
+      author_avatar_url: s.author_user_id == null ? null : (avatarMap[s.author_user_id] ?? null),
       campaign_name: s.campaign_id ? (campMap[s.campaign_id] ?? null) : null,
     })))
     // Reaction hydration - single batched fetch keyed by story ids so
@@ -223,7 +225,7 @@ export default function WarStoriesPage() {
     const list = (rows ?? []) as Story[]
     setHasMore(false)  // search results don't paginate
     if (list.length === 0) { setStories([]); setSearching(false); return }
-    const authorIds = Array.from(new Set(list.map(s => s.author_user_id)))
+    const authorIds = Array.from(new Set(list.map(s => s.author_user_id).filter((x): x is string => !!x)))
     const campaignIds = Array.from(new Set(list.map(s => s.campaign_id).filter((x): x is string => !!x)))
     const [profRes, campRes] = await Promise.all([
       supabase.from('profiles').select('id, username, avatar_url').in('id', authorIds),
@@ -237,8 +239,8 @@ export default function WarStoriesPage() {
     setStories(list.map(s => ({
       ...s,
       attachments: Array.isArray(s.attachments) ? s.attachments : [],
-      author_username: nameMap[s.author_user_id] ?? 'Unknown',
-      author_avatar_url: avatarMap[s.author_user_id] ?? null,
+      author_username: s.author_user_id == null ? 'Anonymous' : (nameMap[s.author_user_id] ?? 'Unknown'),
+      author_avatar_url: s.author_user_id == null ? null : (avatarMap[s.author_user_id] ?? null),
       campaign_name: s.campaign_id ? (campMap[s.campaign_id] ?? null) : null,
     })))
     // Hydrate reactions for the search hits.
@@ -268,7 +270,7 @@ export default function WarStoriesPage() {
     const list = (rows ?? []) as Story[]
     setHasMore(list.length === PAGE_SIZE)
     if (list.length === 0) { setLoadingMore(false); return }
-    const authorIds = Array.from(new Set(list.map(s => s.author_user_id)))
+    const authorIds = Array.from(new Set(list.map(s => s.author_user_id).filter((x): x is string => !!x)))
     const campaignIds = Array.from(new Set(list.map(s => s.campaign_id).filter((x): x is string => !!x)))
     const [profRes, campRes] = await Promise.all([
       supabase.from('profiles').select('id, username, avatar_url').in('id', authorIds),
@@ -282,8 +284,8 @@ export default function WarStoriesPage() {
     setStories(prev => [...prev, ...list.map(s => ({
       ...s,
       attachments: Array.isArray(s.attachments) ? s.attachments : [],
-      author_username: nameMap[s.author_user_id] ?? 'Unknown',
-      author_avatar_url: avatarMap[s.author_user_id] ?? null,
+      author_username: s.author_user_id == null ? 'Anonymous' : (nameMap[s.author_user_id] ?? 'Unknown'),
+      author_avatar_url: s.author_user_id == null ? null : (avatarMap[s.author_user_id] ?? null),
       campaign_name: s.campaign_id ? (campMap[s.campaign_id] ?? null) : null,
     }))])
     // Append reactions for the newly-loaded ids.

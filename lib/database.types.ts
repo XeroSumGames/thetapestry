@@ -1642,7 +1642,7 @@ export type Database = {
       }
       forum_replies: {
         Row: {
-          author_user_id: string
+          author_user_id: string | null
           body: string
           created_at: string
           id: string
@@ -1650,7 +1650,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          author_user_id: string
+          author_user_id?: string | null
           body: string
           created_at?: string
           id?: string
@@ -1658,7 +1658,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          author_user_id?: string
+          author_user_id?: string | null
           body?: string
           created_at?: string
           id?: string
@@ -1711,7 +1711,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
-          author_user_id: string
+          author_user_id: string | null
           body: string
           campaign_id: string | null
           category: string
@@ -1731,7 +1731,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
-          author_user_id: string
+          author_user_id?: string | null
           body: string
           campaign_id?: string | null
           category: string
@@ -1751,7 +1751,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
-          author_user_id?: string
+          author_user_id?: string | null
           body?: string
           campaign_id?: string | null
           category?: string
@@ -1777,6 +1777,68 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gm_scratch: {
+        Row: {
+          campaign_id: string
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          text?: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gm_scratch_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gm_screen_layouts: {
+        Row: {
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          state?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gm_screen_standard_layout: {
+        Row: {
+          id: number
+          state: Json
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          state?: Json
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          state?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       initiative_order: {
         Row: {
@@ -1876,65 +1938,60 @@ export type Database = {
           },
         ]
       }
-      gm_scratch: {
+      issue_reports: {
         Row: {
-          campaign_id: string
-          text: string
-          updated_at: string
+          created_at: string
+          email: string | null
+          id: string
+          message: string
+          page_url: string | null
+          source: string | null
+          status: string
+          user_agent: string | null
         }
         Insert: {
-          campaign_id: string
-          text?: string
-          updated_at?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          message: string
+          page_url?: string | null
+          source?: string | null
+          status?: string
+          user_agent?: string | null
         }
         Update: {
-          campaign_id?: string
-          text?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gm_scratch_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: true
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      gm_screen_layouts: {
-        Row: {
-          state: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          state?: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          state?: Json
-          updated_at?: string
-          user_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          message?: string
+          page_url?: string | null
+          source?: string | null
+          status?: string
+          user_agent?: string | null
         }
         Relationships: []
       }
-      gm_screen_standard_layout: {
+      launch_signups: {
         Row: {
-          id: number
-          state: Json
-          updated_at: string
+          created_at: string
+          email: string
+          id: string
+          site: string | null
+          source: string | null
         }
         Insert: {
-          id?: number
-          state?: Json
-          updated_at?: string
+          created_at?: string
+          email: string
+          id?: string
+          site?: string | null
+          source?: string | null
         }
         Update: {
-          id?: number
-          state?: Json
-          updated_at?: string
+          created_at?: string
+          email?: string
+          id?: string
+          site?: string | null
+          source?: string | null
         }
         Relationships: []
       }
@@ -2001,7 +2058,7 @@ export type Database = {
       }
       lfg_post_replies: {
         Row: {
-          author_user_id: string
+          author_user_id: string | null
           body: string
           created_at: string
           id: string
@@ -2009,7 +2066,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          author_user_id: string
+          author_user_id?: string | null
           body: string
           created_at?: string
           id?: string
@@ -2017,7 +2074,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          author_user_id?: string
+          author_user_id?: string | null
           body?: string
           created_at?: string
           id?: string
@@ -2038,7 +2095,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
-          author_user_id: string
+          author_user_id: string | null
           body: string
           created_at: string
           id: string
@@ -2056,7 +2113,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
-          author_user_id: string
+          author_user_id?: string | null
           body: string
           created_at?: string
           id?: string
@@ -2074,7 +2131,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
-          author_user_id?: string
+          author_user_id?: string | null
           body?: string
           created_at?: string
           id?: string
@@ -3539,55 +3596,103 @@ export type Database = {
       }
       visitor_logs: {
         Row: {
+          browser: string | null
           city: string | null
           country: string | null
           country_code: string | null
           created_at: string
+          device_type: string | null
+          duration_ms: number | null
+          ended_at: string | null
+          full_path: string | null
           id: string
           ip_address: string | null
           ip_hash: string | null
           is_ghost: boolean
+          language: string | null
           latitude: number | null
           longitude: number | null
+          os: string | null
           page: string
           referrer: string | null
           region: string | null
+          screen_h: number | null
+          screen_w: number | null
           session_id: string
+          site: string | null
+          user_agent: string | null
           user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
         }
         Insert: {
+          browser?: string | null
           city?: string | null
           country?: string | null
           country_code?: string | null
           created_at?: string
+          device_type?: string | null
+          duration_ms?: number | null
+          ended_at?: string | null
+          full_path?: string | null
           id?: string
           ip_address?: string | null
           ip_hash?: string | null
           is_ghost?: boolean
+          language?: string | null
           latitude?: number | null
           longitude?: number | null
+          os?: string | null
           page: string
           referrer?: string | null
           region?: string | null
+          screen_h?: number | null
+          screen_w?: number | null
           session_id: string
+          site?: string | null
+          user_agent?: string | null
           user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Update: {
+          browser?: string | null
           city?: string | null
           country?: string | null
           country_code?: string | null
           created_at?: string
+          device_type?: string | null
+          duration_ms?: number | null
+          ended_at?: string | null
+          full_path?: string | null
           id?: string
           ip_address?: string | null
           ip_hash?: string | null
           is_ghost?: boolean
+          language?: string | null
           latitude?: number | null
           longitude?: number | null
+          os?: string | null
           page?: string
           referrer?: string | null
           region?: string | null
+          screen_h?: number | null
+          screen_w?: number | null
           session_id?: string
+          site?: string | null
+          user_agent?: string | null
           user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Relationships: []
       }
@@ -3596,7 +3701,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           attachments: Json
-          author_user_id: string
+          author_user_id: string | null
           body: string
           campaign_id: string | null
           created_at: string
@@ -3614,7 +3719,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           attachments?: Json
-          author_user_id: string
+          author_user_id?: string | null
           body: string
           campaign_id?: string | null
           created_at?: string
@@ -3632,7 +3737,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           attachments?: Json
-          author_user_id?: string
+          author_user_id?: string | null
           body?: string
           campaign_id?: string | null
           created_at?: string
@@ -3690,7 +3795,7 @@ export type Database = {
       }
       war_story_replies: {
         Row: {
-          author_user_id: string
+          author_user_id: string | null
           body: string
           created_at: string
           id: string
@@ -3698,7 +3803,7 @@ export type Database = {
           war_story_id: string
         }
         Insert: {
-          author_user_id: string
+          author_user_id?: string | null
           body: string
           created_at?: string
           id?: string
@@ -3706,7 +3811,7 @@ export type Database = {
           war_story_id: string
         }
         Update: {
-          author_user_id?: string
+          author_user_id?: string | null
           body?: string
           created_at?: string
           id?: string
@@ -3725,19 +3830,19 @@ export type Database = {
       }
       whispers: {
         Row: {
-          author_user_id: string
+          author_user_id: string | null
           content: string
           created_at: string
           id: string
         }
         Insert: {
-          author_user_id: string
+          author_user_id?: string | null
           content: string
           created_at?: string
           id?: string
         }
         Update: {
-          author_user_id?: string
+          author_user_id?: string | null
           content?: string
           created_at?: string
           id?: string
@@ -3980,6 +4085,16 @@ export type Database = {
           username: string
         }[]
       }
+      apply_barter_trade: {
+        Args: {
+          p_pc_character_id: string
+          p_pc_gets: Json
+          p_pc_gives: Json
+          p_target_id: string
+          p_target_kind: string
+        }
+        Returns: undefined
+      }
       auto_end_stale_sessions: {
         Args: { stale_hours?: number }
         Returns: number
@@ -4009,6 +4124,10 @@ export type Database = {
         Args: { p_action: string; p_max_per_hour: number }
         Returns: boolean
       }
+      clone_module_pregens_into_campaign: {
+        Args: { p_campaign_id: string; p_module_id: string; p_pregens: Json }
+        Returns: number
+      }
       find_campaign_by_invite_code: {
         Args: { p_code: string }
         Returns: {
@@ -4024,6 +4143,10 @@ export type Database = {
         Args: { p_campaign_id: string }
         Returns: string
       }
+      get_campaign_module_cover: {
+        Args: { p_campaign_id: string }
+        Returns: string
+      }
       get_latest_messages_for_conversations: {
         Args: { conv_ids: string[] }
         Returns: {
@@ -4035,19 +4158,78 @@ export type Database = {
       }
       get_or_create_dm: { Args: { other_user_id: string }; Returns: string }
       get_profile_email: { Args: { p_user_id: string }; Returns: string }
-      get_visitor_map_data: {
-        Args: never
-        Returns: {
-          city: string
-          country_code: string
-          first_visit: string
-          ip_hash: string
-          is_ghost: boolean
-          last_visit: string
-          lat: number
-          lng: number
-          visit_count: number
-        }[]
+      get_visitor_map_data:
+        | {
+            Args: never
+            Returns: {
+              city: string
+              country_code: string
+              first_visit: string
+              ip_hash: string
+              is_ghost: boolean
+              last_visit: string
+              lat: number
+              lng: number
+              visit_count: number
+            }[]
+          }
+        | {
+            Args: { p_site?: string }
+            Returns: {
+              city: string
+              country_code: string
+              first_visit: string
+              ip_hash: string
+              is_ghost: boolean
+              last_visit: string
+              lat: number
+              lng: number
+              visit_count: number
+            }[]
+          }
+      give_item_character_to_community: {
+        Args: {
+          p_giver_character_id: string
+          p_item_custom: boolean
+          p_item_enc?: number
+          p_item_name: string
+          p_item_notes?: string
+          p_item_rarity?: string
+          p_qty: number
+          p_target_community_id: string
+        }
+        Returns: undefined
+      }
+      give_item_character_to_npc: {
+        Args: {
+          p_giver_character_id: string
+          p_item_custom: boolean
+          p_item_name: string
+          p_qty: number
+          p_target_npc_id: string
+        }
+        Returns: undefined
+      }
+      give_item_character_to_vehicle: {
+        Args: {
+          p_campaign_id: string
+          p_giver_character_id: string
+          p_item_custom: boolean
+          p_item_name: string
+          p_qty: number
+          p_vehicle_id: string
+        }
+        Returns: undefined
+      }
+      give_item_npc_to_character: {
+        Args: {
+          p_giver_npc_id: string
+          p_item_custom: boolean
+          p_item_name: string
+          p_qty: number
+          p_target_character_id: string
+        }
+        Returns: undefined
       }
       give_item_to_character: {
         Args: {
@@ -4073,6 +4255,17 @@ export type Database = {
       is_campaign_member: { Args: { p_campaign_id: string }; Returns: boolean }
       is_thriver: { Args: never; Returns: boolean }
       is_user_suspended: { Args: never; Returns: boolean }
+      join_campaign_by_invite_code: {
+        Args: { p_code: string; p_observer?: boolean }
+        Returns: {
+          cover_image_url: string
+          description: string
+          gm_user_id: string
+          id: string
+          name: string
+          setting: string
+        }[]
+      }
       loot_npc_equipment_item: {
         Args: {
           p_character_id: string
@@ -4129,10 +4322,16 @@ export type Database = {
         Returns: undefined
       }
       update_vehicle_in_campaign: {
+        Args: { p_campaign_id: string; p_patch: Json; p_vehicle_id: string }
+        Returns: undefined
+      }
+      withdraw_item_community_to_character: {
         Args: {
-          p_campaign_id: string
-          p_new_vehicle: Json
-          p_vehicle_id: string
+          p_community_id: string
+          p_item_custom: boolean
+          p_item_name: string
+          p_qty: number
+          p_target_character_id: string
         }
         Returns: undefined
       }

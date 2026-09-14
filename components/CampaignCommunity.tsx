@@ -19,7 +19,7 @@ import {
   deleteCommunityEvent, insertMigrations, worldRowsForCommunities, approvedWorldCommunityTargets,
   insertWorldCommunity, updateWorldCommunity, deleteWorldCommunity, campaignNpcOptions,
   campaignMembersWithChars, myCharacterInCampaign, myFoundingCharacter, userIdForCharacter,
-  campaignPins, pinCoords, getCharacterData, updateCharacterData, eventAuthorUsernames, recruitRolls,
+  campaignPins, pinCoords, eventAuthorUsernames, recruitRolls,
 } from '../lib/data/community'
 import type { Community, Member, Role, RecruitmentType } from '../lib/types/community'
 import { reportSupabaseError } from '../lib/supabase-errors'
@@ -498,22 +498,29 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
     }
     const row = (stockpileByCommunity[communityId] ?? []).find(r => r.id === rowId)
     if (!row) return
-    // Read the PC's current inventory.
-    const { data: charRow, error: readErr } = await getCharacterData(myCharacterId)
-    if (readErr || !charRow) { alert(`Read failed: ${readErr?.message ?? 'unknown'}`); return }
-    const charData: any = charRow.data ?? {}
-    const inv: InventoryItem[] = Array.isArray(charData.inventory) ? [...charData.inventory] : []
-    const existingIdx = inv.findIndex(i => i.name === row.name && (i.custom ?? false) === (row.custom ?? false))
-    if (existingIdx >= 0) {
-      inv[existingIdx] = { ...inv[existingIdx], qty: (inv[existingIdx].qty ?? 0) + 1 }
-    } else {
-      inv.push({ name: row.name, enc: row.enc, rarity: row.rarity, notes: row.notes, qty: 1, custom: !!row.custom })
-    }
-    const { error: writeErr } = await updateCharacterData(myCharacterId, { ...charData, inventory: inv })
-    if (writeErr) { alert(`Write failed: ${writeErr.message}`); return }
-    // Decrement the stockpile via the existing helper. This handles
-    // both the qty>1 update AND the qty=1 delete branches.
-    await removeStockpileItem(rowId, communityId)
+    // Atomic RPC (withdraw_item_community_to_character): locks the
+    // stockpile row (FOR UPDATE) and the character row, decrements/deletes
+    // the stockpile entry and credits the PC in one transaction. The old
+    // code here computed newQty off React state (stockpileByCommunity)
+    // instead of a fresh read - two simultaneous withdrawals of the last
+    // unit both succeeded independently and both decremented from the same
+    // stale base, duplicating the item (per the 2026-08-01 audit).
+    const { error } = await supabase.rpc('withdraw_item_community_to_character', {
+      p_community_id: communityId,
+      p_target_character_id: myCharacterId,
+      p_item_name: row.name,
+      p_item_custom: row.custom ?? false,
+      p_qty: 1,
+    })
+    if (error) { alert(`Withdraw failed: ${error.message}`); return }
+    setStockpileByCommunity(prev => {
+      const rows = prev[communityId] ?? []
+      const newQty = row.qty - 1
+      return {
+        ...prev,
+        [communityId]: newQty > 0 ? rows.map(r => r.id === rowId ? { ...r, qty: newQty } : r) : rows.filter(r => r.id !== rowId),
+      }
+    })
   }
 
   // Decrement a stockpile item's qty by 1 (or delete if it'd hit 0).
@@ -2545,10 +2552,20 @@ export default function CampaignCommunity({ campaignId, isGM, initialMode, initi
                               style={{ fontSize: '13px', color: '#7ab3d4', background: '#0f1a2e', border: '1px solid #2e2e5a', padding: '1px 6px', borderRadius: '2px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>⏳ Temporary</span>
                           )}
                           {isCommunity && (
+                          isGM ? (
                           <select value={m.role} onChange={e => handleChangeRole(m, e.target.value as Role)}
                             style={{ width: '110px', padding: '4px 6px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '2px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', appearance: 'none' }}>
                             {(Object.keys(ROLE_LABEL) as Role[]).map(ro => <option key={ro} value={ro}>{ROLE_LABEL[ro]}</option>)}
                           </select>
+                          ) : (
+                          // Labor-role reassignment is GM-only (2026-08-01 - the
+                          // RLS behind this was fully open to any campaign member
+                          // until tonight; this control never had an isGM gate
+                          // either). Players see their/others' role as read-only.
+                          <span style={{ width: '110px', padding: '4px 6px', color: '#cce0f5', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                            {ROLE_LABEL[m.role]}
+                          </span>
+                          )
                           )}
                           {m.character_id && pcUserMap[m.character_id] && pcUserMap[m.character_id] !== myUserId && (
                             <a href={`/messages?dm=${pcUserMap[m.character_id]}`} title="Send message"

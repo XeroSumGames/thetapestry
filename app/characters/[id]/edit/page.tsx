@@ -7,6 +7,7 @@ import { getCachedAuth } from '../../../../lib/auth-cache'
 import { isThriver as roleIsThriver } from '../../../../lib/auth/roles'
 import { countGmCampaigns, getUserRole } from '../../../../lib/data/campaigns'
 import { insertPregen } from '../../../../lib/data/pregens'
+import { saveWizardCharacterEdit } from '../../../../lib/data/characters'
 import { createWizardState, WizardState, buildCharacter } from '../../../../lib/xse-engine'
 import { SKILLS, normalizeRations } from '../../../../lib/xse-schema'
 import StepXero from '../../../../components/wizard/StepXero'
@@ -142,10 +143,15 @@ export default function EditCharacterPage() {
     // map. portrait_url is the canonical source; data.photoDataUrl is the
     // legacy fallback for rows not yet touched by the migration tool.
     const portraitUrl = state.photoDataUrl || null
-    const { error } = await supabase
-      .from('characters')
-      .update({ name: character.name || characterName, data: character, portrait_url: portraitUrl })
-      .eq('id', id)
+
+    // buildCharacter() starts from a blank template and only ever sets the
+    // wizard-owned fields - it doesn't know about inventory, progression_log,
+    // session_notes, lastingWounds, relationships, cdp, insightDice,
+    // stressLevel, breakingPoint, or any other key a live session has
+    // written onto this character's data blob. saveWizardCharacterEdit
+    // fresh-reads the row and merges only the wizard fields in, so an edit
+    // can't reset accumulated play data to blank.
+    const { error } = await saveWizardCharacterEdit(id, character, characterName, portraitUrl)
     if (error) { setSaveError(error.message); setSaving(false); return }
     setSaved(true)
     setSaving(false)

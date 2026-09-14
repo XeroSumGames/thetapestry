@@ -1,9 +1,10 @@
 'use client'
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '../../../../lib/supabase-browser'
-import { getCampaignNpcs } from '../../../../lib/data/campaign-npcs'
+import { getCampaignNpcs, getCampaignNpcById } from '../../../../lib/data/campaign-npcs'
+import { getCharacterStateById } from '../../../../lib/data/character-states'
 import { canCoverFire, resolveCoverFireShooter, applyCoverFire } from '../../../../lib/cover-fire'
-import { CAMPAIGN_COLUMNS, foldGmScratch } from '../../../../lib/data/campaigns'
+import { CAMPAIGN_COLUMNS, foldGmScratch, listCampaignObservers } from '../../../../lib/data/campaigns'
 import { activeSceneId } from '../../../../lib/data/scenes'
 import { insertRollLog, deleteRollLog, setRollLogSession, rollLogForCampaign } from '../../../../lib/data/roll-log'
 import { insertSession, activeSessionIdForCampaign } from '../../../../lib/data/sessions'
@@ -297,6 +298,7 @@ export default function TablePage() {
   // Sync gmLikeRef every render so listener closures get a fresh read.
   useEffect(() => { gmLikeRef.current = gmLike }, [gmLike])
   const [entries, setEntries] = useState<TableEntry[]>([])
+  const [observers, setObservers] = useState<{ userId: string; username: string }[]>([])
   useEffect(() => { entriesRef.current = entries }, [entries])
   const [gmInfo, setGmInfo] = useState<GmInfo | null>(null)
   const [loading, setLoading] = useState(true)
@@ -501,6 +503,22 @@ export default function TablePage() {
   const [sharedSceneId, setSharedSceneId] = useState<string | null>(null)
   // Transient "✓ Shared" flash on the Share Map button after click.
   const [shareMapFlash, setShareMapFlash] = useState(false)
+  // Transient in-combat validation notice - replaces browser alert() on
+  // combat-action gates (Broken weapon / empty clip / no weapon readied /
+  // nothing left to throw). Auto-dismisses. Seq ref keys the toast so an
+  // identical repeated message still re-triggers the render + timer.
+  // (no-browser-dialogs rule: feedback_no_browser_dialogs.)
+  const combatNoticeSeq = useRef(0)
+  const [combatNotice, setCombatNotice] = useState<{ text: string; id: number } | null>(null)
+  function flashCombatNotice(text: string) {
+    combatNoticeSeq.current += 1
+    setCombatNotice({ text, id: combatNoticeSeq.current })
+  }
+  useEffect(() => {
+    if (!combatNotice) return
+    const t = setTimeout(() => setCombatNotice(null), 2800)
+    return () => clearTimeout(t)
+  }, [combatNotice])
   // Ref-mirror so the realtime broadcast handler at subscription time
   // doesn't capture a stale `tacticalShared`. Used by the
   // `scene_activated` listener to decide whether a GM scene switch
@@ -1547,34 +1565,61 @@ export default function TablePage() {
     // safe to race the event-driven one.
     reconcile: () => loadEntries(id),
   })
+  // Shared refetch helpers so both the realtime handler AND the reconcile
+  // catch-up run identical logic. These channels were MISSED when the
+  // reconcile net was first wired (only table_ got one), so a whole-socket
+  // reconnect (~3x during the 2026-08-03 2h08m session, e.g. on auth-token
+  // refresh) resumed listening but never re-synced whatever changed during
+  // the gap - the mechanism behind the "trouble showing/hiding Melissa &
+  // Billy" NPC-reveal report. All refetch fns already seq-guard internally.
+  // Observers are campaign_members with observer=true. They are deliberately
+  // NOT part of `entries`: that pipeline is driven by character_states and
+  // requires an assigned character, and an observer usually has none - which
+  // is exactly why the GM could not see them. Kept as its own tiny query so
+  // the load-bearing loadEntries path is untouched.
+  const loadObservers = async (campaignId: string) => {
+    const { data } = await listCampaignObservers(campaignId)
+    setObservers(data)
+  }
+
+  const resyncMembers = async () => {
+    const { data: refreshedMembers } = await supabase
+      .from('campaign_members')
+      .select('user_id, character_id, characters:character_id(id, name, data->rapid)')
+      .eq('campaign_id', id)
+      .not('character_id', 'is', null)
+    if (refreshedMembers && refreshedMembers.length > 0) await ensureCharacterStates(id, refreshedMembers as any[])
+    await loadEntries(id)
+    await loadObservers(id)
+  }
+  const reloadCampaignNpcs = async () => {
+    const { data: cnpcs } = await getCampaignNpcs(id)
+    if (cnpcs) {
+      setCampaignNpcs(cnpcs)
+      setRosterNpcs(cnpcs.filter((n: any) => { if (n.status !== 'active') return false; const wp = n.wp_current ?? n.wp_max ?? 10; return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0) }))
+    }
+  }
   useCampaignChannel(id, {
     channelName: `members_${id}`,
-    postgres: [{
-      label: 'campaign_members:*', event: '*', table: 'campaign_members', filter: `campaign_id=eq.${id}`,
-      handler: async () => {
-        const { data: refreshedMembers } = await supabase
-          .from('campaign_members')
-          .select('user_id, character_id, characters:character_id(id, name, data->rapid)')
-          .eq('campaign_id', id)
-          .not('character_id', 'is', null)
-        if (refreshedMembers && refreshedMembers.length > 0) await ensureCharacterStates(id, refreshedMembers as any[])
-        await loadEntries(id)
-      },
-    }],
+    postgres: [{ label: 'campaign_members:*', event: '*', table: 'campaign_members', filter: `campaign_id=eq.${id}`, handler: resyncMembers }],
+    reconcile: resyncMembers,
   })
+  const applyCampaignRow = (row: any) => {
+    setSessionStatus(row.session_status === 'active' ? 'active' : 'idle')
+    setSessionCount(row.session_count ?? 0)
+    syncRollLogSession(row.session_status)  // Y11-e
+    setCampaign((prev: Campaign | null) => prev ? { ...prev, session_status: row.session_status, session_count: row.session_count, session_started_at: row.session_started_at } : prev)
+    if (Array.isArray(row.vehicles)) setVehicles(row.vehicles)
+  }
   useCampaignChannel(id, {
     channelName: `campaign_${id}`,
-    postgres: [{
-      label: 'campaigns:UPDATE', event: 'UPDATE', table: 'campaigns', filter: `id=eq.${id}`,
-      handler: (payload: any) => {
-        const row = payload.new
-        setSessionStatus(row.session_status === 'active' ? 'active' : 'idle')
-        setSessionCount(row.session_count ?? 0)
-        syncRollLogSession(row.session_status)  // Y11-e
-        setCampaign((prev: Campaign | null) => prev ? { ...prev, session_status: row.session_status, session_count: row.session_count, session_started_at: row.session_started_at } : prev)
-        if (Array.isArray(row.vehicles)) setVehicles(row.vehicles)
-      },
-    }],
+    postgres: [{ label: 'campaigns:UPDATE', event: 'UPDATE', table: 'campaigns', filter: `id=eq.${id}`, handler: (payload: any) => applyCampaignRow(payload.new) }],
+    // Handler applies an UPDATE payload directly (no refetch), so the reconcile
+    // needs to re-read the row and reapply the same fields after a gap.
+    reconcile: async () => {
+      const { data: row } = await supabase.from('campaigns').select('session_status, session_count, session_started_at, vehicles').eq('id', id).maybeSingle()
+      if (row) applyCampaignRow(row)
+    },
   })
   useCampaignChannel(id, {
     channelName: `campaign_npcs_${id}`,
@@ -1592,19 +1637,15 @@ export default function TablePage() {
           setViewingNpcs(prev => prev.map(n => n.id === row.id ? { ...n, ...row } as CampaignNpc : n))
           return
         }
-        void (async () => {
-          const { data: cnpcs } = await getCampaignNpcs(id)
-          if (cnpcs) {
-            setCampaignNpcs(cnpcs)
-            setRosterNpcs(cnpcs.filter((n: any) => { if (n.status !== 'active') return false; const wp = n.wp_current ?? n.wp_max ?? 10; return !(wp === 0 && n.death_countdown != null && n.death_countdown <= 0) }))
-          }
-        })()
+        void reloadCampaignNpcs()
       },
     }],
+    reconcile: reloadCampaignNpcs,
   })
   useCampaignChannel(id, {
     channelName: `community_members_${id}`,
     postgres: [{ label: 'community_members:*', event: '*', table: 'community_members', filter: `campaign_id=eq.${id}`, handler: () => loadPlayerNpcCommunityMap(id) }],
+    reconcile: () => loadPlayerNpcCommunityMap(id),
   })
   useCampaignChannel(id, {
     channelName: `reveals_${id}`,
@@ -1615,6 +1656,13 @@ export default function TablePage() {
         else if (myCharIdRef.current) loadRevealedNpcs(myCharIdRef.current, campaignNpcs)
       },
     }],
+    // Catch-up: npc_relationships.revealed drives who a player sees revealed;
+    // a dropped event during a socket cycle was the "Melissa & Billy won't
+    // show/hide" friction. Same call the handler makes.
+    reconcile: () => {
+      if (gmLikeRef.current) loadRevealedNpcs(null, campaignNpcs)
+      else if (myCharIdRef.current) loadRevealedNpcs(myCharIdRef.current, campaignNpcs)
+    },
   })
 
   useEffect(() => {
@@ -2353,25 +2401,50 @@ export default function TablePage() {
     }
     consumeActionInFlightRef.current.add(entryId)
     try {
-    // Re-fetch from DB to avoid stale state
-    const { data: freshEntry, error: freshErr } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
-    if (freshErr) reportSupabaseError(freshErr, 'consumeAction:fetch')
-    const entry = freshEntry ?? initiativeOrder.find(e => e.id === entryId)
-    trace('consumeAction', {
-      called: true,
-      entryId,
-      character: entry?.character_name,
-      actions_before: entry?.actions_remaining,
-      cost,
-      label: actionLabel,
-      call_site_via_stack: new Error().stack?.split('\n').slice(2, 5).join(' | '),
-    })
-    if (!entry) { trace('consumeAction', { skipped: 'no entry found, bailing' }); return }
-    if ((entry.actions_remaining ?? 0) < cost) { trace('consumeAction', { skipped: 'insufficient actions', actions_remaining: entry.actions_remaining, cost }); return }
-    const newRemaining = (entry.actions_remaining ?? 0) - cost
-    trace('consumeAction', { wrote_actions_remaining: { from: entry.actions_remaining, to: newRemaining } })
+    // Compare-and-set with retry (same pattern as lib/campaign-clock.ts
+    // advance()): the in-flight ref above only blocks a double-fire from
+    // THIS tab. A different client controlling the same combatant (e.g.
+    // the table page and a vehicle popout tab on the same seat) could
+    // still read the same actions_remaining and both write the same
+    // decrement - double-spending or under-spending an action, or never
+    // reaching 0 to advance the turn. Each attempt re-reads and only
+    // writes if the count is still what it read.
+    let entry: any = null
+    let newRemaining = 0
+    let clearAim = false
+    let won = false
+    for (let attempt = 0; attempt < 5 && !won; attempt++) {
+      const { data: freshEntry, error: freshErr } = await supabase.from('initiative_order').select('*').eq('id', entryId).single()
+      if (freshErr) reportSupabaseError(freshErr, 'consumeAction:fetch')
+      entry = freshEntry ?? initiativeOrder.find(e => e.id === entryId)
+      trace('consumeAction', {
+        called: true, entryId, character: entry?.character_name, actions_before: entry?.actions_remaining, cost, label: actionLabel,
+        call_site_via_stack: new Error().stack?.split('\n').slice(2, 5).join(' | '),
+      })
+      if (!entry) { trace('consumeAction', { skipped: 'no entry found, bailing' }); return }
+      if ((entry.actions_remaining ?? 0) < cost) { trace('consumeAction', { skipped: 'insufficient actions', actions_remaining: entry.actions_remaining, cost }); return }
+      const actionsBefore = entry.actions_remaining ?? 0
+      newRemaining = actionsBefore - cost
+      // Clear aim bonus after a roll (no actionLabel = called from
+      // closeRollModal). Clear BOTH aim_bonus (the numeric +N CMod) and
+      // aim_active (the "Aimed - Attack or lose it" badge).
+      clearAim = !actionLabel && entry.aim_bonus > 0
+      trace('consumeAction', { wrote_actions_remaining: { from: actionsBefore, to: newRemaining } })
 
-    // Log the action to game feed
+      const { error: updErr, data: updData } = await supabase.from('initiative_order')
+        .update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0, aim_active: false } : {}) })
+        .eq('id', entryId).eq('actions_remaining', actionsBefore)
+        .select('id, actions_remaining')
+      trace('consumeAction', { update: true, entryId, newRemaining, rowsAffected: updData?.length ?? 0, error: updErr?.message ?? 'none', returned: updData })
+      if (updErr) { reportSupabaseError(updErr, 'consumeAction:update'); return }
+      won = !!updData && updData.length > 0
+    }
+    if (!won) {
+      console.error('[consumeAction] too much contention or silent RLS fail - 0 rows after 5 attempts. entryId:', entryId)
+      return
+    }
+
+    // Log the action to game feed - once, after the decrement has landed.
     if (actionLabel) {
       const { error: actionLogErr } = await insertRollLog({
         campaign_id: id,
@@ -2382,27 +2455,6 @@ export default function TablePage() {
         outcome: OUTCOME.action,
       })
       if (actionLogErr) reportSupabaseError(actionLogErr, 'consumeAction:action-log-insert')
-    }
-
-    // Clear aim bonus after a roll (no actionLabel = called from closeRollModal).
-    // Clear BOTH aim_bonus (the numeric +N CMod) and aim_active (the "Aimed -
-    // Attack or lose it" badge). Previously only aim_bonus was cleared, so
-    // the badge lingered after the attack even though the bonus was already
-    // consumed - visually misleading.
-    const clearAim = !actionLabel && entry.aim_bonus > 0
-
-    // Always persist the new action count to DB first - if nextTurn fails or
-    // races, the DB is at least consistent with "this combatant is spent".
-    // `.select()` so a silent RLS rejection (0 rows affected, no error) is
-    // distinguishable from a real update.
-    const { error: updErr, data: updData } = await supabase.from('initiative_order')
-      .update({ actions_remaining: newRemaining, ...(clearAim ? { aim_bonus: 0, aim_active: false } : {}) })
-      .eq('id', entryId)
-      .select('id, actions_remaining')
-    trace('consumeAction', { update: true, entryId, newRemaining, rowsAffected: updData?.length ?? 0, error: updErr?.message ?? 'none', returned: updData })
-    if (updErr) reportSupabaseError(updErr, 'consumeAction:update')
-    if (!updErr && (!updData || updData.length === 0)) {
-      console.error('[consumeAction] SILENT RLS FAIL - 0 rows updated, no error. entryId:', entryId)
     }
 
     if (newRemaining <= 0) {
@@ -3087,7 +3139,14 @@ export default function TablePage() {
   //   1. localStorage 'storage' event - browser-native, OTHER tab only
   //   2. BroadcastChannel - browser-native, OTHER context only
   //   3. window 'focus' - whenever this tab regains focus
-  //   4. 3-second polling - last-resort guarantee
+  //   4. 30-second polling, VISIBLE tabs only - last-resort guarantee.
+  //      Cut from 3s -> 30s + visibility-gated (2026-08-02, scale): a 3s
+  //      poll on every mounted table client is ~167 req/s of SELECT
+  //      vehicles at Beta-500 (500 clients), almost all pure idle waste
+  //      since a popout is rarely open. A backgrounded tab skips the poll
+  //      and re-syncs immediately via 'focus' when re-shown, so the net
+  //      still holds; worst-case popout-sync staleness on a focused tab is
+  //      30s (path 1/2 normally beat it to it).
   // Whatever fires first wins; refetchVehicles is idempotent.
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -3105,7 +3164,7 @@ export default function TablePage() {
       bc = new BroadcastChannel(channelName)
       bc.onmessage = () => { void refetchVehicles() }
     } catch { bc = null }
-    const pollId = window.setInterval(() => { void refetchVehicles() }, 3000)
+    const pollId = window.setInterval(() => { if (document.visibilityState === 'visible') void refetchVehicles() }, 30000)
     window.addEventListener('storage', onStorage)
     window.addEventListener('focus', onFocus)
     return () => {
@@ -4531,16 +4590,25 @@ export default function TablePage() {
 
   // Assembles the AttackCmodCtx from current component state for the prefill
   // and the target-dropdown onChange (the only two computeAttackCmod callers).
-  function cmodCtx(): AttackCmodCtx {
+  // labelOverride: the prefill call site (handleRollRequest) computes this
+  // ctx in the SAME synchronous call as setPendingRoll(), before React
+  // re-renders - reading pendingRoll?.label there would see the PREVIOUS
+  // roll's label, wrongly gating (or wrongly allowing) the Coordinated
+  // Effort bonus in computeAttackCmod's `!pendingLabel.startsWith('Group
+  // Check - ')` check (per the 2026-08-01 audit). Pass the label being set
+  // up right now; the dropdown onChange call site (already-settled state,
+  // a separate render cycle) omits it and reads pendingRoll as before.
+  function cmodCtx(labelOverride?: string): AttackCmodCtx {
     return {
       entries, npcs: campaignNpcs, tokens: mapTokens, initiative: initiativeOrder, vehicles: vehicles.map((v: any) => ({ name: v.name, size: v.size })),
-      userId, pendingLabel: pendingRoll?.label ?? '', coordEffort: coordEffortRef.current,
+      userId, pendingLabel: labelOverride ?? pendingRoll?.label ?? '', coordEffort: coordEffortRef.current,
     }
   }
 
   async function handleInsightSave(spend: boolean) {
     if (!insightSavePrompt) return
     const { stateId, phyAmod, insightDice } = insightSavePrompt
+    const targetEntryForActions = entries.find(e => e.stateId === stateId)
     if (spend) {
       // Trade ALL Insight Dice per SRD, regain 1 WP and 1 RP
       await supabase.from('character_states').update({
@@ -4563,6 +4631,24 @@ export default function TablePage() {
           label: `😰 ${targetEntry.character.name} gains a Stress from being Mortally Wounded`,
           die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.stress,
         })
+      }
+    }
+    // Zero actions + auto-advance if this combatant is the active one -
+    // matches the direct mortal-wound path (useRollResolution.ts), which
+    // does this "so combat doesn't stall on a downed-but-still-active
+    // combatant" (SMOKE-1). This modal-driven path never did (per the
+    // 2026-08-01 audit) - a self-attack that triggers the Insight-Trade
+    // save left the wounded/survived combatant still active with actions
+    // to spend, stalling the round either way (spend or decline).
+    if (combatActive && targetEntryForActions) {
+      const initEntry = initiativeOrder.find(e => e.character_id === targetEntryForActions.character.id)
+      if (initEntry) {
+        await setInitiativeActions(initEntry.id, 0)
+        if (initEntry.is_active) {
+          await nextTurn()
+        }
+        await loadInitiative(id)
+        initChannelRef.current?.send({ type: 'broadcast', event: 'turn_changed', payload: {} })
       }
     }
     setInsightSavePrompt(null)
@@ -4756,7 +4842,7 @@ export default function TablePage() {
       // Itemized CMod (incl. NPC-target defense on the to-hit roll, Q1=b) via
       // the shared computeAttackCmod so the prefill and the dropdown onChange
       // stay in lockstep.
-      const { net, sources } = computeAttackCmod(chosenTarget, weapon, cmodCtx())
+      const { net, sources } = computeAttackCmod(chosenTarget, weapon, cmodCtx(label))
       cmodSourcesRef.current = sources
       setCmod(String(net))
       const autoRange = getAutoRangeBand(activeEntry.character_id || undefined, activeEntry.npc_id || undefined, chosenTarget)
@@ -5086,8 +5172,18 @@ export default function TablePage() {
         if (finalWP > 0 && !weapon.forceMelee && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetEntry.character.name)
         const phy = targetEntry.character.data?.rapid?.PHY ?? 0
         const ls = targetEntry.liveState
-        const eb = baseline?.targetKind === 'pc' && baseline.id === targetEntry.stateId ? baseline
-          : { wp: ls.wp_current, rp: ls.rp_current, deathCountdown: ls.death_countdown ?? 0, incapRounds: ls.incap_rounds ?? 0, stress: ls.stress ?? 0 }
+        // No baseline means the original roll missed (nothing was applied),
+        // so the reroll's damage is the first hit on this target - re-fetch
+        // fresh state instead of trusting the closure, same fix as the
+        // initial-hit path (a concurrent hit between the miss and this
+        // reroll click would otherwise be overwritten - lost-update race).
+        let eb = { wp: ls.wp_current, rp: ls.rp_current, deathCountdown: ls.death_countdown ?? 0, incapRounds: ls.incap_rounds ?? 0, stress: ls.stress ?? 0 }
+        if (baseline?.targetKind === 'pc' && baseline.id === targetEntry.stateId) {
+          eb = baseline
+        } else {
+          const { data: freshState } = await getCharacterStateById(targetEntry.stateId)
+          if (freshState) eb = { wp: freshState.wp_current, rp: freshState.rp_current, deathCountdown: freshState.death_countdown ?? 0, incapRounds: freshState.incap_rounds ?? 0, stress: freshState.stress ?? 0 }
+        }
         const tNewWP = Math.max(0, eb.wp - finalWP)
         const tNewRP = Math.max(0, eb.rp - finalRP)
         const mortalNow = tNewWP === 0 && eb.wp > 0
@@ -5112,8 +5208,15 @@ export default function TablePage() {
       } else if (targetNpcObj) {
         if (finalWP > 0 && !weapon.forceMelee && weaponCausesWoundInfection(weapon.weaponName)) pendingWoundInfectionRef.current.add(targetNpcObj.name)
         const npcPhy = targetNpcObj.physicality ?? 0
-        const eb = baseline?.targetKind === 'npc' && baseline.id === targetNpcObj.id ? baseline
-          : { wp: targetNpcObj.wp_current ?? targetNpcObj.wp_max ?? 10, rp: targetNpcObj.rp_current ?? targetNpcObj.rp_max ?? 6, deathCountdown: (targetNpcObj as any).death_countdown ?? 0, incapRounds: (targetNpcObj as any).incap_rounds ?? 0 }
+        // No baseline means the original roll missed - re-fetch fresh state
+        // instead of trusting the closure (same lost-update fix as above).
+        let eb = { wp: targetNpcObj.wp_current ?? targetNpcObj.wp_max ?? 10, rp: targetNpcObj.rp_current ?? targetNpcObj.rp_max ?? 6, deathCountdown: (targetNpcObj as any).death_countdown ?? 0, incapRounds: (targetNpcObj as any).incap_rounds ?? 0 }
+        if (baseline?.targetKind === 'npc' && baseline.id === targetNpcObj.id) {
+          eb = baseline
+        } else {
+          const { data: freshNpc } = await getCampaignNpcById(targetNpcObj.id)
+          if (freshNpc) eb = { wp: freshNpc.wp_current ?? targetNpcObj.wp_max ?? 10, rp: freshNpc.rp_current ?? targetNpcObj.rp_max ?? 6, deathCountdown: freshNpc.death_countdown ?? 0, incapRounds: freshNpc.incap_rounds ?? 0 }
+        }
         const tNewWP = Math.max(0, eb.wp - finalWP)
         const tNewRP = Math.max(0, eb.rp - finalRP)
         const mortalNow = tNewWP === 0 && eb.wp > 0
@@ -6011,10 +6114,10 @@ export default function TablePage() {
 
                 {/* ── ATTACK: weapon attack, +1 CMod if same target as last attack ── */}
                 <button onClick={() => {
-                  if (!w || !weaponData) { alert('No weapon readied.'); return }
-                  if (isBroken) { alert(`${w.name} is Broken and can't be used. Repair it (Upkeep Check) before firing.`); return }
-                  if (outOfAmmo) { alert(`${w.name} is empty. Reload via Ready Weapon before firing again.`); return }
-                  if (outOfThrows) { alert(`${w.name} - none left to throw.`); return }
+                  if (!w || !weaponData) { flashCombatNotice('No weapon readied.'); return }
+                  if (isBroken) { flashCombatNotice(`${w.name} is Broken and can't be used. Repair it (Upkeep Check) before firing.`); return }
+                  if (outOfAmmo) { flashCombatNotice(`${w.name} is empty. Reload via Ready Weapon before firing again.`); return }
+                  if (outOfThrows) { flashCombatNotice(`${w.name} - none left to throw.`); return }
                   const rapid = charEntry?.character.data?.rapid ?? {}
                   const npcAttacker = activeEntry.is_npc ? campaignNpcs.find((n: any) => n.name === activeEntry.character_name) : null
                   const attrKey = isMelee ? 'PHY' : (w.skill === 'Ranged Combat' ? 'DEX' : 'ACU')
@@ -7183,6 +7286,7 @@ export default function TablePage() {
             }}>
               <CharacterCard
                 campaignId={id}
+                setting={campaign?.setting}
                 character={syncedSelectedEntry.character}
                 liveState={syncedSelectedEntry.liveState}
                 canEdit={gmLike || syncedSelectedEntry.userId === userId}
@@ -7257,21 +7361,29 @@ export default function TablePage() {
                   .filter((n: any) => n.status !== 'dead')
                   .map((n: any) => ({ id: n.id, name: n.name }))}
                 onGiveItemToNpc={async (item: InventoryItem, targetNpcId: string, qty: number) => {
-                  // Mirrors onGiveItem but writes to campaign_npcs.
-                  // Filters apply on the recipient list above so non-GM
-                  // players can't see hidden NPCs as targets.
+                  // Atomic RPC (give_item_character_to_npc): decrements the
+                  // giver PC's inventory AND credits the NPC in one
+                  // transaction. The old code here only wrote the receiver
+                  // side (InventoryPanel's own giver-decrement is skipped for
+                  // non-'pc' targets per its own comment, so nothing else
+                  // ever decremented the giver - free items, per the
+                  // 2026-08-01 audit). Filters apply on the recipient list
+                  // above so non-GM players can't see hidden NPCs as targets.
+                  const { error } = await supabase.rpc('give_item_character_to_npc', {
+                    p_giver_character_id: syncedSelectedEntry.character.id,
+                    p_target_npc_id: targetNpcId,
+                    p_item_name: item.name,
+                    p_item_custom: item.custom ?? false,
+                    p_qty: qty,
+                  })
+                  if (error) { alert(`Give to NPC failed: ${error.message}`); return }
+                  await loadEntries(id)
                   const targetNpc: any = campaignNpcs.find((n: any) => n.id === targetNpcId)
-                  if (!targetNpc) return
-                  const targetInv: InventoryItem[] = Array.isArray(targetNpc.inventory) ? targetNpc.inventory : []
+                  const targetInv: InventoryItem[] = Array.isArray(targetNpc?.inventory) ? targetNpc.inventory : []
                   const existing = targetInv.find((i: InventoryItem) => i.name === item.name && (i.custom ?? false) === (item.custom ?? false))
                   const newTargetInv = existing
                     ? targetInv.map((i: InventoryItem) => i === existing ? { ...i, qty: (i.qty ?? 1) + qty } : i)
                     : [...targetInv, { ...item, qty }]
-                  const { error } = await supabase.from('campaign_npcs').update({ inventory: newTargetInv }).eq('id', targetNpcId)
-                  if (error) { alert(`Give to NPC failed: ${error.message}`); return }
-                  // Local state patch + token-refresh broadcast so other
-                  // GMs / players see the NPC's new inventory without a
-                  // manual refresh.
                   setCampaignNpcs(prev => prev.map((n: any) => n.id === targetNpcId ? { ...n, inventory: newTargetInv } : n))
                   setRosterNpcs(prev => prev.map((n: any) => n.id === targetNpcId ? { ...n, inventory: newTargetInv } : n))
                   setViewingNpcs(prev => prev.map((n: any) => n.id === targetNpcId ? { ...n, inventory: newTargetInv } : n))
@@ -7279,65 +7391,58 @@ export default function TablePage() {
                 }}
                 otherCommunities={(pcCommunityMemberships[syncedSelectedEntry.character.id] ?? [])}
                 onGiveItemToCommunity={async (item: InventoryItem, targetCommunityId: string, qty: number) => {
-                  // Deposit to community_stockpile_items. Stack-merge
-                  // by (name, custom): UPDATE qty if a row already
-                  // exists, else INSERT. The unique index on
-                  // (community_id, name, custom) catches the race.
-                  const { data: existing, error: readErr } = await supabase
-                    .from('community_stockpile_items')
-                    .select('id, qty')
-                    .eq('community_id', targetCommunityId)
-                    .eq('name', item.name)
-                    .eq('custom', item.custom)
-                    .maybeSingle()
-                  if (readErr) { alert(`Stockpile read failed: ${readErr.message}`); return }
-                  if (existing) {
-                    const newQty = ((existing as any).qty ?? 0) + qty
-                    const { error } = await supabase
-                      .from('community_stockpile_items')
-                      .update({ qty: newQty })
-                      .eq('id', (existing as any).id)
-                    if (error) { alert(`Deposit failed: ${error.message}`); return }
-                  } else {
-                    const { error } = await supabase.from('community_stockpile_items').insert({
-                      community_id: targetCommunityId,
-                      name: item.name, qty, enc: item.enc, rarity: item.rarity,
-                      notes: item.notes, custom: item.custom,
-                    })
-                    if (error) { alert(`Deposit failed: ${error.message}`); return }
-                  }
+                  // Atomic RPC (give_item_character_to_community): decrements
+                  // the giver PC's inventory AND deposits into the stockpile
+                  // in one transaction, with FOR UPDATE row locking on the
+                  // stockpile item. The old read-then-write here raced two
+                  // concurrent deposits/withdrawals on the same item row
+                  // (both read the same stale qty, both write the same
+                  // absolute value - lost update, per the 2026-08-01 audit).
+                  const { error } = await supabase.rpc('give_item_character_to_community', {
+                    p_giver_character_id: syncedSelectedEntry.character.id,
+                    p_target_community_id: targetCommunityId,
+                    p_item_name: item.name,
+                    p_item_custom: item.custom ?? false,
+                    p_qty: qty,
+                    p_item_enc: item.enc,
+                    p_item_rarity: item.rarity,
+                    p_item_notes: item.notes,
+                  })
+                  if (error) { alert(`Deposit failed: ${error.message}`); return }
+                  await loadEntries(id)
                 }}
                 otherVehicles={vehicles.map(v => ({ id: v.id, name: v.name ?? 'Vehicle' }))}
                 onGiveItemToVehicle={async (item: InventoryItem, targetVehicleId: string, qty: number) => {
-                  // Stash in campaigns.vehicles[N].cargo. Stack-merge
-                  // by (name, custom) to mirror the existing
-                  // community-stockpile pattern: if the cargo array
-                  // already has the same item, bump qty; else push a
-                  // new row. Whole vehicles[] is then written back to
-                  // the campaigns.vehicles jsonb in one update.
-                  const targetIdx = vehicles.findIndex(v => v.id === targetVehicleId)
-                  if (targetIdx < 0) { alert('Vehicle not found.'); return }
-                  const target = vehicles[targetIdx]
-                  const cargo = Array.isArray(target.cargo) ? [...target.cargo] : []
-                  const existingIdx = cargo.findIndex(c => c.name === item.name && (c.custom ?? false) === (item.custom ?? false))
-                  if (existingIdx >= 0) {
-                    cargo[existingIdx] = { ...cargo[existingIdx], qty: (cargo[existingIdx].qty ?? 0) + qty }
-                  } else {
-                    cargo.push({ name: item.name, enc: item.enc, rarity: item.rarity, notes: item.notes, qty, custom: !!item.custom })
-                  }
-                  const newVehicles = vehicles.map((v, i) => i === targetIdx ? { ...v, cargo } : v)
-                  setVehicles(newVehicles)
-                  // RPC instead of direct UPDATE so non-GM members succeed
-                  // (post-playtest Q3 scope A, 2026-05-19). Direct UPDATE is
-                  // RLS-blocked for non-GM; the RPC is SECURITY DEFINER +
-                  // member-authorized.
-                  const updated = newVehicles[targetIdx]
-                  const { error } = await supabase.rpc('update_vehicle_in_campaign', {
+                  // Atomic RPC (give_item_character_to_vehicle): decrements
+                  // the giver PC's inventory AND stashes it in the vehicle's
+                  // cargo in one transaction (locks the campaigns row for the
+                  // vehicles jsonb, same as update_vehicle_in_campaign). The
+                  // old code here never decremented the giver directly -
+                  // that happened via InventoryPanel's own separate onUpdate
+                  // call, racing independently against this write with no
+                  // coordination (per the 2026-08-01 audit).
+                  const { error } = await supabase.rpc('give_item_character_to_vehicle', {
+                    p_giver_character_id: syncedSelectedEntry.character.id,
                     p_campaign_id: id,
-                    p_vehicle_id: updated.id,
-                    p_new_vehicle: updated as any,
+                    p_vehicle_id: targetVehicleId,
+                    p_item_name: item.name,
+                    p_item_custom: item.custom ?? false,
+                    p_qty: qty,
                   })
                   if (error) { alert(`Stash failed: ${error.message}`); return }
+                  await loadEntries(id)
+                  const targetIdx = vehicles.findIndex(v => v.id === targetVehicleId)
+                  if (targetIdx >= 0) {
+                    const target = vehicles[targetIdx]
+                    const cargo = Array.isArray(target.cargo) ? [...target.cargo] : []
+                    const existingIdx = cargo.findIndex(c => c.name === item.name && (c.custom ?? false) === (item.custom ?? false))
+                    if (existingIdx >= 0) {
+                      cargo[existingIdx] = { ...cargo[existingIdx], qty: (cargo[existingIdx].qty ?? 0) + qty }
+                    } else {
+                      cargo.push({ name: item.name, enc: item.enc, rarity: item.rarity, notes: item.notes, qty, custom: !!item.custom })
+                    }
+                    setVehicles(vehicles.map((v, i) => i === targetIdx ? { ...v, cargo } : v))
+                  }
                 }}
                 onInventoryChange={(newInventory: InventoryItem[]) => {
                   // Patch our entries state so the new inventory persists when
@@ -7879,13 +7984,16 @@ export default function TablePage() {
                                 RPC since direct campaigns.update is GM-RLS-blocked. */}
                             <VehicleCard vehicle={v} campaignId={id} canEdit={true}
                               onClickInline={() => { setSelectedEntry(null); setSheetPos(null); setSelectedVehicleId(v.id) }}
-                              onUpdate={async (updated: Vehicle) => {
-                                const newVehicles = vehicles.map(vv => vv.id === updated.id ? updated : vv)
-                                setVehicles(newVehicles)
+                              onUpdate={async (patch) => {
+                                setVehicles(vehicles.map(vv => vv.id === patch.id ? { ...vv, ...patch } : vv))
+                                // patch is already narrow (id + only the changed
+                                // fields) - the RPC merges server-side, so a
+                                // concurrent client's write to a different field
+                                // survives instead of being clobbered.
                                 const { error } = await supabase.rpc('update_vehicle_in_campaign', {
                                   p_campaign_id: id,
-                                  p_vehicle_id: updated.id,
-                                  p_new_vehicle: updated as any,
+                                  p_vehicle_id: patch.id,
+                                  p_patch: patch,
                                 })
                                 if (error) {
                                   reportSupabaseError(error as any, 'vehicle-asset-update')
@@ -7969,6 +8077,39 @@ export default function TablePage() {
         </button>
           )
         })()}
+
+        {/* Observers. They hold no character and no character_states row, so
+            they can never appear in `entries` - the GM previously had no way
+            to see who was watching. Green dot = currently connected, from the
+            same presence set that borders the player seats. */}
+        {gmLike && observers.length > 0 && (
+          <div title="People watching this table as observers"
+            style={{ display: 'flex', flexDirection: 'column', gap: '3px', padding: '4px 8px', marginLeft: '8px', border: '1px solid #2e2e2e', borderRadius: '4px', background: '#141414' }}>
+            <span style={{ fontSize: '13px', color: '#cce0f5', fontFamily: 'Carlito, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              Observing
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {observers.map(o => {
+                const online = onlineUserIds.has(o.userId)
+                const isTarget = whisperTarget?.userId === o.userId
+                return (
+                  <button key={o.userId}
+                    onClick={() => {
+                      // Same toggle the player seats use: click to aim a
+                      // whisper, click again to clear it.
+                      if (isTarget) { setWhisperTarget(null) }
+                      else { setWhisperTarget({ userId: o.userId, characterName: `${o.username} (Observer)` }); setFeedTab('chat') }
+                    }}
+                    title={`${online ? 'Connected now' : 'Not currently connected'} - click to whisper ${o.username}`}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', cursor: 'pointer', padding: '1px 6px', borderRadius: '2px', background: isTarget ? '#2a102a' : 'transparent', border: isTarget ? '1px solid #8b2e8b' : '1px solid transparent' }}>
+                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: online ? '#7fc458' : '#3a3a3a', flexShrink: 0 }} />
+                    {o.username}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {(() => {
           const slotCount = Math.max(playerEntries.length, 3)
@@ -8079,6 +8220,27 @@ export default function TablePage() {
         })()}
       </div>
 
+      {/* Transient combat-action notice (in-table, replaces alert()). Amber
+          warning chrome matching the "Aimed" combat chips; auto-dismisses. */}
+      {combatNotice && (
+        <div
+          key={combatNotice.id}
+          role="status"
+          aria-live="polite"
+          onClick={() => setCombatNotice(null)}
+          style={{
+            position: 'fixed', bottom: '100px', left: '50%', transform: 'translateX(-50%)',
+            zIndex: 10000, maxWidth: '440px',
+            padding: '9px 16px', borderRadius: '4px',
+            background: '#2a2010', border: '1px solid #5a4a1b',
+            color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.5)', cursor: 'pointer',
+            textAlign: 'center', letterSpacing: '.01em',
+          }}>
+          {combatNotice.text}
+        </div>
+      )}
+
       {/* Character sheet overlay - draggable floating window */}
       {syncedSelectedEntry && sheetMode === 'overlay' && (
         <div onClick={() => { setSelectedEntry(null); setSheetPos(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 9999 }}>
@@ -8120,6 +8282,7 @@ export default function TablePage() {
             </div>
             <CharacterCard
               campaignId={id}
+              setting={campaign?.setting}
               character={syncedSelectedEntry.character}
               liveState={syncedSelectedEntry.liveState}
               canEdit={gmLike || syncedSelectedEntry.userId === userId}
@@ -10853,98 +11016,30 @@ export default function TablePage() {
               // instead of a silent dev-console throw.
               try {
                 const charId = myEntry.character.id
-                const newPcInv: InventoryItem[] = structuredClone(pcInventory)
-                for (const g of pcGives) {
-                  const idx = newPcInv.findIndex(i => i.name === g.name && i.custom === g.custom)
-                  if (idx >= 0) {
-                    newPcInv[idx].qty -= g.selectedQty
-                    if (newPcInv[idx].qty <= 0) newPcInv.splice(idx, 1)
-                  }
-                }
-                for (const r of pcGets) {
-                  const idx = newPcInv.findIndex(i => i.name === r.name && i.custom === r.custom)
-                  if (idx >= 0) newPcInv[idx].qty += r.selectedQty
-                  else newPcInv.push({ ...r, qty: r.selectedQty })
-                }
-                // PC write
-                const { error: charErr } = await supabase
-                  .from('characters')
-                  .update({ data: { ...charData, inventory: newPcInv } })
-                  .eq('id', charId)
-                if (charErr) throw new Error(`PC inventory write failed: ${charErr.message}`)
-                setEntries(prev => prev.map(e => e.character.id === charId
-                  ? { ...e, character: { ...e.character, data: { ...e.character.data, inventory: newPcInv } } }
-                  : e))
-                // Target write
+                // Atomic RPC (apply_barter_trade): locks the PC (and, for an
+                // NPC target, the NPC) row FOR UPDATE, verifies BOTH sides
+                // have enough of what they're giving up, and writes
+                // everything in one transaction. The old code wrote the PC
+                // side first and the target side second with no rollback -
+                // a mid-flow failure (NPC deleted on another client, RLS
+                // denial, a stockpile row vanishing) half-applied the deal
+                // (per the 2026-08-01 audit).
+                const { error: tradeErr } = await supabase.rpc('apply_barter_trade', {
+                  p_pc_character_id: charId,
+                  p_target_kind: tradeTarget!.kind,
+                  p_target_id: tradeTarget!.id,
+                  p_pc_gives: pcGives,
+                  p_pc_gets: pcGets,
+                })
+                if (tradeErr) throw new Error(tradeErr.message)
+                await loadEntries(id)
                 if (tradeTarget!.kind === 'npc') {
-                  const npc: any = campaignNpcs.find((n: any) => n.id === tradeTarget!.id)
-                  if (!npc) throw new Error('NPC vanished mid-trade')
-                  const newNpcInv: InventoryItem[] = structuredClone(npc.inventory ?? [])
-                  for (const r of pcGets) {
-                    const idx = newNpcInv.findIndex(i => i.name === r.name && i.custom === r.custom)
-                    if (idx >= 0) {
-                      newNpcInv[idx].qty -= r.selectedQty
-                      if (newNpcInv[idx].qty <= 0) newNpcInv.splice(idx, 1)
-                    }
+                  const { data: cnpcs } = await getCampaignNpcs(id)
+                  if (cnpcs) {
+                    setCampaignNpcs(cnpcs)
+                    setRosterNpcs(cnpcs)
                   }
-                  for (const g of pcGives) {
-                    const idx = newNpcInv.findIndex(i => i.name === g.name && i.custom === g.custom)
-                    if (idx >= 0) newNpcInv[idx].qty += g.selectedQty
-                    else newNpcInv.push({ ...g, qty: g.selectedQty })
-                  }
-                  const { error: npcErr } = await supabase.from('campaign_npcs')
-                    .update({ inventory: newNpcInv })
-                    .eq('id', tradeTarget!.id)
-                  if (npcErr) throw new Error(`NPC inventory write failed: ${npcErr.message}`)
-                  setCampaignNpcs(prev => prev.map((n: any) => n.id === tradeTarget!.id ? { ...n, inventory: newNpcInv } : n))
-                  setRosterNpcs(prev => prev.map((n: any) => n.id === tradeTarget!.id ? { ...n, inventory: newNpcInv } : n))
                   initChannelRef.current?.send({ type: 'broadcast', event: 'npc_inventory_changed', payload: { npcId: tradeTarget!.id } })
-                } else {
-                  // Community stockpile target. PC gets items decrement
-                  // existing stockpile rows (delete if qty hits 0); PC
-                  // gives items insert/upsert by (name, custom). Each
-                  // step is error-checked - a mid-loop failure now
-                  // throws so the user sees it instead of leaving the
-                  // stockpile in a half-applied state.
-                  const communityId = tradeTarget!.id
-                  for (const r of pcGets) {
-                    const { data: existing, error: selErr } = await supabase
-                      .from('community_stockpile_items')
-                      .select('id, qty')
-                      .eq('community_id', communityId).eq('name', r.name).eq('custom', r.custom)
-                      .maybeSingle()
-                    if (selErr) throw new Error(`Stockpile read failed: ${selErr.message}`)
-                    if (!existing) continue
-                    const remaining = ((existing as any).qty ?? 0) - r.selectedQty
-                    if (remaining <= 0) {
-                      const { error: delErr } = await supabase.from('community_stockpile_items').delete().eq('id', (existing as any).id)
-                      if (delErr) throw new Error(`Stockpile delete failed: ${delErr.message}`)
-                    } else {
-                      const { error: updErr } = await supabase.from('community_stockpile_items').update({ qty: remaining }).eq('id', (existing as any).id)
-                      if (updErr) throw new Error(`Stockpile update failed: ${updErr.message}`)
-                    }
-                  }
-                  for (const g of pcGives) {
-                    const { data: existing, error: selErr } = await supabase
-                      .from('community_stockpile_items')
-                      .select('id, qty')
-                      .eq('community_id', communityId).eq('name', g.name).eq('custom', g.custom)
-                      .maybeSingle()
-                    if (selErr) throw new Error(`Stockpile read failed: ${selErr.message}`)
-                    if (existing) {
-                      const { error: updErr } = await supabase.from('community_stockpile_items')
-                        .update({ qty: ((existing as any).qty ?? 0) + g.selectedQty })
-                        .eq('id', (existing as any).id)
-                      if (updErr) throw new Error(`Stockpile update failed: ${updErr.message}`)
-                    } else {
-                      const { error: insErr } = await supabase.from('community_stockpile_items').insert({
-                        community_id: communityId,
-                        name: g.name, qty: g.selectedQty, enc: g.enc, rarity: g.rarity,
-                        notes: g.notes, custom: g.custom,
-                      })
-                      if (insErr) throw new Error(`Stockpile insert failed: ${insErr.message}`)
-                    }
-                  }
                 }
                 // Single roll-log summary.
                 const giveStr = pcGives.map(g => `${g.name}×${g.selectedQty}`).join(', ') || '(nothing)'
