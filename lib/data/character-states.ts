@@ -16,13 +16,19 @@ export function getCharacterStates(campaignId: string) {
 /**
  * Party Status fetch: character_states scoped to currently-assigned characters.
  * Prefetches campaign_members to build the active character_id set so that stale
- * rows from reassigned players are excluded.
+ * rows from reassigned players are excluded. OBSERVERS are excluded too - they
+ * spectate the campaign, they are not part of the playing party, so their PC
+ * must not appear in Party Status (2026-09-14: a DZ observer's character was
+ * showing in the list).
  */
 export async function getPartyCharacterStates(campaignId: string) {
   const { data: members } = await db()
     .from('campaign_members')
     .select('character_id')
     .eq('campaign_id', campaignId)
+    // `is not true` keeps observer = false AND any null (default non-observer);
+    // only an explicit observer = true is dropped.
+    .not('observer', 'is', true)
   const currentCharIds = (members ?? []).map(m => m.character_id).filter((id): id is string => !!id)
   if (currentCharIds.length === 0) return { data: [], error: null }
   return db()
