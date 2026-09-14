@@ -24,7 +24,7 @@ remembering, it gets its own entry in `decisions.md` too.
 **Question numbering (2026-09-14, Xero's ask):** every question actually put
 to Xero from here on gets a global sequential tag (`Q1`, `Q2`, ...), NOT
 renumbered retroactively for anything asked before this date. Next number to
-assign: **Q8**.
+assign: **Q9**.
 
 ---
 
@@ -52,16 +52,6 @@ assign: **Q8**.
   features of very different size. Split them before he prioritises or he
   will be answering about all three at once.
 
-  **3. redesign the 'Character Tab' across the bottom** (raw)
-  - buttons on THE character at the bottom
-  - 1. hand raise, like on teams
-  - 2. a button to INTERJECT
-
-  *Puffer note:* worth asking whether hand-raise and interject are genuinely
-  two mechanics or one. A raised hand the GM then grants is a different
-  thing from a player interrupting directly, and it changes who holds
-  control of the table.
-
   **5. Solar panels - EZ bikes** (raw)
 
   *Puffer note:* uninterpretable as written. May be setting/equipment content
@@ -85,6 +75,7 @@ assign: **Q8**.
 
 ## ANSWERED
 
+- **[2026-09-14, Q8] Item 3 (Character Tab redesign) - hand-raise and interject are ONE mechanic, not two - Xero: "one thing".** Build it as a single control: a hand-raise button (like Teams) that IS the interject mechanism, GM-mediated - not two separate buttons/systems. Routed to the hub.
 - **[2026-09-14, Q7] Campaign Sheet punch list - Xero: audit it and bring suggestions, he has ideas but wants to see ours first.** Framing, important: **"right now this sheet provides no real value to the players. I want to change that or remove it."** This is a value-proposition question, not just a bug/feature list - the audit needs to answer "does this page earn its place" before proposing polish. Routed to the hub.
 - **[2026-09-14, Q6] "Campaign sheet - add 'words' to character" - Xero expanded this into two concrete, immediately-routable pieces.**
   1. **BUG - Party Status accuracy:** the Campaign Sheet's Party Status list shows characters who shouldn't be there (named: Mikey Shevik, Cruz Zwick, District Zero campaign). Needs reproducing - check whether they left the party, died, or the list just isn't filtering correctly. Routed to Hunt & Peck.
