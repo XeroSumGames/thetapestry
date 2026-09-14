@@ -24,16 +24,11 @@ remembering, it gets its own entry in `decisions.md` too.
 **Question numbering (2026-09-14, Xero's ask):** every question actually put
 to Xero from here on gets a global sequential tag (`Q1`, `Q2`, ...), NOT
 renumbered retroactively for anything asked before this date. Next number to
-assign: **Q5**.
+assign: **Q6**.
 
 ---
 
 ## OPEN
-
-- **[2026-09-01] Two notes that are probably NOT software - confirm with Xero before anyone scopes them.**
-  - *"battery free flashlight"* - reads as an equipment/setting item, i.e. rules content rather than a VTT feature.
-  - *"solar panels - EZ bikes"* (carried over from 2026-08-18, still uninterpreted) - same class.
-  If they are content, they belong in the rulebook/canon work, not a lane.
 
 - **[2026-08-18] Xero's playtest notes, items 2-5 - ASK HIM ONE AT A TIME.**
   Raised by Puffer Fish. Xero's instruction, verbatim: *"ask me about these,
@@ -91,6 +86,7 @@ assign: **Q5**.
 
 ## ANSWERED
 
+- **[2026-09-14, Q5] "Battery-free flashlight" - Xero: setting item, not software.** Belongs in the rulebook/canon work, not a lane. No routing needed.
 - **[2026-09-14, Q4] "A built-in dice roller" - Xero: wants a visible DICE button that opens a visual roller.** Not a discoverability gap with the existing `/r 1d6+3` chat-command syntax - a separate UI: a button somewhere on screen opens a visual dice roller covering everything commonly used, 1d3 through 1d20. Additive alongside the existing `/r` command, not a replacement. Routed to the hub.
 - **[2026-09-14, Q2] "First impressions note working?" + item 4 (GM NPC-card visibility) - resolved as ONE item, Xero: "I should be able to see all of their FIRST IMPRESSIONS with different player characters" when opening an NPC card.** Screenshot attached of the current `/npc-sheet` popout (George Meeker), which has no First Impression display at all. Answers both: (a) the "not working" report was the known GM-visibility gap, not a roll/CMod/chip bug; (b) item 4's outstanding sub-question - "all" means every PC's CMod listed, not filtered to non-zero. Small build, routed to the hub.
 - **[2026-09-14, Q3] Fog-of-war scene desync - Xero: "go".** Keep the private-prep scene stickiness; HP builds the non-GM-viewer banner ("GM is on a different scene") + DB-hydrate on load/refresh so a new joiner lands on the currently-shared scene. Routed to Hunt & Peck.
