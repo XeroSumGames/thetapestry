@@ -30,8 +30,6 @@ assign: **Q12**.
 
 ## OPEN
 
-- **[2026-09-14, Q10] Campaign Sheet "Relax" button - what Tactic mechanic should it use?** Currently a placeholder alert. Audit's proposed shape: spend a Tactic to clear a Stress pip - but there's no existing mechanic to reuse (unlike Rest and Eat, which just wire up code that already ships elsewhere). Needs Xero's ruling: which Tactic(s) qualify, and how often can this be used?
-
 - **[2026-08-18] Xero's playtest notes, items 2-5 - ASK HIM ONE AT A TIME.**
   Raised by Puffer Fish. Xero's instruction, verbatim: *"ask me about these,
   1 at a time, so you can route them where they should go."* He then said
@@ -73,6 +71,7 @@ assign: **Q12**.
 
 ## ANSWERED
 
+- **[2026-09-14, Q10] Campaign Sheet "Relax" button - Xero: it's the Cooling Off mechanic (SRD's 8-uninterrupted-hours rule), not a new "Tactic" resource.** Confirmed against the actual SRD text (font-bug workaround via PyMuPDF): the SRD's only Stress-reduction mechanic is "reduce Stress by 1 by spending at least 8 uninterrupted in-game hours free from combat/conflict/threat doing something enjoyable" - the same Cooling Off rule already shipped as a GM toggle (per `feedback_stress_on_mortal_incap`-adjacent Rest-finish work). Relax should wire that existing mechanic to a visible button on the Campaign Sheet instead of inventing a new resource. Xero confirmed nothing further needed - implementation details (per-PC vs. party-wide trigger, interaction with the page's Advance Time buttons) are HP/hub's to resolve during build. Routed to the hub.
 - **[2026-09-14, Q11] Mikey Shevik - Xero: (1) he left the game.** He noticed Mikey is still listed on the Story page's own Party list (screenshot: Party (6), REMOVE button per member) - "that's likely on me," self-serving the removal via the existing REMOVE button and testing whether it correctly drops him from Party Status too. No build needed for this instance; HP should stand by in case his test finds the REMOVE action doesn't actually clear campaign_members (would then be a real bug, not user error).
 - **[2026-09-14, Q9] Drag-and-drop NPC folders/sorting - fully resolved.** (a) Friendly/hostile does NOT become an automatic grouping - "another folder", i.e. Xero names it himself like any other folder. (b) Player characters do NOT get folder/sort treatment - NPCs only. Full scope: players get drag-and-drop to move NPCs between existing (GM- or player-named) folders and reorder within them; no auto-grouping, no PC folders. Routed to the hub.
 - **[2026-09-14, Q8] Item 3 (Character Tab redesign) - hand-raise and interject are ONE mechanic, not two - Xero: "one thing".** Build it as a single control: a hand-raise button (like Teams) that IS the interject mechanism, GM-mediated - not two separate buttons/systems. Routed to the hub.
