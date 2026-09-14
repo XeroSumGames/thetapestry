@@ -30,8 +30,6 @@ assign: **Q12**.
 
 ## OPEN
 
-- **[2026-09-14, Q11] Q6 follow-up - why shouldn't Mikey Shevik be in the DZ Party Status?** Cruz Zwick was a real bug (observer wasn't excluded, fixed, ready to ship). Mikey checks out as a normal active member in live data - not a filtering bug. HP needs Xero's reason: (1) he left the game - remove his DZ membership; (2) he should be a spectator - flag him observer; (3) his character died in-story - no "dead PC" handling exists in Party Status today, would need a small new feature to mark/segregate dead PCs.
-
 - **[2026-09-14, Q10] Campaign Sheet "Relax" button - what Tactic mechanic should it use?** Currently a placeholder alert. Audit's proposed shape: spend a Tactic to clear a Stress pip - but there's no existing mechanic to reuse (unlike Rest and Eat, which just wire up code that already ships elsewhere). Needs Xero's ruling: which Tactic(s) qualify, and how often can this be used?
 
 - **[2026-08-18] Xero's playtest notes, items 2-5 - ASK HIM ONE AT A TIME.**
@@ -75,6 +73,7 @@ assign: **Q12**.
 
 ## ANSWERED
 
+- **[2026-09-14, Q11] Mikey Shevik - Xero: (1) he left the game.** He noticed Mikey is still listed on the Story page's own Party list (screenshot: Party (6), REMOVE button per member) - "that's likely on me," self-serving the removal via the existing REMOVE button and testing whether it correctly drops him from Party Status too. No build needed for this instance; HP should stand by in case his test finds the REMOVE action doesn't actually clear campaign_members (would then be a real bug, not user error).
 - **[2026-09-14, Q9] Drag-and-drop NPC folders/sorting - fully resolved.** (a) Friendly/hostile does NOT become an automatic grouping - "another folder", i.e. Xero names it himself like any other folder. (b) Player characters do NOT get folder/sort treatment - NPCs only. Full scope: players get drag-and-drop to move NPCs between existing (GM- or player-named) folders and reorder within them; no auto-grouping, no PC folders. Routed to the hub.
 - **[2026-09-14, Q8] Item 3 (Character Tab redesign) - hand-raise and interject are ONE mechanic, not two - Xero: "one thing".** Build it as a single control: a hand-raise button (like Teams) that IS the interject mechanism, GM-mediated - not two separate buttons/systems. Routed to the hub.
 - **[2026-09-14, Q7] Campaign Sheet punch list - Xero: audit it and bring suggestions, he has ideas but wants to see ours first.** Framing, important: **"right now this sheet provides no real value to the players. I want to change that or remove it."** This is a value-proposition question, not just a bug/feature list - the audit needs to answer "does this page earn its place" before proposing polish. Routed to the hub. **Audit result (hub, `f9db4432`):** VERDICT = keep the page. The "no value" read traces to one thing - 3 of 4 action buttons (Eat, Rest, Relax) are placeholders that just pop a "Phase 3 will do this" alert; the rest of the page (clock, live status, streaming heals, timeline, export log) is real and working. Rest and Eat are normal builds with no ruling needed, routed to HP. Relax needs a Tactic-mechanic ruling - see Q10.
