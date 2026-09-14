@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { AUTH, canAuth } from './_fixtures'
-import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_teardown'
+import { SUPABASE_URL, captureAnonKey, resolveCreds, getInviteCode, type SupaCreds } from './_teardown'
 
 // Grapple-family structure / contract net for the 2026-06-01 rework
 // (`f5b4465` Subdue, `e5c1b61` Break Free; spec `tasks/grapple-subdue-rework-spec.md`,
@@ -24,7 +24,7 @@ import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_t
 // label has the canonical "<grappler> grapples / fails / no clear" shape.
 
 const RUN = `[E2E ${Date.now().toString(36)}]`
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32' // marv: "Cree Blaine"
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f' // marv: "Mikey Shevik"
 const GRAPPLE_OUTCOMES = ['Grappled!', 'Failed - 1 RP', 'No clear victor'] as const
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
 
@@ -44,11 +44,7 @@ async function setupGrappleArena(opts: {
   await gm.waitForURL(/\/stories\/[0-9a-f-]{36}$/i, { timeout: 30_000 })
   const campaignId = gm.url().split('/stories/')[1]
   expect(campaignId, 'no campaign id in landing URL').toBeTruthy()
-  const campRow = await (await gm.request.get(
-    `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}&select=invite_code`,
-    { headers: H(gmCreds) },
-  )).json() as Array<{ invite_code: string }>
-  const inviteCode = campRow?.[0]?.invite_code
+  const inviteCode = await getInviteCode(gm, campaignId, gmCreds)
   expect(inviteCode, 'campaign has no invite_code').toBeTruthy()
 
   // marv joins by code.

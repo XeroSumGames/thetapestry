@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { AUTH, canAuth } from './_fixtures'
-import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_teardown'
+import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCreds } from './_teardown'
 
 // Advantage lifecycle contract: GM REST-inserts an advantage for a PC ->
 // advantage row persists in DB with correct fields (skill_name, cmod_delta,
@@ -13,7 +13,7 @@ import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_t
 // dice flow. The consume path (PATCH consumed_at) mirrors what executeRoll
 // does when a player uses their advantage on a roll.
 
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32'
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f'
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
 
 test.describe('Advantage lifecycle contract', () => {
@@ -44,11 +44,7 @@ test.describe('Advantage lifecycle contract', () => {
       campaignId = gm.url().split('/stories/')[1]
 
       // Marv joins + wires PC + seeds character_states.
-      const campRow = await (await gm.request.get(
-        `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}&select=invite_code`,
-        { headers: H(gmCreds!) },
-      )).json() as Array<{ invite_code: string }>
-      const inviteCode = campRow?.[0]?.invite_code
+      const inviteCode = await getInviteCode(gm, campaignId!, gmCreds!)
       expect(inviteCode, 'no invite_code').toBeTruthy()
 
       await pl.goto('/stories/join', { waitUntil: 'domcontentloaded' })

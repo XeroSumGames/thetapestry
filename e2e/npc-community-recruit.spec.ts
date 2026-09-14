@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { AUTH, canAuth } from './_fixtures'
-import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_teardown'
+import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCreds } from './_teardown'
 
 // NPC recruitment contract: an NPC revealed to the party (via npc_relationships)
 // can be recruited into a community during an active session. The GM clicks
@@ -19,7 +19,7 @@ import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_t
 // The community_members INSERT happens inside executeRecruitRoll before the
 // result modal opens, so the row should be visible as soon as we poll.
 
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32'
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f'
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
 
 test.describe('NPC community recruitment contract', () => {
@@ -51,11 +51,7 @@ test.describe('NPC community recruitment contract', () => {
       campaignId = gm.url().split('/stories/')[1]
 
       // Marv joins + wires PC + seeds character_states.
-      const campRow = await (await gm.request.get(
-        `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}&select=invite_code`,
-        { headers: H(gmCreds!) },
-      )).json() as Array<{ invite_code: string }>
-      const inviteCode = campRow?.[0]?.invite_code
+      const inviteCode = await getInviteCode(gm, campaignId!, gmCreds!)
       expect(inviteCode, 'no invite_code').toBeTruthy()
 
       await pl.goto('/stories/join', { waitUntil: 'domcontentloaded' })
@@ -130,7 +126,7 @@ test.describe('NPC community recruitment contract', () => {
         await expect(gm.getByText(/pick target.*approach/i).first()).toBeVisible({ timeout: 2_000 })
       }, 'Recruit modal should open from Checks dropdown').toPass({ timeout: 20_000 })
 
-      // Select Rolling PC (Marv / Cree Blaine) - value is the character id.
+      // Select Rolling PC (Marv / Mikey Shevik) - value is the character id.
       await gm.locator('select').nth(0).selectOption(MARV_CHAR)
       // Select Target NPC (the seeded NPC - option value is npcId).
       await gm.locator('select').nth(1).selectOption(npcId!)

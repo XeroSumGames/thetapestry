@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { AUTH, canAuth } from './_fixtures'
-import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_teardown'
+import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCreds } from './_teardown'
 
 // Session notes contract: GM starts a session, opens the End Session modal, fills
 // in gm_summary + cliffhanger + next_session_notes, submits, and the sessions row
@@ -11,7 +11,7 @@ import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_t
 // needed in between). The modal has two "End Session" buttons - the first opens
 // the modal (GM tools bar), the second submits it (modal footer).
 
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32' // marv: "Cree Blaine"
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f' // marv: "Mikey Shevik"
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
 
 test.describe('Session notes - End Session modal contract', () => {
@@ -41,11 +41,7 @@ test.describe('Session notes - End Session modal contract', () => {
       campaignId = gm.url().split('/stories/')[1]
 
       // Marv joins + wires PC + seeds character_states.
-      const campRow = await (await gm.request.get(
-        `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}&select=invite_code`,
-        { headers: H(gmCreds!) },
-      )).json() as Array<{ invite_code: string }>
-      const inviteCode = campRow?.[0]?.invite_code
+      const inviteCode = await getInviteCode(gm, campaignId!, gmCreds!)
       expect(inviteCode, 'no invite_code').toBeTruthy()
 
       await pl.goto('/stories/join', { waitUntil: 'domcontentloaded' })

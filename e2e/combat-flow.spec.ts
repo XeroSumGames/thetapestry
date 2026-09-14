@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { AUTH, ACCOUNTS, canAuth } from './_fixtures'
-import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_teardown'
+import { SUPABASE_URL, captureAnonKey, resolveCreds, getInviteCode, type SupaCreds } from './_teardown'
 
 // Ch9 / build-plan #10 - Combat-flow E2E (the last uncovered Phase-2 spec).
 // Plan: tasks/e2e-combat-flow-plan-2026-05-30.md.
@@ -22,7 +22,7 @@ import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_t
 // PHASE C (deterministic damage chain via Puffer's gm_apply_damage RPC) lands
 // as its own commit on top of this one.
 
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32' // marv: "Cree Blaine"
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f' // marv: "Mikey Shevik"
 const RUN = `[E2E ${Date.now().toString(36)}]`
 
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
@@ -48,11 +48,7 @@ async function setupThrowawayWithMarvPc(opts: {
   const campaignId = gm.url().split('/stories/')[1]
   expect(campaignId, 'no campaign id in landing URL').toBeTruthy()
 
-  const campRow = await (await gm.request.get(
-    `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}&select=invite_code`,
-    { headers: H(gmCreds) },
-  )).json() as Array<{ invite_code: string }>
-  const inviteCode = campRow?.[0]?.invite_code
+  const inviteCode = await getInviteCode(gm, campaignId, gmCreds)
   expect(inviteCode, 'campaign has no invite_code').toBeTruthy()
 
   // marv joins by code (Ch6.2). The /stories/join page lands him at the hub.

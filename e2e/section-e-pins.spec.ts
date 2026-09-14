@@ -5,7 +5,9 @@ import { captureAnonKey, resolveCreds, SUPABASE_URL, type SupaCreds } from './_t
 // SECTION E (map-pins half) - a world map_pin inserted by one client shows on
 // the other's map live, via the constant `map_pins_changes` sub (MapView.tsx:589
 // -> loadPins). GM (Thriver) inserts an APPROVED pin (so it's publicly visible).
-// Assertion is via the marker's title attribute + the Public-tab panel row -
+// Assertion is via the marker's title attribute + the World Events-tab panel row
+// (the tab was relabeled Public -> "World Events" ~2026-08; internal key stays
+// `public`, so key-based selectors are unaffected - only the visible label moved) -
 // markercluster/collapsible folders make this the most fragile of the realtime
 // assertions; if it proves flaky it gets logged manual-only (Gate-0 allows that).
 // Reversible: delete the pin on teardown (RLS: map_pins by author's own user_id).

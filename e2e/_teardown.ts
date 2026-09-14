@@ -104,3 +104,29 @@ export async function restDelete(page: Page, table: string, id: string, creds: S
     return false
   }
 }
+
+// Fetch a campaign's invite code via the sanctioned RPC. The invite_code COLUMN
+// is no longer directly readable (revoked 2026-06-23 to close an enumeration
+// leak); a raw `?select=invite_code` now returns no value. The GM/member-gated
+// get_campaign_invite_code(uuid) RPC is the read path the app itself uses
+// (mirrors app/stories/[id]/page.tsx). Returns '' on any failure.
+export async function getInviteCode(page: Page, campaignId: string, creds: SupaCreds): Promise<string> {
+  try {
+    const res = await page.request.post(
+      `${SUPABASE_URL}/rest/v1/rpc/get_campaign_invite_code`,
+      {
+        headers: {
+          apikey: creds.anonKey,
+          Authorization: `Bearer ${creds.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        data: { p_campaign_id: campaignId },
+      },
+    )
+    if (!res.ok()) return ''
+    const code = await res.json().catch(() => '')
+    return typeof code === 'string' ? code : ''
+  } catch {
+    return ''
+  }
+}

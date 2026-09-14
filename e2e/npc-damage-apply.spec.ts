@@ -52,7 +52,7 @@ test.describe('NPC damage apply - gm_apply_damage RPC contract', () => {
 
       // Throwaway campaign. invite_code has no DEFAULT in the schema.
       const campInsert = await (await gm.request.post(
-        `${SUPABASE_URL}/rest/v1/campaigns`,
+        `${SUPABASE_URL}/rest/v1/campaigns?select=id`,
         { headers: { ...H(gmCreds!), 'Content-Type': 'application/json', Prefer: 'return=representation' },
           data: { gm_user_id: gmUserId, name: `${tag}-campaign`, invite_code: tag } },
       )).json() as Array<{ id: string }>

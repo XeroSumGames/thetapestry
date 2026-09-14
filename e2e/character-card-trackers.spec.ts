@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { AUTH, canAuth } from './_fixtures'
-import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_teardown'
+import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCreds } from './_teardown'
 
 // CharacterCard live-tracker contract: GM opens the character overlay via the
 // bottom portrait strip, then increments and decrements Stress using the +/-
@@ -14,7 +14,7 @@ import { SUPABASE_URL, captureAnonKey, resolveCreds, type SupaCreds } from './_t
 //   Therefore the first text-content +/- button in the page DOM when the overlay
 //   is open is the Stress section's ±, which renders before Insight/CDP/Morality.
 
-const MARV_CHAR = '31300132-c808-4711-9936-13def2e1ce32' // marv: "Cree Blaine"
+const MARV_CHAR = '54982e08-1dc9-49c9-b916-3ea86e02126f' // marv: "Mikey Shevik"
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
 
 test.describe('CharacterCard - live stress tracker (GM overlay)', () => {
@@ -43,11 +43,7 @@ test.describe('CharacterCard - live stress tracker (GM overlay)', () => {
       await gm.waitForURL(/\/stories\/[0-9a-f-]{36}$/i, { timeout: 30_000 })
       campaignId = gm.url().split('/stories/')[1]
 
-      const campRow = await (await gm.request.get(
-        `${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}&select=invite_code`,
-        { headers: H(gmCreds!) },
-      )).json() as Array<{ invite_code: string }>
-      const inviteCode = campRow?.[0]?.invite_code
+      const inviteCode = await getInviteCode(gm, campaignId!, gmCreds!)
       expect(inviteCode, 'no invite_code').toBeTruthy()
 
       // Marv joins + wires PC + seeds character_states (stress=0).
@@ -68,10 +64,13 @@ test.describe('CharacterCard - live stress tracker (GM overlay)', () => {
                    wp_current: 10, wp_max: 10, rp_current: 6, rp_max: 6, stress: 0 } },
       )
 
-      // Resolve character name for portrait-button selector.
-      const charRow = await (await gm.request.get(
+      // Resolve character name for portrait-button selector. Read as the OWNER
+      // (marv): the characters world-read policy was dropped 2026-06-22 (659183b4),
+      // and the GM's scoped read races the just-applied campaign_members link;
+      // the owner SELECT policy is unconditional, so read marv's own character.
+      const charRow = await (await pl.request.get(
         `${SUPABASE_URL}/rest/v1/characters?id=eq.${MARV_CHAR}&select=name`,
-        { headers: H(gmCreds!) },
+        { headers: H(plCreds!) },
       )).json() as Array<{ name: string }>
       const marvName = charRow?.[0]?.name
       expect(marvName, 'could not resolve marv character name').toBeTruthy()

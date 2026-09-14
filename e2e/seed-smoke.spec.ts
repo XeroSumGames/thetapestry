@@ -43,7 +43,8 @@ test.describe('Gate 0 fixture seeding (Arena): seed -> exists -> teardown', () =
     const after = await captureVehicles(page, creds!, CAMPAIGN_ID)
     expect(after.some((v) => (v as { id?: string }).id === 'e2e-test-rig'), 'seeded vehicle not present').toBe(true)
 
-    // Restore the original vehicles array (the RPC can only replace/append).
+    // Restore the original vehicles array via direct PATCH (the merge RPC is
+    // update-only now - it can't create or delete array elements).
     expect(await restoreVehicles(page, creds!, CAMPAIGN_ID, before), 'restore failed').toBe(true)
     const restored = await captureVehicles(page, creds!, CAMPAIGN_ID)
     expect(restored.some((v) => (v as { id?: string }).id === 'e2e-test-rig'), 'vehicle not cleaned up').toBe(false)

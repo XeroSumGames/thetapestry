@@ -58,8 +58,20 @@ export async function captureVehicles(page: Page, creds: SupaCreds, campaignId: 
 }
 
 export async function seedVehicle(page: Page, creds: SupaCreds, campaignId: string, vehicleId: string): Promise<{ ok: boolean; detail: string }> {
+  // update_vehicle_in_campaign is now UPDATE-ONLY: it merges a patch into an
+  // existing vehicles[] element (jsonb `||`) and RAISES if the id is absent
+  // (19d07ab8, 2026-08-01 - was replace/create). The create path is a direct
+  // array append. So append the test vehicle via PATCH (create), then exercise
+  // the merge RPC with a real patch so this still covers the app's write path.
+  const existing = await captureVehicles(page, creds, campaignId)
+  const others = (existing as Array<{ id?: string }>).filter((v) => v?.id !== vehicleId)
+  const patchRes = await page.request.patch(`${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}`, {
+    headers: await authHeaders(creds, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+    data: { vehicles: [...others, testVehicle(vehicleId)] },
+  })
+  if (!patchRes.ok()) return { ok: false, detail: `append PATCH ${patchRes.status()}` }
   const r = await rpcCall(page, 'update_vehicle_in_campaign', {
-    p_campaign_id: campaignId, p_vehicle_id: vehicleId, p_new_vehicle: testVehicle(vehicleId),
+    p_campaign_id: campaignId, p_vehicle_id: vehicleId, p_patch: { stress: 0 },
   }, creds)
   return { ok: r.ok, detail: `${r.status} ${r.body}`.slice(0, 300) }
 }

@@ -64,7 +64,7 @@ test.describe('Chat propagation - realtime contract', () => {
 
       // Throwaway campaign owned by GM. invite_code has no DEFAULT.
       const campInsert = await (await gm.request.post(
-        `${SUPABASE_URL}/rest/v1/campaigns`,
+        `${SUPABASE_URL}/rest/v1/campaigns?select=id`,
         { headers: { ...H(gmCreds!), 'Content-Type': 'application/json', Prefer: 'return=representation' },
           data: { gm_user_id: gmUserId, name: `${tag}-campaign`, invite_code: tag } },
       )).json() as Array<{ id: string }>
