@@ -105,6 +105,15 @@ export default function VehiclePage() {
   // Seq guard: loadTokens fires from mount AND the token_moved broadcast,
   // so rapid drags can overlap fetches; drop a stale earlier resolve.
   const loadVehTokSeqRef = useRef(0)
+  // Synchronous in-flight guard for applyDamage/adjustWp (same pattern as
+  // rollCheck in useVehicleCheck.tsx) - a fast double-click before React
+  // re-renders could fire both before either commits. MUST stay above the
+  // loading / !vehicle early returns below: it is a hook, and returning before
+  // it changes the render's hook count between renders (React #310 - the crash
+  // this caused on /vehicle for ~6 weeks). The guard is idempotent either way
+  // (both reads see the same stale vehicle.wp_current); it just closes the
+  // double-network gap for defense-in-depth (per the 2026-08-01 audit).
+  const wpActionInFlightRef = useRef(false)
 
   useEffect(() => {
     async function load() {
@@ -384,16 +393,6 @@ export default function VehiclePage() {
       await broadcastOnce(`tactical_${campaignId}`, 'vehicle_updated', { vehicle_id: updated.id }, { holdMs: 500 })
     }
   }
-
-  // Synchronous in-flight guard for applyDamage/adjustWp (same pattern as
-  // rollCheck in useVehicleCheck.tsx) - a very fast double-click before
-  // React re-renders could fire both before either commits. Lower
-  // severity than a rolled check (both calls read the same stale
-  // vehicle.wp_current and compute the same idempotent target, so
-  // update_vehicle_in_campaign's merge doesn't double-apply damage per
-  // se), but still closes the gap for defense-in-depth and avoids a
-  // wasted duplicate network round-trip (per the 2026-08-01 audit).
-  const wpActionInFlightRef = useRef(false)
 
   async function applyDamage() {
     if (!vehicle || !campaignId || !myUserId || wpActionInFlightRef.current) return
