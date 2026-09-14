@@ -30,8 +30,6 @@ assign: **Q4**.
 
 ## OPEN
 
-- **[2026-09-14, Q3] Fog-of-war scene desync (observer Pesky Larue saw no fog) - Hunt & Peck needs a decision.** Diagnosed as scene desync, not a permissions bug: GM switching scenes without re-clicking "Share Map" leaves non-GM viewers silently on the OLD scene (by design, so the GM can prep privately), but there's no on-screen indicator - looked like "no fog" to the observer. HP recommends: **(go)** keep the private-prep stickiness, add a banner telling non-GM viewers the GM is on a different scene, and hydrate the shared scene from the DB on load/refresh; OR **(auto-follow)** viewers always track the GM's active scene (HP does NOT recommend - removes private scene prep).
-
 - **[2026-09-01] Three post-playtest notes from Xero that Puffer cannot interpret - need his words.**
   2. *"first impressions note working?"* - needs a repro. Which part failed: the roll itself, the CMod landing, the +/- chip on the card, or the GM being unable to see them? (The last is already a known gap, queued as item 4 in the 2026-08-18 batch.)
   3. *"a built in dice roller"* - Tapestry already has one; the roll log fired normally throughout the playtest traces. So this is either a discoverability problem (a player could not find it) or he means something specific, e.g. free-form "roll 2d6" rather than clicking a skill.
@@ -104,6 +102,7 @@ assign: **Q4**.
 
 ## ANSWERED
 
+- **[2026-09-14, Q3] Fog-of-war scene desync - Xero: "go".** Keep the private-prep scene stickiness; HP builds the non-GM-viewer banner ("GM is on a different scene") + DB-hydrate on load/refresh so a new joiner lands on the currently-shared scene. Routed to Hunt & Peck.
 - **[2026-09-14, Q1] "How to call out NPCs in the NPC bar?" - Xero: highlight/point one out so players notice it** (not summon into scene). Routed to the hub.
 - **[2026-09-01] Session notes visible to players - Xero: INTENDED, leave as-is.** All four fields (`gm_summary`, `cliffhanger`, `next_session_notes`, `session_log`) stay readable by every campaign member. His words: "publicly viewable... by players in the game, at least." No code change - current behaviour already matches. Scope boundary recorded: campaign members only, NOT world-readable. Written up in `decisions.md` 2026-09-01 with a do-not-fix note, because the `sessions` policy read cold looks exactly like the confidentiality bugs we fixed earlier this year and a future audit would otherwise flag it.
 
