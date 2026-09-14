@@ -1,7 +1,14 @@
 # HUB-LIVE.md - the live Puffer Fish hub claim
 
-**Current hub: Puffer Fish Hub chat, branch `lane/puffer`, worktree `D:\coding\VTTs\TheTapestry-puffer`.**
-**Claimed: 2026-08-02.**
+**Current hub: `Tapestry | Puffer Fish Hub` - session id `local_1ce0f93d-3a12-4b3e-b160-8973cf30c990`.**
+**Works in the primary checkout `D:\Coding\VTTs\TheTapestry`, branch `main`.**
+**Claimed: 2026-09-14.**
+
+**Not the hub, despite the similar names:** `Tapestry | Puffer-Fish`
+(`local_c82ac0e5...`, worktree `TheTapestry-puffer`, idle since 2026-08-18) and
+`Tapestry | Puffer-Fish` (`local_eeee0cb0...`, idle since 2026-08-01). Do not
+route SHAs, questions or handoffs to either. Match on the session id above,
+not the title.
 
 ## What "hub" means here
 
