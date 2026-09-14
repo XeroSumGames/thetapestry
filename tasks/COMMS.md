@@ -21,12 +21,16 @@ call that needs the hub's ruling. Once resolved, the item moves to
 ANSWERED here; if it was ALSO an architectural decision worth permanently
 remembering, it gets its own entry in `decisions.md` too.
 
+**Question numbering (2026-09-14, Xero's ask):** every question actually put
+to Xero from here on gets a global sequential tag (`Q1`, `Q2`, ...), NOT
+renumbered retroactively for anything asked before this date. Next number to
+assign: **Q2**.
+
 ---
 
 ## OPEN
 
 - **[2026-09-01] Three post-playtest notes from Xero that Puffer cannot interpret - need his words.**
-  1. *"how to call out NPCs in the NPC bar?"* - unclear whether "call out" means summon into the scene, highlight/point at one for players, or something else.
   2. *"first impressions note working?"* - needs a repro. Which part failed: the roll itself, the CMod landing, the +/- chip on the card, or the GM being unable to see them? (The last is already a known gap, queued as item 4 in the 2026-08-18 batch.)
   3. *"a built in dice roller"* - Tapestry already has one; the roll log fired normally throughout the playtest traces. So this is either a discoverability problem (a player could not find it) or he means something specific, e.g. free-form "roll 2d6" rather than clicking a skill.
 
@@ -98,6 +102,7 @@ remembering, it gets its own entry in `decisions.md` too.
 
 ## ANSWERED
 
+- **[2026-09-14, Q1] "How to call out NPCs in the NPC bar?" - Xero: highlight/point one out so players notice it** (not summon into scene). Routed to the hub.
 - **[2026-09-01] Session notes visible to players - Xero: INTENDED, leave as-is.** All four fields (`gm_summary`, `cliffhanger`, `next_session_notes`, `session_log`) stay readable by every campaign member. His words: "publicly viewable... by players in the game, at least." No code change - current behaviour already matches. Scope boundary recorded: campaign members only, NOT world-readable. Written up in `decisions.md` 2026-09-01 with a do-not-fix note, because the `sessions` policy read cold looks exactly like the confidentiality bugs we fixed earlier this year and a future audit would otherwise flag it.
 
 *(dated log, newest first - move an item here the moment it's resolved,
