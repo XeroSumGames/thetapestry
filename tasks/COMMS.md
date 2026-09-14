@@ -24,11 +24,13 @@ remembering, it gets its own entry in `decisions.md` too.
 **Question numbering (2026-09-14, Xero's ask):** every question actually put
 to Xero from here on gets a global sequential tag (`Q1`, `Q2`, ...), NOT
 renumbered retroactively for anything asked before this date. Next number to
-assign: **Q2**.
+assign: **Q4**.
 
 ---
 
 ## OPEN
+
+- **[2026-09-14, Q3] Fog-of-war scene desync (observer Pesky Larue saw no fog) - Hunt & Peck needs a decision.** Diagnosed as scene desync, not a permissions bug: GM switching scenes without re-clicking "Share Map" leaves non-GM viewers silently on the OLD scene (by design, so the GM can prep privately), but there's no on-screen indicator - looked like "no fog" to the observer. HP recommends: **(go)** keep the private-prep stickiness, add a banner telling non-GM viewers the GM is on a different scene, and hydrate the shared scene from the DB on load/refresh; OR **(auto-follow)** viewers always track the GM's active scene (HP does NOT recommend - removes private scene prep).
 
 - **[2026-09-01] Three post-playtest notes from Xero that Puffer cannot interpret - need his words.**
   2. *"first impressions note working?"* - needs a repro. Which part failed: the roll itself, the CMod landing, the +/- chip on the card, or the GM being unable to see them? (The last is already a known gap, queued as item 4 in the 2026-08-18 batch.)
