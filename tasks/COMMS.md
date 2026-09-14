@@ -24,14 +24,11 @@ remembering, it gets its own entry in `decisions.md` too.
 **Question numbering (2026-09-14, Xero's ask):** every question actually put
 to Xero from here on gets a global sequential tag (`Q1`, `Q2`, ...), NOT
 renumbered retroactively for anything asked before this date. Next number to
-assign: **Q4**.
+assign: **Q5**.
 
 ---
 
 ## OPEN
-
-- **[2026-09-01] Three post-playtest notes from Xero that Puffer cannot interpret - need his words.**
-  3. *"a built in dice roller"* - Tapestry already has one; the roll log fired normally throughout the playtest traces. So this is either a discoverability problem (a player could not find it) or he means something specific, e.g. free-form "roll 2d6" rather than clicking a skill.
 
 - **[2026-09-01] Two notes that are probably NOT software - confirm with Xero before anyone scopes them.**
   - *"battery free flashlight"* - reads as an equipment/setting item, i.e. rules content rather than a VTT feature.
@@ -94,6 +91,7 @@ assign: **Q4**.
 
 ## ANSWERED
 
+- **[2026-09-14, Q4] "A built-in dice roller" - Xero: wants a visible DICE button that opens a visual roller.** Not a discoverability gap with the existing `/r 1d6+3` chat-command syntax - a separate UI: a button somewhere on screen opens a visual dice roller covering everything commonly used, 1d3 through 1d20. Additive alongside the existing `/r` command, not a replacement. Routed to the hub.
 - **[2026-09-14, Q2] "First impressions note working?" + item 4 (GM NPC-card visibility) - resolved as ONE item, Xero: "I should be able to see all of their FIRST IMPRESSIONS with different player characters" when opening an NPC card.** Screenshot attached of the current `/npc-sheet` popout (George Meeker), which has no First Impression display at all. Answers both: (a) the "not working" report was the known GM-visibility gap, not a roll/CMod/chip bug; (b) item 4's outstanding sub-question - "all" means every PC's CMod listed, not filtered to non-zero. Small build, routed to the hub.
 - **[2026-09-14, Q3] Fog-of-war scene desync - Xero: "go".** Keep the private-prep scene stickiness; HP builds the non-GM-viewer banner ("GM is on a different scene") + DB-hydrate on load/refresh so a new joiner lands on the currently-shared scene. Routed to Hunt & Peck.
 - **[2026-09-14, Q1] "How to call out NPCs in the NPC bar?" - Xero: highlight/point one out so players notice it** (not summon into scene). Routed to the hub.
