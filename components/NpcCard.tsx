@@ -1,10 +1,11 @@
 'use client'
-// no React hooks needed - HP is derived from props
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CampaignNpc, getNpcRingColor } from './NpcRoster'
 import { getWeaponByName, conditionColor, CONDITION_CMOD, Condition, getTraitValue } from '../lib/weapons'
 import { createClient } from '../lib/supabase-browser'
 import { openPopout } from '../lib/popout'
+import { relationshipsForNpc } from '../lib/data/npc-roster'
+import { reportSupabaseError } from '../lib/supabase-errors'
 import InventoryPanel, { InventoryItem } from './InventoryPanel'
 import { LASTING_WOUNDS } from '../lib/xse-schema'
 
@@ -54,6 +55,26 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
   const supabase = createClient()
   const [enlarged, setEnlarged] = useState(false)
   const [showInventory, setShowInventory] = useState(false)
+  // First Impression CMod per PC for this NPC (npc_relationships). The GM card
+  // lists EVERY PC, zeros included (Q2, 2026-09-15). Only when the parent passes
+  // pcCharacters - the table page does; the standalone popout doesn't.
+  const [fiByChar, setFiByChar] = useState<Record<string, number>>({})
+  useEffect(() => {
+    if (!pcCharacters || pcCharacters.length === 0) return
+    let cancelled = false
+    const load = async () => {
+      const { data, error } = await relationshipsForNpc(npc.id)
+      if (cancelled) return
+      if (error) { reportSupabaseError(error, 'NpcCard.firstImpressions'); return }
+      const map: Record<string, number> = {}
+      for (const r of (data ?? []) as any[]) if (r.character_id) map[r.character_id] = r.relationship_cmod ?? 0
+      setFiByChar(map)
+    }
+    void load()
+    const onUpdate = (e: Event) => { if ((e as CustomEvent).detail?.npcId === npc.id) void load() }
+    window.addEventListener('tapestry:recruit-updated', onUpdate)
+    return () => { cancelled = true; window.removeEventListener('tapestry:recruit-updated', onUpdate) }
+  }, [npc.id, pcCharacters?.length]) // eslint-disable-line react-hooks/exhaustive-deps
   // Local mirror of NPC inventory so the panel reads/writes without
   // forcing a full NPC refetch each keystroke; persisted on every change.
   const [inv, setInv] = useState<InventoryItem[]>(() => Array.isArray((npc as any).inventory) ? (npc as any).inventory : [])
@@ -233,6 +254,21 @@ export default function NpcCard({ npc, onClose, onEdit, onRoll, onPublish, isPub
           <button onClick={onClose} style={{ padding: '2px 6px', background: '#2a1210', border: '1px solid #c0392b', borderRadius: '3px', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer' }}>Close</button>
         </div>
       </div>
+
+      {/* First Impressions - every PC's CMod with this NPC, zeros included. */}
+      {pcCharacters && pcCharacters.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 10px', marginBottom: '4px', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>
+          <span style={{ color: '#cce0f5', textTransform: 'uppercase', letterSpacing: '.06em' }}>First Impressions</span>
+          {pcCharacters.map(pc => {
+            const v = fiByChar[pc.id] ?? 0
+            return (
+              <span key={pc.id} style={{ color: '#f5f2ee' }}>
+                {pc.name} <span style={{ fontWeight: 700, color: v > 0 ? '#7fc458' : v < 0 ? '#f5a89a' : '#cce0f5' }}>{sgn(v)}</span>
+              </span>
+            )
+          })}
+        </div>
+      )}
 
       {/* RAPID + WP/RP on same row */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '4px', alignItems: 'flex-start' }}>
