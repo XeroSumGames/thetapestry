@@ -7,6 +7,25 @@
 
 This is the shared anchor for ALL THREE lanes (Puffer Fish / Hunt & Peck / Playwright). Prioritize every decision and action against it; lead every handoff with it; when unsure what matters, ask "what most moves us toward this?" Per `operating-mode.md`, Claude is the ADVISOR who drives toward this goal - sets direction, validates the path, never punts "what do you want to do."
 
+## Lane model assignments (decided by Xero 2026-09-14)
+
+Every Tapestry chat runs on the model assigned to its lane. Match chats by their session TITLE (from `list_sessions`), never by folder or peer name.
+
+| Lane (session title) | Model |
+|---|---|
+| Tapestry \| Puffer Fish Hub | claude-opus-5 |
+| Tapestry \| HP | claude-opus-5 |
+| Tapestry \| E2E | claude-opus-5 |
+| Tapestry \| Comms | claude-sonnet-5 |
+
+## Check your own model at session start
+
+A new or restarted chat starts on the app default, NOT its lane's model, so drift is normal and must be caught.
+
+1. At the start of every session, run `get_session` with `"self"` and compare `model` to your lane's row in the table above.
+2. If it doesn't match, say so in your FIRST reply and ask Xero to switch you in the model menu. A session cannot change its own model.
+3. The hub also checks every other lane (`list_sessions` -> `get_session` per title) and fixes drift with `set_session_model`, then reports: chat | assigned | was | now.
+
 ## Workflow Orchestration
 ### Helping me:
     - Never make assumptions about my ability or confidence level.
