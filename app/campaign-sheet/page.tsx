@@ -19,6 +19,8 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '../../lib/supabase-browser'
 import { wrapBroadcast, wrapDbChange } from '../../lib/sentry-realtime'
 import { insertRollLog } from '../../lib/data/roll-log'
+import PartyRestModal from '../../components/PartyRestModal'
+import { consumeRationsForParty } from '../../lib/data/party-rations'
 import { getPartyCharacterStates } from '../../lib/data/character-states'
 import { getCampaignClock } from '../../lib/data/campaigns'
 import { getCachedAuth } from '../../lib/auth-cache'
@@ -82,6 +84,10 @@ export default function CampaignSheetPage() {
   const [advancing, setAdvancing] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [party, setParty] = useState<PartyRow[]>([])
+  // Rest/Relax action-bar modal. Relax opens it pre-set to an 8h restful rest
+  // (Cooling Off); Rest opens it blank. null = closed.
+  const [showRest, setShowRest] = useState<{ hours: number; restful: boolean } | null>(null)
+  const [eating, setEating] = useState(false)
   const [vehicles, setVehicles] = useState<VehicleRow[]>([])
   const [pending, setPending] = useState<PendingHeal[]>([])
   const [healModal, setHealModal] = useState(false)
@@ -155,6 +161,26 @@ export default function CampaignSheetPage() {
       outcome: OUTCOME.rations,
     })
     await loadParty()
+  }
+
+  // Party-wide Eat: consume one ration per PC via the party-rations repository
+  // (all DB access stays in lib/data), then write one summary feed row + refresh.
+  async function handleEat() {
+    if (eating) return
+    setEating(true)
+    const { eaten } = await consumeRationsForParty(
+      party.map(p => ({ character_id: p.character_id, state_id: p.state_id, name: p.name, stress: p.stress, rations_type: p.rations_type, rations_count: p.rations_count })),
+    )
+    if (eaten.length > 0) {
+      const { user } = await getCachedAuth()
+      await insertRollLog({
+        campaign_id: campaignId, user_id: user?.id ?? null, character_name: 'System',
+        label: `🍞 Party ate: ${eaten.join('; ')}`,
+        die1: 0, die2: 0, amod: 0, smod: 0, cmod: 0, total: 0, outcome: OUTCOME.rations,
+      })
+    }
+    await loadParty()
+    setEating(false)
   }
 
   async function loadVehicles() {
@@ -402,30 +428,37 @@ export default function CampaignSheetPage() {
             style={actionBtn('#1a2e10', '#2d5a1b', '#7fc458')}>
             🩹 Heal
           </button>
-          {/* Placeholder buttons - Phase 3 will wire each to its
-              event type:
-                Eat   → ration_consumed events for everyone present
-                Rest  → bulk WP/RP restoration over scheduled hours
-                Relax → spend a tactic to clear one Stress pip
-              Visible to both GM and players so muscle memory builds
-              before the wiring lands. */}
-          <button onClick={() => alert('Eating (placeholder).\n\nPhase 3 will consume one ration per character present + apply any Luxury Ration stress-clear. For now this is just a visible affordance.')} disabled={advancing}
+          {/* Action bar - Eat / Rest / Relax, wired to real mechanics
+              (2026-09-14). Eat consumes a ration per PC party-wide; Rest opens
+              the shared Party Rest modal; Relax is a Rest pre-set to an 8h
+              restful "Cooling Off" (the SRD 8h Stress-clear). */}
+          <button onClick={handleEat} disabled={advancing || eating}
             style={actionBtn('#2a1a10', '#5a3a1b', '#EF9F27')}
-            title="Consume rations for everyone present (Phase 3)">
-            🍞 Eat
+            title="Consume one ration for every PC who has one (Luxury also clears 1 Stress)">
+            {eating ? '🍞 ...' : '🍞 Eat'}
           </button>
-          <button onClick={() => alert('Resting (placeholder).\n\nPhase 3 will queue a bulk rest action - full WP/RP restoration over a configurable rest duration, with interruption rules. For now this is just a visible affordance.')} disabled={advancing}
+          <button onClick={() => setShowRest({ hours: 0, restful: true })} disabled={advancing}
             style={actionBtn('#0f1a2e', '#1a3a5c', '#7ab3d4')}
-            title="Begin a rest (Phase 3)">
+            title="Rest the whole party - advances the clock and recovers WP/RP (and Stress if restful, 8h+)">
             💤 Rest
           </button>
-          <button onClick={() => alert('Relax (placeholder).\n\nPhase 3 will let a PC spend a tactic (or pass a roll) to clear one Stress pip. For now this is just a visible affordance.')}
+          <button onClick={() => setShowRest({ hours: 8, restful: true })} disabled={advancing}
             style={actionBtn('#2a1210', '#c0392b', '#f5a89a')}
-            title="Spend a tactic to clear one Stress pip (Phase 3)">
+            title="Cooling Off - an 8h restful rest that clears a Stress pip (SRD)">
             🧘 Relax
           </button>
         </div>
       </div>
+
+      {showRest && (
+        <PartyRestModal
+          campaignId={campaignId}
+          initialHours={showRest.hours}
+          initialRestful={showRest.restful}
+          onClose={() => setShowRest(null)}
+          onDone={loadParty}
+        />
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 20, marginBottom: 24 }}>
         {/* ── Party Status ───────────────────────────────────── */}
