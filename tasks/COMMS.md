@@ -24,11 +24,20 @@ remembering, it gets its own entry in `decisions.md` too.
 **Question numbering (2026-09-14, Xero's ask):** every question actually put
 to Xero from here on gets a global sequential tag (`Q1`, `Q2`, ...), NOT
 renumbered retroactively for anything asked before this date. Next number to
-assign: **Q13**.
+assign: **Q14**.
 
 ---
 
 ## OPEN
+
+- **[2026-09-15, Q13] Hand-raise / interject (Q8) - 6 GM-side design questions, HP has a recommended default for each.** Blocking the build. Item 5 confirms Q8's "one thing" ruling (one button, not two). Full list:
+  1. Where does the GM see a raised hand? REC: icon on the player's seat in the party panel (alternative: notification popup).
+  2. Does it self-clear or does the GM clear it? REC: GM clicks it to clear - acts as "go ahead," nothing auto-clears so it can't be silently missed.
+  3. Can a player lower their own hand? REC: yes.
+  4. Do other players see who has a hand up, or only the GM? REC: everyone sees it.
+  5. One button or two (hand-raise vs. interject)? REC: one.
+  6. Sound, or silent/visual only? REC: silent.
+  Xero can answer by number or say "all defaults."
 
 - **[2026-09-15, Q12] NPC folders (Q9 fix) - shared across the whole table, or personal per player?** HP's Q9 fix ships as shared: one folder list per campaign, so a player's drag-and-drop reorganises it for the GM and every other player too (that's how it already worked - the old bug saved correctly, just didn't render). Personal (each player arranges their own view, GM's roster never changes) needs a new per-player folder layer - a real build, not a tweak. The shared version is fine to ship either way; this only decides whether follow-up work gets queued.
 
