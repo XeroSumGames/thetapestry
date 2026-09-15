@@ -8,6 +8,15 @@
 
 > **NORTH STAR: [tasks/north-star.md](north-star.md)** - everything below ladders up to "TheTapestry stable/polished/fun for the 9/1 Kickstarter" (Beta-500 7/1; billing ~10/1 post-KS). #1 = reliable core table loop (tactical-map render fix + the 2-client verify gate `tasks/tactical-map-verify-2client-testplan-2026-05-27.md`). #2 = KS first-impression / polish.
 
+### 🆕 OPEN 2026-09-15 - TheTapestry in the one frame, on new /v2 pages alongside the old ones (PLAN written, waiting for Xero's go)
+Design locked (`tasks/decisions.md` 2026-09-15). Xero: "ideally i would want this on the live site on new pages while the old ones remain active." **Full plan with checkable items: `tasks/plan-one-frame-new-pages-2026-09-15.md`.** Summary:
+- Phase 0 (no visible change): let `/v2` skip the old sidebar in `LayoutShell.tsx` (hub-reviewed, it is the login gate); pull the site menu out of `Sidebar.tsx`, the PINS panel out of `MapView.tsx`, and the table's layout blocks out of `app/stories/[id]/table/page.tsx` (all at their LOC caps, so extraction is required). Gate: full E2E green + one normal session on the OLD table.
+- Phase 1: the frame + Dashboard + section pages live at `/v2`, unlinked; measurement test at 1920/1280/1024.
+- Phase 2: the story table at `/v2` with title-bar avatar popovers; mixed old/new sessions verified.
+- Phase 3 (switch-over) is a separate later decision.
+- Waiting on Xero: go on the plan; address prefix (recommended `/v2`); how people find the new pages (recommended: only via a link he shares).
+- Sequencing: HP clears its current player-facing queue and pushes `aa10f6c8` + `da8fad50` first; 0.4 must not overlap other table-page work.
+
 ### 🆕 OPEN 2026-09-14 - Players can't drag-drop NPCs into folders (Q9 partial answer, diagnosed, routed to HP)
 Xero via Comms (Q9 partial, `COMMS.md` `c3a4eccc`): players (not just the GM) need drag-and-drop to move NPCs into folders and rearrange them - "it's not user friendly" today. Screenshot showed a player's NPC tab with existing folders (Workshop/Town Council/West Gate) they can't rearrange. **Diagnosed the actual gate, so HP doesn't have to hunt for it:**
 - **Not an RLS problem** - checked `sql/_baseline/schema.sql`: the `"Campaign members update campaign_npcs"` policy already permits ANY campaign member (not just the GM) to UPDATE `campaign_npcs`, which is where `folder`/`sort_order` live. So a player's drag-drop write would already be allowed by the database today.
