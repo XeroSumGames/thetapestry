@@ -4,7 +4,29 @@ import {
   dirtyNpcSortRows,
   persistNpcSort,
   persistNpcFolder,
+  folderDbValue,
+  compareNpcSort,
+  planNpcRowDrop,
 } from '../../lib/npc-drag-drop'
+
+describe('planNpcRowDrop', () => {
+  const folder = [{ id: 'a', sort_order: 1 }, { id: 'b', sort_order: 2 }, { id: 'c', sort_order: 3 }]
+  it('dragging an NPC from another folder onto a row = move into this folder', () => {
+    expect(planNpcRowDrop(folder, 'x', 'b', 'West Gate')).toEqual({ kind: 'move', folder: 'West Gate' })
+  })
+  it('moving onto a row in the "Unfiled" folder clears the folder', () => {
+    expect(planNpcRowDrop(folder, 'x', 'b', 'Unfiled')).toEqual({ kind: 'move', folder: null })
+  })
+  it('dragging within the folder = reorder with only the changed rows', () => {
+    const plan = planNpcRowDrop(folder, 'c', 'a', 'West Gate')
+    expect(plan?.kind).toBe('reorder')
+    if (plan?.kind === 'reorder') expect(plan.dirty.map(n => [n.id, n.sort_order])).toEqual([['c', 1], ['a', 2], ['b', 3]])
+  })
+  it('dropping on itself or with no drag is a no-op', () => {
+    expect(planNpcRowDrop(folder, 'a', 'a', 'West Gate')).toBeNull()
+    expect(planNpcRowDrop(folder, null, 'a', 'West Gate')).toBeNull()
+  })
+})
 
 describe('reorderNpcs', () => {
   const seed = [
@@ -122,5 +144,40 @@ describe('persistNpcFolder', () => {
     const { supabase, updateCalls } = makeMockSupabase()
     await persistNpcFolder(supabase, 'npc-2', 'Uncategorized')
     expect(updateCalls[0].payload).toEqual({ folder: null })
+  })
+
+  it('maps the player tab\'s "Unfiled" label to null, not the literal string', async () => {
+    const { supabase, updateCalls } = makeMockSupabase()
+    await persistNpcFolder(supabase, 'npc-3', 'Unfiled')
+    expect(updateCalls[0].payload).toEqual({ folder: null })
+  })
+})
+
+describe('folderDbValue', () => {
+  it('keeps real folder names', () => {
+    expect(folderDbValue('West Gate')).toBe('West Gate')
+  })
+  it('maps both "no folder" labels to null', () => {
+    expect(folderDbValue('Uncategorized')).toBeNull()
+    expect(folderDbValue('Unfiled')).toBeNull()
+  })
+})
+
+describe('compareNpcSort', () => {
+  it('orders by sort_order before name, so a drag-reorder survives render', () => {
+    const rows = [
+      { name: 'Alice', sort_order: 3 },
+      { name: 'Zed', sort_order: 1 },
+      { name: 'Mo', sort_order: 2 },
+    ]
+    expect([...rows].sort(compareNpcSort).map(r => r.name)).toEqual(['Zed', 'Mo', 'Alice'])
+  })
+  it('puts null sort_order last and breaks ties by name', () => {
+    const rows = [
+      { name: 'Bea', sort_order: null },
+      { name: 'Al', sort_order: null },
+      { name: 'Cy', sort_order: 5 },
+    ]
+    expect([...rows].sort(compareNpcSort).map(r => r.name)).toEqual(['Cy', 'Al', 'Bea'])
   })
 })

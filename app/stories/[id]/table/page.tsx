@@ -51,7 +51,7 @@ import { RestorePickerModal } from './components/RestorePickerModal'
 import { GrantAdvantageModal } from './components/GrantAdvantageModal'
 import { FeedColumn } from './components/FeedColumn'
 import { CommunityStatusModal } from './components/CommunityStatusModal'
-import { reorderNpcs, dirtyNpcSortRows, persistNpcSort, persistNpcFolder } from '../../../../lib/npc-drag-drop'
+import { persistNpcSort, persistNpcFolder, folderDbValue, compareNpcSort, planNpcRowDrop } from '../../../../lib/npc-drag-drop'
 import {
   type Advantage,
   consumeAdvantage,
@@ -7547,8 +7547,13 @@ export default function TablePage() {
               // Community buckets - NPC is recruited (in playerNpcCommunityMap) and not in combat
               const communityBuckets = new Map<string, any[]>()
               const byFolder = new Map<string, any[]>()
-              for (const n of revealedNpcs) {
-                if (combatIdSet.has(n.id)) continue
+              // folder + sort_order from the LIVE campaign_npcs row: revealedNpcs is a load-time
+              // copy, so drag-moves/reorders saved but never showed (Q9, 2026-09-15).
+              const liveById = new Map<string, any>(campaignNpcs.map((c: any) => [c.id, c]))
+              for (const rn of revealedNpcs) {
+                if (combatIdSet.has(rn.id)) continue
+                const live = liveById.get(rn.id)
+                const n = live ? { ...rn, folder: live.folder, sort_order: live.sort_order } : rn
                 const commName = playerNpcCommunityMap[n.id]
                 if (commName) {
                   const arr = communityBuckets.get(commName) ?? []
@@ -7583,7 +7588,7 @@ export default function TablePage() {
                 if (alphaSet.has(key)) orderedFolderNames.push(key)
               }
               for (const f of orderedFolderNames) {
-                folders.push({ name: f, key: f, npcs: byFolder.get(f)!.sort((a, b) => a.name.localeCompare(b.name)) })
+                folders.push({ name: f, key: f, npcs: byFolder.get(f)!.sort(compareNpcSort) })
               }
               // Phase B sync: keep playerFolderOrder current with what
               // actually rendered. Guarded with a length+order check so
@@ -7647,16 +7652,19 @@ export default function TablePage() {
                         setPlayerNpcDragId(null); setPlayerNpcDragOverId(null); return
                       }
                       e.stopPropagation()
-                      // Reorder within the bucket - operate on bucket.npcs.
-                      // Note: bucket.npcs are sorted by name in the player
-                      // view (L8669); after this drop sort_order persists to
-                      // DB and the GM/player view will reorder accordingly
-                      // on the next render.
-                      const renumbered = reorderNpcs(bucket.npcs, playerNpcDragId, npc.id)
-                      setPlayerNpcDragId(null)
-                      setPlayerNpcDragOverId(null)
-                      if (renumbered === bucket.npcs) return
-                      await persistNpcSort(supabase, dirtyNpcSortRows(bucket.npcs, renumbered))
+                      const dragId = playerNpcDragId
+                      setPlayerNpcDragId(null); setPlayerNpcDragOverId(null); setPlayerNpcDragOverFolder(null)
+                      // Row in another folder = move in; same folder = reorder. Patch campaignNpcs first so it shows at once.
+                      const plan = planNpcRowDrop(bucket.npcs, dragId, npc.id, bucket.name)
+                      if (plan?.kind === 'move') {
+                        setCampaignNpcs(prev => prev.map((n: any) => n.id === dragId ? { ...n, folder: plan.folder } : n))
+                        const { error } = await persistNpcFolder(supabase, dragId, bucket.name)
+                        if (error) { reportSupabaseError(error as any, 'player-npc-folder-move'); void reloadCampaignNpcs() }
+                      } else if (plan?.kind === 'reorder') {
+                        const patch = new Map<string, number | null | undefined>(plan.dirty.map((n: any) => [n.id, n.sort_order]))
+                        setCampaignNpcs(prev => prev.map((n: any) => patch.has(n.id) ? { ...n, sort_order: patch.get(n.id) } : n))
+                        await persistNpcSort(supabase, plan.dirty)
+                      }
                     }}
                     onClick={() => {
                       setViewingNpcs(prev => prev.some(n => n.id === npc.id) ? prev.filter(n => n.id !== npc.id) : [...prev, npc])
@@ -7759,14 +7767,14 @@ export default function TablePage() {
                           }
                           e.stopPropagation()
                           if (playerNpcDragId) {
-                            // Cross-folder NPC move (Phase A behavior):
-                            // bucket.name IS the folder string ('Unfiled'
-                            // maps to null inside persistNpcFolder).
+                            // Cross-folder move; optimistic patch, re-pull on a failed write.
                             const dragId = playerNpcDragId
                             setPlayerNpcDragId(null)
                             setPlayerNpcDragOverFolder(null)
+                            const folder = folderDbValue(bucket.name)
+                            setCampaignNpcs(prev => prev.map((n: any) => n.id === dragId ? { ...n, folder } : n))
                             const { error } = await persistNpcFolder(supabase, dragId, bucket.name)
-                            if (error) reportSupabaseError(error as any, 'player-npc-folder-move')
+                            if (error) { reportSupabaseError(error as any, 'player-npc-folder-move'); void reloadCampaignNpcs() }
                           } else if (playerFolderDragId) {
                             // Folder reorder (Phase B): local-only,
                             // localStorage-backed. No DB write because
