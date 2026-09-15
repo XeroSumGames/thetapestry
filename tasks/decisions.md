@@ -10,6 +10,28 @@ Newest first.
 
 ---
 
+## 2026-09-14: TheTapestry moves to the one-frame VTT standard - frame only, contents unchanged; four placement calls decided
+
+**Decision:** TheTapestry's two frames (the story table's tactical view and the world view with its long left menu) reconcile into ONE frame built to the house VTT standard (`D:\Coding\VTTs\TheTable	askstt-frame-standard.md`): a 45px title bar, a 34px section strip whose first and last tabs sit over the rails, a 280px left rail, a flexible centre with no padding, a 260px right rail, and 1px dividers, filling the screen with no gap. **Only the frame changes; everything inside it stays as it is on the live site** (Xero: "you should only be adjusting the frame. the contents should be what they currently are on the live site."). Xero picked, from the mockup:
+1. **Site menu: A** - stays in the left rail, as live.
+2. **Player seats bar: A** - the bottom bar (GM, Observing, player seats with MAP / POPOUT) is KEPT, as a deliberate exception to the standard; it sits inside the frame's flex column and the columns shrink by its 58px.
+3. **GM's NPC list: A** - NPCS / ASSETS / PINS / GM NOTES stay in the right rail, as live.
+4. **Map controls: B** - Day/Fog, Share View, zoom, address search and the map layer buttons move off the map into a 34px toolbar at the top of the centre. It is part of the view, not the chrome.
+
+**Also locked by the mockup's verification (Table hub measured it independently):** a rail never scrolls itself - long lists (NPC roster, site menu, session log, pins) scroll inside their own box under fixed controls. The story session name is the one title-bar item allowed to shorten with an ellipsis, so the bar stays one line down to 1024px.
+
+**Reference mockup:** https://claude.ai/artifact/BDavy5FhVgQPUTtJzJwckf (defaults set to these four picks). Brief: `D:\Coding\VTTs\TheTable	asksrief-thetapestry-frame-2026-09-14.md`.
+
+**Alternatives considered:** 1B title-bar Menu button, 1C menu as strip tabs; 2B Party tab in the left rail, 2C avatars in the title bar; 3B NPCs tab in the left rail; 4A controls floating on the map (as live).
+
+**Why these won:** Xero kept everything players and GMs already know in place (menu, seats, NPC list) and changed only what the frame demands, plus the one move that clears the map so it runs edge to edge.
+
+**Status:** decided, NOT built. The real-app build (global LayoutShell + the table page) is a load-bearing refactor of TheTapestry's live, revenue site; it needs its own plan and Xero's go before any code, and ships localhost-first.
+
+**What would change our mind:** the build showing that the kept bottom bar or the 280/260 rails cost real space on the tactical map at common laptop sizes.
+
+---
+
 ## 2026-09-01: session notes are intentionally visible to every player in the campaign - NOT a confidentiality bug
 
 **Decision:** all four GM-authored session fields - `gm_summary`, `cliffhanger`, `next_session_notes`, `session_log` - stay readable by every campaign member. Xero's call, in his words: they should be "publicly viewable... by players in the game, at least."
