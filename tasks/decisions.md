@@ -10,7 +10,39 @@ Newest first.
 
 ---
 
+## 2026-09-15: TheTapestry one-frame - final placement picks (supersedes 2026-09-14 on decisions 2 and 4) plus the Dashboard
+
+**Decision:** still frame only, contents unchanged (see 2026-09-14). Xero's final picks, from the mockup:
+1. **Site menu: A** - stays in the left rail, as live. (unchanged)
+2. **Player seats: C** - the bottom seats bar is REMOVED. Each player's avatar sits in the title bar, and clicking one opens a small in-page popover with the same controls the bar has today (MAP, POPOUT) plus the character and player name. A grey counter avatar opens a popover listing who is observing (GrumpyBattersby, Pesky Larue) with presence dots. Xero: "if i click them it needs to have a popout or controls like it does at the bottom." (changed from A)
+3. **GM's NPC list: A** - right rail, as live. (unchanged)
+4. **Map controls: A** - stay on the map, as live (Day/Fog, Share View and zoom top-right on the tactical map; zoom, address search and layer buttons on the world map). (changed from B)
+
+**Also decided with Xero, 2026-09-14/15:**
+- The story table's first strip tab is renamed **DASHBOARD** (was CAMPAIGN MAP).
+- On the DASHBOARD tab **both rails swap**: the left rail shows today's full site menu and the right rail shows today's PINS panel (26 total, World Events / My Pins / Whispers). Every other story tab keeps Logs / Chat / Both / Map on the left and NPCs / Assets / Pins / GM Notes on the right.
+- **The Dashboard is the landing page.** The live site already does this ('/' renders app/dashboard/page.tsx). In the new frame the landing view's first tab is DASHBOARD too, so the first tab reaches the same page from both contexts. "The World" stays a link in the site menu.
+
+**Effect on the frame standard** (`D:\Coding\VTTs\TheTable\tasks\vtt-frame-standard.md` section 4b): the bottom-bar exception is WITHDRAWN, because 2C is within the standard. The DASHBOARD rail swap remains TheTapestry's one approved exception.
+
+**Title bar detail that 2C forced:** with two player avatars and the observer counter in the bar, the story session name is the one item allowed to shorten with an ellipsis (minimum 60px), so the bar stays one line down to 1024px.
+
+**Reference mockup:** https://claude.ai/artifact/BDavy5FhVgQPUTtJzJwckf (defaults set to these picks); local copy `D:\ClaudeOutput\tapestry-frame.html`.
+
+**Alternatives considered:** 2A (keep the bottom bar as an exception), 2B (Party tab in the left rail); 4B (a toolbar at the top of the centre).
+
+**Why these won:** 2C gives the tactical map back the bar's 58px of height without losing a single control, since every seat action is one click away on its avatar. 4A keeps the controls where GMs already reach for them.
+
+**Status:** decided, NOT built. The real-app build is a load-bearing refactor of the live site and needs its own plan and Xero's go first.
+
+**What would change our mind:** tables with more players than fit in the title bar at laptop widths (the avatar row grows with party size); that would need an overflow counter or a return to a Party tab.
+
+---
+
 ## 2026-09-14: TheTapestry moves to the one-frame VTT standard - frame only, contents unchanged; four placement calls decided
+
+**SUPERSEDED 2026-09-15** (see entry above): decisions 2 and 4 were changed, and the Dashboard landing, tab rename and rail swap were added.
+
 
 **Decision:** TheTapestry's two frames (the story table's tactical view and the world view with its long left menu) reconcile into ONE frame built to the house VTT standard (`D:\Coding\VTTs\TheTable\tasks\vtt-frame-standard.md`): a 45px title bar, a 34px section strip whose first and last tabs sit over the rails, a 280px left rail, a flexible centre with no padding, a 260px right rail, and 1px dividers, filling the screen with no gap. **Only the frame changes; everything inside it stays as it is on the live site** (Xero: "you should only be adjusting the frame. the contents should be what they currently are on the live site."). Xero picked, from the mockup:
 1. **Site menu: A** - stays in the left rail, as live.
