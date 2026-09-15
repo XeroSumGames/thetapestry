@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-15 21:04 UTC
+
+**Status:** DRIFT (carry-forward - same 3 items as prior entry)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (GitHub API confirmed)
+
+**Drift:**
+- HOPED-FOR 90d+: Stress Check 12-string (8 uncaptured: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no code touch in 3d
+- HOPED-FOR 90d+: vehicle popout broadcasts Section B - React #310 crash fixed (156b3ae) but broadcasts still unplayed
+- Stale-todo: health-pulse em/en-dash fix still open as [ ]
+
+**Action:** Carry-forward drift only; 2 new app commits since 18:04 (campaign-sheet observer fix aa8c8f5, vehicle hook ordering 156b3ae) - neither resolves drift items.
+
+---
+
 ## 2026-09-15 18:04 UTC
 
 **Status:** DRIFT (carry-forward - same items as prior entry)
