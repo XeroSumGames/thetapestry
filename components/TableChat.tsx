@@ -27,12 +27,13 @@
 // the parent (scroll area vs fixed bottom strip), so they're separate
 // exports rather than a single wrapper component.
 
-import { memo, useEffect, useRef, useState, useCallback } from 'react'
+import { memo, useEffect, useRef, useState, useCallback, type CSSProperties } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { createClient } from '../lib/supabase-browser'
 import { renderRichText } from '../lib/rich-text'
 import { wrapDbChange } from '../lib/sentry-realtime'
 import { reportSupabaseError } from '../lib/supabase-errors'
+import { matchRollCommand, parseDiceExpression, rollParsedDice, DICE_PANEL_SIDES, DICE_FORMAT_HINT } from '../lib/dice-expression'
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -305,11 +306,22 @@ interface ChatComposerProps {
 export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whisperTarget, setWhisperTarget }: ChatComposerProps) {
   const supabase = createClient()
   const [input, setInput] = useState('')
+  // Visual dice panel (Q4, 2026-09-15). Xero's spec: a visible dice button
+  // opening a roller for 1d3 through 1d20, ADDITIVE alongside `/r`, not a
+  // replacement. Both paths share lib/dice-expression, so they cannot drift.
+  const [showDice, setShowDice] = useState(false)
+  const [diceCount, setDiceCount] = useState(1)
+  const [diceMod, setDiceMod] = useState(0)
+  // Malformed-expression feedback, shown inline in the panel. Never alert() -
+  // browser dialogs are banned repo-wide (AGENTS.md); the old `/r` path used
+  // one, which is fixed here.
+  const [diceError, setDiceError] = useState<string | null>(null)
+
+  const myEntry = entries.find(e => e.userId === userId)
+  const characterName = myEntry?.character.name ?? (isGM ? 'Game Master' : 'Unknown')
 
   async function send() {
     if (!input.trim() || !userId) return
-    const myEntry = entries.find(e => e.userId === userId)
-    const characterName = myEntry?.character.name ?? (isGM ? 'Game Master' : 'Unknown')
     const trimmed = input.trim()
     let recipientUserId: string | null = whisperTarget?.userId ?? null
     let isWhisper = !!whisperTarget
@@ -324,31 +336,18 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
     // `/d` originally; flipped to `/r` per Xero on 2026-05-04 since
     // `/d` collided with muscle memory from other tools that use it
     // as a delete shortcut.
-    const diceCmd = trimmed.match(/^\/r(?:oll)?\s+(.+)$/i)
-    if (diceCmd) {
-      const expr = diceCmd[1].replace(/\s+/g, '')
-      const m = expr.match(/^(\d+)d(\d+)((?:[+\-]\d+)*)$/i)
-      if (!m) {
-        alert(`Bad dice expression: "${diceCmd[1]}"\n\nFormat: /r NdM[+/-K] - e.g. /r 1d6, /r 3d20+3+2-1, /r 1d100-2`)
+    const diceExpr = matchRollCommand(trimmed)
+    if (diceExpr !== null) {
+      const parsed = parseDiceExpression(diceExpr)
+      if (!parsed) {
+        // Open the panel so the hint is visible next to the dice buttons, and
+        // KEEP the typed text so it can be corrected rather than retyped.
+        setDiceError(`Bad dice expression: "${diceExpr}". ${DICE_FORMAT_HINT}`)
+        setShowDice(true)
         return
       }
-      const count = Math.min(100, Math.max(1, parseInt(m[1], 10)))
-      const sides = Math.min(1000, Math.max(2, parseInt(m[2], 10)))
-      let modifier = 0
-      const modPart = m[3] ?? ''
-      const modMatches = modPart.matchAll(/([+\-])(\d+)/g)
-      for (const mm of modMatches) {
-        modifier += (mm[1] === '+' ? 1 : -1) * parseInt(mm[2], 10)
-      }
-      const rolls: number[] = []
-      for (let i = 0; i < count; i++) rolls.push(Math.floor(Math.random() * sides) + 1)
-      const sum = rolls.reduce((a, b) => a + b, 0)
-      const total = sum + modifier
-      const exprPretty = modifier === 0
-        ? `${count}d${sides}`
-        : `${count}d${sides}${modifier > 0 ? '+' : ''}${modifier}`
-      const modStr = modifier === 0 ? '' : modifier > 0 ? ` +${modifier}` : ` ${modifier}`
-      messageBody = `🎲 ${exprPretty} → [${rolls.join('+')}]${modStr} = ${total}`
+      setDiceError(null)
+      messageBody = rollParsedDice(parsed).text
     }
 
     // Whisper command - `/whisper <target> <body>` or `/w <target> <body>`.
@@ -405,6 +404,15 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
     }
 
     if (!messageBody.trim()) return
+    if (await postChat(messageBody, isWhisper, recipientUserId)) setInput('')
+  }
+
+  /**
+   * Insert one chat row. Returns false when it never reached the feed, so the
+   * caller can KEEP the typed input for a retry instead of silently losing
+   * what the player wrote. (Was: result discarded + input cleared always.)
+   */
+  async function postChat(messageBody: string, isWhisper: boolean, recipientUserId: string | null) {
     const { error } = await supabase.from('chat_messages').insert({
       campaign_id: campaignId,
       user_id: userId,
@@ -414,13 +422,30 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
       recipient_user_id: recipientUserId,
     })
     if (error) {
-      // The message never reached the feed. Surface it (console + Sentry) and
-      // KEEP the typed input so the player can retry instead of silently
-      // losing what they wrote. Was: result discarded + input cleared always.
       reportSupabaseError(error, 'TableChat.send')
-      return
+      return false
     }
-    setInput('')
+    return true
+  }
+
+  /**
+   * Roll one die from the visual panel. Goes down the SAME path as `/r`,
+   * including the current whisper target, so a panel roll and a typed roll are
+   * indistinguishable in the feed.
+   */
+  async function rollFromPanel(sides: number) {
+    if (!userId) return
+    setDiceError(null)
+    const roll = rollParsedDice({ count: diceCount, sides, modifier: diceMod })
+    await postChat(roll.text, !!whisperTarget, whisperTarget?.userId ?? null)
+  }
+
+  // Shared chrome for the count / modifier steppers. 28px to match the
+  // repo-wide header button height.
+  const diceStepBtn: CSSProperties = {
+    height: '28px', width: '24px', padding: 0, background: '#242424',
+    border: '1px solid #3a3a3a', borderRadius: '3px', color: '#cce0f5',
+    fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer',
   }
 
   return (
@@ -434,12 +459,39 @@ export function ChatComposer({ campaignId, userId, isGM, campaign, entries, whis
             style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#d48bd4', cursor: 'pointer', fontSize: '13px', padding: '0 4px', lineHeight: 1 }}>×</button>
         </div>
       )}
+      {showDice && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px', padding: '6px 8px', background: '#1e1e1e', borderBottom: '1px solid #3a3a3a' }}>
+          {DICE_PANEL_SIDES.map(sides => (
+            <button key={sides} onClick={() => rollFromPanel(sides)}
+              title={`Roll ${diceCount}d${sides}${diceMod > 0 ? `+${diceMod}` : diceMod < 0 ? diceMod : ''}${whisperTarget ? ` (whispered to ${whisperTarget.characterName})` : ''}`}
+              style={{ height: '28px', minWidth: '40px', padding: '0 8px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}>
+              d{sides}
+            </button>
+          ))}
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '4px' }}>
+            <button onClick={() => setDiceCount(c => Math.max(1, c - 1))} title="Fewer dice" style={diceStepBtn}>-</button>
+            <span style={{ minWidth: '58px', textAlign: 'center', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>{diceCount} {diceCount === 1 ? 'die' : 'dice'}</span>
+            <button onClick={() => setDiceCount(c => Math.min(20, c + 1))} title="More dice" style={diceStepBtn}>+</button>
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <button onClick={() => setDiceMod(m => m - 1)} title="Lower the modifier" style={diceStepBtn}>-</button>
+            <span style={{ minWidth: '34px', textAlign: 'center', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif' }}>{diceMod > 0 ? `+${diceMod}` : diceMod}</span>
+            <button onClick={() => setDiceMod(m => m + 1)} title="Raise the modifier" style={diceStepBtn}>+</button>
+          </span>
+          {diceError && (
+            <div style={{ flexBasis: '100%', color: '#f5a89a', fontSize: '13px', fontFamily: 'Carlito, sans-serif', lineHeight: 1.4 }}>{diceError}</div>
+          )}
+        </div>
+      )}
       <div style={{ display: 'flex', gap: '0', padding: '6px 8px', alignItems: 'stretch' }}>
+        <button onClick={() => { setShowDice(v => !v); setDiceError(null) }}
+          title={showDice ? 'Hide the dice roller' : 'Dice roller'}
+          style={{ width: '28px', flexShrink: 0, background: showDice ? '#1a2e10' : '#242424', border: `1px solid ${showDice ? '#2d5a1b' : '#3a3a3a'}`, borderRight: 'none', borderRadius: '3px 0 0 3px', color: showDice ? '#7fc458' : '#cce0f5', fontSize: '13px', cursor: 'pointer', padding: 0 }}>🎲</button>
         <textarea value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
           placeholder={whisperTarget ? `Whisper to ${whisperTarget.characterName}...` : 'Type a message...'}
           rows={2}
-          style={{ flex: 1, padding: '6px 8px', background: whisperTarget ? '#1a1a2a' : '#242424', border: `1px solid ${whisperTarget ? '#8b2e8b' : '#3a3a3a'}`, borderRight: 'none', borderRadius: '3px 0 0 3px', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', resize: 'none', lineHeight: '1.4' }} />
+          style={{ flex: 1, padding: '6px 8px', background: whisperTarget ? '#1a1a2a' : '#242424', border: `1px solid ${whisperTarget ? '#8b2e8b' : '#3a3a3a'}`, borderLeft: 'none', borderRight: 'none', borderRadius: '0', color: '#f5f2ee', fontSize: '13px', fontFamily: 'Carlito, sans-serif', outline: 'none', resize: 'none', lineHeight: '1.4' }} />
         <button onClick={send}
           style={{ width: '24px', flexShrink: 0, background: whisperTarget ? '#2a102a' : '#1a2e10', border: `1px solid ${whisperTarget ? '#8b2e8b' : '#2d5a1b'}`, borderRadius: '0 3px 3px 0', color: whisperTarget ? '#d48bd4' : '#7fc458', fontSize: '13px', fontFamily: 'Carlito, sans-serif', textTransform: 'uppercase', cursor: 'pointer', writingMode: 'vertical-rl', letterSpacing: '.08em', padding: 0, transform: 'rotate(180deg)' }}>Send</button>
       </div>
