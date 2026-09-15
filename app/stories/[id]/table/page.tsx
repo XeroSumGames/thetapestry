@@ -4,7 +4,7 @@ import { createClient } from '../../../../lib/supabase-browser'
 import { getCampaignNpcs, getCampaignNpcById } from '../../../../lib/data/campaign-npcs'
 import { getCharacterStateById } from '../../../../lib/data/character-states'
 import { canCoverFire, resolveCoverFireShooter, applyCoverFire } from '../../../../lib/cover-fire'
-import { CAMPAIGN_COLUMNS, foldGmScratch, listCampaignObservers } from '../../../../lib/data/campaigns'
+import { CAMPAIGN_COLUMNS, foldGmScratch, listCampaignObservers, setSharedScene } from '../../../../lib/data/campaigns'
 import { activeSceneId } from '../../../../lib/data/scenes'
 import { insertRollLog, deleteRollLog, setRollLogSession, rollLogForCampaign } from '../../../../lib/data/roll-log'
 import { insertSession, activeSessionIdForCampaign } from '../../../../lib/data/sessions'
@@ -1278,6 +1278,7 @@ export default function TablePage() {
       setSessionStatus(camp.session_status === 'active' ? 'active' : 'idle')
       setSessionCount(camp.session_count ?? 0)
       syncRollLogSession(camp.session_status)  // Y11-e: stamp rolls after a mid-session reload
+      setSharedSceneId(camp.shared_scene_id ?? null)  // survive a reload; broadcast only reaches live tabs
       setLoading(false)
       // Seed the Quick Add pin lat/lng from the campaign's map center
       // so if the player opens Quick Add via some non-dblclick route
@@ -1610,6 +1611,8 @@ export default function TablePage() {
     syncRollLogSession(row.session_status)  // Y11-e
     setCampaign((prev: Campaign | null) => prev ? { ...prev, session_status: row.session_status, session_count: row.session_count, session_started_at: row.session_started_at } : prev)
     if (Array.isArray(row.vehicles)) setVehicles(row.vehicles)
+    // Share Map writes shared_scene_id; mirroring it here catches a player who missed the broadcast.
+    if ('shared_scene_id' in row) setSharedSceneId(row.shared_scene_id ?? null)
   }
   useCampaignChannel(id, {
     channelName: `campaign_${id}`,
@@ -1617,7 +1620,7 @@ export default function TablePage() {
     // Handler applies an UPDATE payload directly (no refetch), so the reconcile
     // needs to re-read the row and reapply the same fields after a gap.
     reconcile: async () => {
-      const { data: row } = await supabase.from('campaigns').select('session_status, session_count, session_started_at, vehicles').eq('id', id).maybeSingle()
+      const { data: row } = await supabase.from('campaigns').select('session_status, session_count, session_started_at, vehicles, shared_scene_id').eq('id', id).maybeSingle()
       if (row) applyCampaignRow(row)
     },
   })
@@ -1891,7 +1894,10 @@ export default function TablePage() {
         setStartingCombat(false)
         if (!tacticalShared) {
           setTacticalShared(true); setShowTacticalMap(true)
-          initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_shared', payload: { shared: true, sceneId: await activeSceneId(supabase, id) } })
+          const dropSceneId = await activeSceneId(supabase, id)
+          setSharedSceneId(dropSceneId)
+          initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_shared', payload: { shared: true, sceneId: dropSceneId } })
+          void setSharedScene(id, dropSceneId).then(({ error }: any) => { if (error) reportSupabaseError(error, 'combat:drop-auto-share-persist') })
         }
         await rollsFeed.refetch()
         initChannelRef.current?.send({ type: 'broadcast', event: 'combat_started', payload: {} })
@@ -1943,7 +1949,10 @@ export default function TablePage() {
     if (!tacticalShared) {
       setTacticalShared(true)
       setShowTacticalMap(true)
-      initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_shared', payload: { shared: true, sceneId: await activeSceneId(supabase, id) } })
+      const startSceneId = await activeSceneId(supabase, id)
+      setSharedSceneId(startSceneId)
+      initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_shared', payload: { shared: true, sceneId: startSceneId } })
+      void setSharedScene(id, startSceneId).then(({ error }: any) => { if (error) reportSupabaseError(error, 'combat:auto-share-persist') })
     }
     // Refresh the GM's log feed so the new entries appear immediately, then
     // broadcast combat start so players also reload their state. We rely on
@@ -5625,10 +5634,13 @@ export default function TablePage() {
             if (showTacticalMap) {
               const sceneId = await activeSceneId(supabase, id)
               setTacticalShared(true)
+              setSharedSceneId(sceneId)
               initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_shared', payload: { shared: true, sceneId } })
+              void setSharedScene(id, sceneId).then(({ error }: any) => { if (error) reportSupabaseError(error, 'table:share-map-persist') })
             } else {
               setTacticalShared(false)
               initChannelRef.current?.send({ type: 'broadcast', event: 'tactical_unshared', payload: {} })
+              void setSharedScene(id, null).then(({ error }: any) => { if (error) reportSupabaseError(error, 'table:unshare-map-persist') })
             }
             setShareMapFlash(true)
             window.setTimeout(() => setShareMapFlash(false), 1500)

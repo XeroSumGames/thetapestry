@@ -16,7 +16,7 @@ import { db } from './db'
 // MUST mirror the regrant set in sql/sec-pii-column-revokes-2026-06-23-*.sql:
 // if a campaigns column is added, add it here AND to that grant.
 export const CAMPAIGN_COLUMNS =
-  'id, name, description, setting, gm_user_id, status, created_at, session_status, session_count, session_started_at, map_style, map_center_lat, map_center_lng, vehicles, last_accessed_at, clock, start_canon_day, cover_image_url'
+  'id, name, description, setting, gm_user_id, status, created_at, session_status, session_count, session_started_at, map_style, map_center_lat, map_center_lng, vehicles, last_accessed_at, clock, start_canon_day, cover_image_url, shared_scene_id'
 
 /**
  * Just the in-game clock for a campaign. Drop-in for
@@ -39,6 +39,18 @@ export async function foldGmScratch(campaignId: string, typedSummary: string): P
   if (scratch) await db().from('gm_scratch').update({ text: '' }).eq('campaign_id', campaignId)
   const typed = (typedSummary ?? '').trim()
   return [typed, scratch ? `GM scratch notes:\n${scratch}` : ''].filter(Boolean).join('\n\n') || null
+}
+
+/**
+ * Persist the scene the GM last pushed with Share Map (null = unshared).
+ * Players hydrate `sharedSceneId` from this on load, so a refresh or a late
+ * join lands on the shared scene instead of whatever happens to be is_active
+ * (the GM may be prepping another scene privately). The broadcast still does
+ * the live push; this column is what survives a reload.
+ * GM-only in practice - the "GM can update campaigns" policy enforces it.
+ */
+export function setSharedScene(campaignId: string, sceneId: string | null) {
+  return db().from('campaigns').update({ shared_scene_id: sceneId } as any).eq('id', campaignId)
 }
 
 /** Count of GM-owned campaigns for a user. Returns {count, error}. */

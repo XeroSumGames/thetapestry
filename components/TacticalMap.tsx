@@ -3912,6 +3912,14 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
 
       {/* Map canvas area - scrollable when zoomed */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        {/* Players stay locked to the last Shared scene (so the GM can prep
+            privately). Say so when the GM has moved to another scene, instead of
+            silently showing a stale map (Q3, 2026-09-15). */}
+        {!isGM && scene && scenes.some(s => s.is_active && s.id !== scene.id) && (
+          <div style={{ position: 'absolute', top: '8px', left: '50%', transform: 'translateX(-50%)', zIndex: 11, padding: '4px 12px', background: 'rgba(42,32,16,.95)', border: '1px solid #EF9F27', borderRadius: '3px', color: '#EF9F27', fontSize: '13px', fontFamily: 'Carlito, sans-serif', letterSpacing: '.04em', pointerEvents: 'none' }}>
+            The GM is on a different scene - waiting for them to Share Map
+          </div>
+        )}
         {/* Zoom control + Share View - top right. Share View is the
             tactical-map sibling of the CampaignMap "👁 Share View"
             button (added 2026-05-11). GM-only one-shot push of the
