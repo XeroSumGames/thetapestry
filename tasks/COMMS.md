@@ -24,11 +24,13 @@ remembering, it gets its own entry in `decisions.md` too.
 **Question numbering (2026-09-14, Xero's ask):** every question actually put
 to Xero from here on gets a global sequential tag (`Q1`, `Q2`, ...), NOT
 renumbered retroactively for anything asked before this date. Next number to
-assign: **Q12**.
+assign: **Q13**.
 
 ---
 
 ## OPEN
+
+- **[2026-09-15, Q12] NPC folders (Q9 fix) - shared across the whole table, or personal per player?** HP's Q9 fix ships as shared: one folder list per campaign, so a player's drag-and-drop reorganises it for the GM and every other player too (that's how it already worked - the old bug saved correctly, just didn't render). Personal (each player arranges their own view, GM's roster never changes) needs a new per-player folder layer - a real build, not a tweak. The shared version is fine to ship either way; this only decides whether follow-up work gets queued.
 
 - **[2026-08-18] Xero's playtest notes, items 2-5 - ASK HIM ONE AT A TIME.**
   Raised by Puffer Fish. Xero's instruction, verbatim: *"ask me about these,
