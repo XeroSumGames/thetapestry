@@ -6,6 +6,27 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-15 06:04 UTC
+
+**Status:** DRIFT (carry-forward - same items as prior entry)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not authenticated - skipped
+
+**Drift:**
+- HOPED-FOR 90d+: Stress Check 12-string (8 uncaptured: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no code touch in 3d
+- HOPED-FOR 90d+: vehicle popout broadcasts Section B - React #310 crash fixed (156b3ae) but broadcasts still unplayed
+- Stale-todo: health-pulse em/en-dash fix (todo.md line 183) still open as [ ]
+
+**Recent app commits (3d):** fix(campaign-sheet) exclude observers from Party Status (aa8c8f5), fix(vehicle) React #310 (156b3ae)
+
+**Action:** Carry-forward drift only - next playtest drains the HOPED-FOR items; no code action needed.
+
+---
+
 ## 2026-09-14 21:05 UTC
 
 **Status:** DRIFT (RED resolved - 48-pulse critical RCE + /vehicle crash both cleared today)
