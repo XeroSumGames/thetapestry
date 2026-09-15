@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from '@sentry/nextjs'
 
 const nextConfig: NextConfig = {
+  // Next 16 defaults to regenerating AGENTS.md on every `next dev` run,
+  // overwriting this repo's real agent instructions with its own
+  // generic version (dirtying the tree every dev session). Ours is
+  // hand-maintained - keep Next from touching it.
+  agentRules: false,
   images: {
     remotePatterns: [
       {
