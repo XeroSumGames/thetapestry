@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-16 21:04 UTC
+
+**Status:** DRIFT (carry-forward - same 3 items + 1 stale-todo, unchanged from 18:03)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success
+
+**Drift:**
+- HOPED-FOR 90d+: Stress Check 12-string (8 uncaptured: HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE) - no code touch in 3d
+- HOPED-FOR 90d+: vehicle popout broadcasts Section B - still unplayed
+- HOPED-FOR 90d+: FI Insight Die award path (`useRollResolution.ts:264`) - never fired in live play
+- Stale-todo: health-pulse em/en-dash fix still open (tasks/todo.md line 199)
+
+**Action:** 0 new app commits since 18:03 - carry-forward only, no new issues.
+
+---
+
 ## 2026-09-16 18:03 UTC
 
 **Status:** DRIFT (carry-forward - same 3 items + 1 stale-todo, unchanged from 15:04)
