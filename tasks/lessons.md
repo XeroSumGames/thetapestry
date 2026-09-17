@@ -1,5 +1,43 @@
 # Lessons Learned
 
+## A blocker is a claim and needs a source - "we are waiting on Xero" most of all (2026-09-16)
+
+The hub held the fog-of-war fix for two days behind "awaiting Xero's approval to
+add `campaigns.shared_scene_id` to the live database", and reported that blocker
+to him several times in one session. **He had already said go on 2026-09-14, and
+`tasks/COMMS.md` recorded it in plain words:** "[2026-09-14, Q3] Fog-of-war scene
+desync - Xero: go." HP's own SQL file header cited that same COMMS entry. Nobody
+had to dig for it; the answer was in the file whose entire job is holding answers.
+
+The column was applied the moment it was checked, and verified live: uuid,
+nullable, with the column-level SELECT grant `campaigns` needs because
+`invite_code` is withheld. Additive, no migration, rollback is a DROP COLUMN. It
+could have shipped on the 14th.
+
+**Root cause:** the hub verified the CODE scrupulously all session - reading
+components before routing, reproducing other lanes' measurements in a browser,
+refusing to relay numbers it had not taken - and never applied any of that
+scepticism to its own process claims. "This is blocked" felt like state rather
+than an assertion, so it was never sourced.
+
+**Rules:** (1) Before saying anything is blocked, name the source that makes it
+so - a COMMS line, a dated decision, a failing gate - and if none exists, it is
+not blocked. (2) `tasks/COMMS.md` is the register of what Xero has answered.
+Check it before adding to his queue, and check it before repeating that something
+is in his queue. (3) A stale blocker is worse than an open question, because an
+open question gets asked again while a blocker just sits. Asking Xero twice costs
+him ten seconds; a falsely-held fix cost a player-facing bug two days. (4) The
+asymmetry means erring toward re-asking is correct - which inverts the usual
+decide-do-not-ask instinct specifically for "has he already answered this?"
+(5) Any lane may overrule the hub on this: if the hub asserts Xero-blocked and
+COMMS says otherwise, COMMS wins.
+
+**Related:** the same week, the hub invented an approval gate that did not exist
+(treating "let us make the changes locally" as approval of approach only, then
+asking for a separate go) which cost a day. Same failure mode in the opposite
+direction: manufacturing a gate versus failing to notice one had opened. Both
+come from not sourcing a process claim.
+
 ## The clip check needs three clauses, and the middle one is what makes it usable (2026-09-16)
 
 The rule for "is content being cut off" went through three revisions in one week,
