@@ -1,5 +1,38 @@
 # Lessons Learned
 
+## The clip check needs three clauses, and the middle one is what makes it usable (2026-09-16)
+
+The rule for "is content being cut off" went through three revisions in one week,
+each time because a version of it produced a wrong answer:
+
+1. **First form: "every pane must not scroll."** Would have forbidden the CENTRE
+   scrolling, which the house frame standard explicitly allows
+   (`.col { overflow: hidden }` / `.col-centre { overflow-y: auto }`). Narrowed
+   to rails only.
+2. **Second form: "walk all descendants, fail on any clipped child."** False-fails
+   on healthy inner scroll boxes - a list that scrolls inside a rail is not
+   clipped, it is scrolling. Corrected to walk up to the nearest ancestor with
+   computed `overflow-y: auto|scroll` and measure against THAT box.
+3. **Third form, and the one that works.** The Table hub's sweep of `/v2` reported
+   8 clipped children in the dashboard centre. They were Leaflet TILES, clipped by
+   the map's own container exactly as intended. Clipping by design is not a defect.
+
+**The rule, all three clauses:** measure against the box the child actually lives
+in; IGNORE boxes that clip by design; and only count content cut by a pane that
+CANNOT scroll. With all three, every `/v2` page reads 0.
+
+**Why the middle clause is the load-bearing one:** without it the check is not
+wrong so much as useless - it fires on every canvas, map, carousel, sprite sheet
+and `overflow: hidden` crop in the app, and a check that cries wolf on correct
+code gets switched off, at which point it catches nothing. The first and third
+clauses make it correct; the second makes it worth running.
+
+Credited to the TheTable Puffer Fish hub's lane, which found clause 3 by
+measuring rather than by reasoning about the CSS.
+
+**Pairs with:** [[the documentElement-never-scrolls rule]] - find the element
+that would actually move, and measure the box the child actually lives in.
+
 ## A change cannot break what it cannot reach - measure again before touching anything (2026-09-16)
 
 Three lanes hit the same shape in one week, which is what promotes it from an anecdote to a rule.

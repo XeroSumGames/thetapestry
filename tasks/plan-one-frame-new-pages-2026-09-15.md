@@ -255,16 +255,45 @@ the panel IS the rail and there is nothing to close. Had the portal been keyed o
 `sidebarOpen`, this would have been an empty 260px dead column with no way to
 restore the panel.
 
-**RULED 2026-09-16 by the hub: all six sections get the right rail.** The
-mockup's `rightRail()` branches on the world view, not on the DASHBOARD tab, so
-three-column everywhere is what Xero approved; both the hub and HP have told the
-E2E lane that six three-column pages are the end state; and it is coherent on the
-merits, because the standard makes the right rail the PLAYER's panel and World
-Events / My Pins / Whispers are no more map-specific than a notes panel. A rail
-that appears on one page and vanishes on the next five reads as a bug whatever
-the CSS permits. Until that follow-up lands, the other five stay two-column and
-must be treated as EXPECTED-ABSENT-FOR-NOW - do NOT invert them into asserted
-two-column, which is the same trap one page later.
+**RULED 2026-09-16 by the hub, then REVERSED the same day: only
+`/v2/dashboard` gets the right rail. The other five sections stay two-column, and
+that is the DESIGN, not a gap.** `frame--noright` on those five is correct and
+should be ASSERTED by the suite, not skipped.
+
+The first ruling was that all six get the rail, on the reasoning that the
+mockup's `rightRail()` branches on the world view rather than the DASHBOARD tab.
+HP pushed back with a cost and a hole, and the hole is decisive:
+
+- **There is no portal source.** The panel is portaled BY `MapView`, which owns
+  its state. The other five sections render no map at all. So the options are
+  mounting a HIDDEN `MapView` on all five purely to source the panel - pulling in
+  Leaflet, every pin, username resolution and realtime subscriptions on THE RULES
+  and MY STORIES, on every navigation - or doing the ~25-prop state lift after
+  all.
+- **Most of the panel is meaningless without a map.** Its primary interaction is
+  click a pin, `flyToPin`, the map pans and opens the popup; the timeline button
+  walks the map pin by pin. On a map-less page there is nothing to fly. A straight
+  port yields roughly FIFTEEN rows per page that look clickable and do nothing -
+  the same defect as the inert `✕` above, multiplied. Fixing one dead control and
+  commissioning fifteen in the same day is not a trade, it is the same mistake.
+
+**The reasoning error in the first ruling, which is the part worth keeping: the
+mockup had not actually decided this.** `rightRail()` shows PINS on every world
+tab because in a STATIC prototype that costs nothing - prototype convenience, not
+a considered product choice. The hub cited the mockup as authority for a decision
+it never made. "The mockup governs what the standard is silent on" still holds,
+but it governs APPEARANCE; it cannot settle a question whose entire cost exists
+only in the real app. Telling those two apart is the hub's job.
+
+**If Xero does want pins everywhere,** the build is the state lift plus HP's
+interaction design: on a non-map section a pin click NAVIGATES to
+`/v2/dashboard` and focuses that pin, and the timeline button is hidden the same
+way the `✕` now is. That keeps every visible control meaningful and makes the
+rail a way INTO the map from anywhere, which reads better against the standard's
+"right rail is the player's panel" than a read-only list would. It is a scoped
+piece of work, not a tweak. Routed to him via Comms with the cost attached; the
+recommendation is Dashboard-only for now, because a refactor plus new
+interaction semantics is not on the 9/1 path.
 
 **Rail tabs need a session.** The rail tab strip (World Events / My Pins /
 Whispers) only renders for a logged-in user; `PinsPanel` gates it on `userId`, as
@@ -276,3 +305,40 @@ pre-`/v2` behaviour, not on the frame.
 ceiling and `app/vehicle/page.tsx` at 1458 against 1459. Both must be ratcheted
 from `main` only, never from the composed tree, or the baseline records numbers
 that do not exist on main.
+
+### Open defect: the last section tab collapses when the frame stacks
+
+At 800x700 on any `--noright` page: strip `scrollWidth` 805 against
+`clientWidth` 796, five tabs at 155.2px with `flex: 1 1 33%`, and the LAST tab
+at 20px with its label clipped. Found by the TheTable hub's sweep, reproduced
+independently by the Tapestry hub.
+
+**Cause is CSS specificity, not the flex maths.** `app/v2/frame.css` line 301
+sets `.navtab, .navtab:first-child, .navtab:last-child { flex: 1 1 33% }` inside
+the `max-width: 820px` block. But `.navstrip--noright .navtab:last-child
+{ flex: 1 1 0 }` at line 135 is TWO classes plus a pseudo-class and outranks the
+media block's ONE class plus a pseudo-class - **a media query contributes no
+specificity of its own.** So the last tab never receives the stacked override.
+Five siblings then claim 33% each, totalling 165% of the strip, and the basis-0
+item takes the remainder.
+
+**Fix:** change the basis to `0` at line 301 so all six read `flex: 1 1 0`, the
+line-135 rule AGREES rather than competes, and each tab takes an equal sixth -
+the 132.8px x6 that DASHBOARD already measures when stacked. Overriding the 33%
+inside the media block also works but leaves two rules racing, which re-opens the
+moment anyone adds another `--noright` variant. Going to `1 1 0` also removes a
+gratuitous deviation from the Mothership reference, whose tabs are all `1 1 0`,
+so the house standard is untouched.
+
+**Note how nearly this hid itself:** the defect only appears on `--noright`
+pages. Under the hub's first (reversed) ruling every page would have had a right
+rail, the last tab would have become the 260px one, the symptom would have
+vanished at every viewport, and the broken CSS would have sat waiting for the
+next page rendered without a right rail. The reversal makes `--noright` a
+permanent shipping surface, so this went from cosmetic-on-a-doomed-page to a real
+defect while it was being reported.
+
+**Test worth having:** every geometry assertion in the suite checks that WIDTHS
+are right; here a width was plausible while a LABEL was cut off. A row asserting
+no tab's `scrollWidth` exceeds its `clientWidth` at stacked widths catches this
+and generalises to any future label that outgrows its tab.
