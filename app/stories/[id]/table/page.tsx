@@ -7663,7 +7663,8 @@ export default function TablePage() {
                       } else if (plan?.kind === 'reorder') {
                         const patch = new Map<string, number | null | undefined>(plan.dirty.map((n: any) => [n.id, n.sort_order]))
                         setCampaignNpcs(prev => prev.map((n: any) => patch.has(n.id) ? { ...n, sort_order: patch.get(n.id) } : n))
-                        await persistNpcSort(supabase, plan.dirty)
+                        const { error } = await persistNpcSort(supabase, plan.dirty)
+                        if (error) { reportSupabaseError(error as any, 'player-npc-reorder'); void reloadCampaignNpcs() }
                       }
                     }}
                     onClick={() => {

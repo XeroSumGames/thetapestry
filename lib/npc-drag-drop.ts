@@ -49,14 +49,21 @@ export function dirtyNpcSortRows<T extends NpcDragRow>(prev: T[], next: T[]): T[
 // own UPDATE so a partial failure doesn't roll back the whole batch.
 // RLS on campaign_npcs lets any campaign member UPDATE
 // (sql/campaign-npcs-rls-fix.sql).
+// Returns the FIRST row error (null when every write landed), matching
+// persistNpcFolder's shape. It used to return void and swallow them, so a
+// rejected write left the screen showing an order the DB never saved and the
+// player only found out on refresh - by which point they believed they had
+// moved something they hadn't. Still best-effort: every row is attempted even
+// if an earlier one fails, so one bad row cannot strand the rest.
 export async function persistNpcSort(
   supabase: SupabaseClient,
   dirty: NpcDragRow[],
-): Promise<void> {
-  if (dirty.length === 0) return
-  await Promise.all(dirty.map(n =>
+): Promise<{ error: any | null }> {
+  if (dirty.length === 0) return { error: null }
+  const results = await Promise.all(dirty.map(n =>
     supabase.from('campaign_npcs').update({ sort_order: n.sort_order }).eq('id', n.id),
   ))
+  return { error: results.find((r: any) => r?.error)?.error ?? null }
 }
 
 // The display label for "no folder" differs by surface: the GM roster

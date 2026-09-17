@@ -129,6 +129,57 @@ describe('persistNpcSort', () => {
   })
 })
 
+describe('persistNpcSort error reporting', () => {
+  // Regression guard: this used to return void and swallow every row error, so
+  // a rejected write left the UI showing an order the DB never saved and the
+  // player only discovered it on refresh. The caller now re-pulls on error, so
+  // the error has to actually reach it.
+  function mockFailing(failId: string | null, message = 'rls denied') {
+    const attempted: string[] = []
+    const supabase: any = {
+      from() {
+        return {
+          update() {
+            return {
+              eq(_col: string, val: any) {
+                attempted.push(val)
+                return Promise.resolve({ error: failId === val ? { message } : null })
+              },
+            }
+          },
+        }
+      },
+    }
+    return { supabase, attempted }
+  }
+
+  it('reports no error when every row write lands', async () => {
+    const { supabase } = mockFailing(null)
+    expect(await persistNpcSort(supabase, [{ id: 'a', sort_order: 1 }])).toEqual({ error: null })
+  })
+
+  it('returns the first row error so the caller can re-pull', async () => {
+    const { supabase } = mockFailing('b')
+    const { error } = await persistNpcSort(supabase, [
+      { id: 'a', sort_order: 1 }, { id: 'b', sort_order: 2 },
+    ])
+    expect(error?.message).toBe('rls denied')
+  })
+
+  it('still attempts every row even when one fails, so one bad row cannot strand the rest', async () => {
+    const { supabase, attempted } = mockFailing('a')
+    await persistNpcSort(supabase, [
+      { id: 'a', sort_order: 1 }, { id: 'b', sort_order: 2 }, { id: 'c', sort_order: 3 },
+    ])
+    expect([...attempted].sort()).toEqual(['a', 'b', 'c'])
+  })
+
+  it('reports no error for an empty dirty list', async () => {
+    const { supabase } = mockFailing(null)
+    expect(await persistNpcSort(supabase, [])).toEqual({ error: null })
+  })
+})
+
 describe('persistNpcFolder', () => {
   it('writes a normal folder name verbatim', async () => {
     const { supabase, updateCalls } = makeMockSupabase()

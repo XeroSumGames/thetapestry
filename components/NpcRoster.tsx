@@ -14,6 +14,7 @@ import PortraitBankPicker from './PortraitBankPicker'
 import { openPopout } from '../lib/popout'
 import { ModalBackdrop, Z_INDEX } from '../lib/style-helpers'
 import { reorderNpcs, dirtyNpcSortRows, persistNpcSort, persistNpcFolder } from '../lib/npc-drag-drop'
+import { reportSupabaseError } from '../lib/supabase-errors'
 import { useCampaignChannel } from '../lib/realtime/useCampaignChannel'
 import { updateCampaignNpc, insertCampaignNpcs } from '../lib/data/campaign-npcs'
 import {
@@ -405,7 +406,10 @@ function NpcRosterImpl({ campaignId, isGM, combatActive, initiativeNpcIds, initi
     setNpcs(renumbered as typeof npcs)
     setDragId(null)
     setDragOverId(null)
-    await persistNpcSort(supabase, dirtyNpcSortRows(npcs, renumbered))
+    // Optimistic above, so a rejected write must re-pull or the GM keeps
+    // looking at an order the DB never saved (same defect as the player tab).
+    const { error } = await persistNpcSort(supabase, dirtyNpcSortRows(npcs, renumbered))
+    if (error) { reportSupabaseError(error as any, 'gm-npc-reorder'); void loadNpcs() }
   }
 
   useEffect(() => {
