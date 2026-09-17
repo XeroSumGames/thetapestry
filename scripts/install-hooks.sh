@@ -39,7 +39,17 @@ cat > "$HOOK_PATH" <<'EOF'
 set -e
 node scripts/check-font-sizes.mjs
 node scripts/check-role-literals.mjs
-node scripts/check-tab-device.mjs
+# Skips LOUDLY when the script is not in this worktree. The hook lives in the
+# shared --git-common-dir, so it runs for EVERY worktree off this repo, but a
+# newly added check only exists on branches that have picked it up. Hard-failing
+# would kill commits in every lane that has not rebased yet, with no obvious
+# cause. Same posture as check:publication / check:db-emdashes, which skip
+# loudly rather than block when their precondition is missing.
+if [ -f scripts/check-tab-device.mjs ]; then
+  node scripts/check-tab-device.mjs
+else
+  echo "[check-tab-device] SKIPPED - not in this worktree. Rebase onto main to enable it."
+fi
 node scripts/check-preview-sync.mjs
 node scripts/check-em-dashes.mjs
 node scripts/check-arch.mjs
