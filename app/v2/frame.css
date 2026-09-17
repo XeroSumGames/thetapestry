@@ -191,7 +191,14 @@
 }
 .fcol {
   background: var(--bg);
-  overflow-y: auto;
+  /* RAILS DO NOT SCROLL. House rule, made structural by the Table hub
+     2026-09-16 (their ccb7962) after this frame's first real content overflowed
+     its rail. The reference had `overflow-y: auto` here and simply never
+     carried content tall enough to expose it, which meant the promise held by
+     luck. Rail content that can outgrow its column owns its own scroll box
+     (flex: 1 1 auto; min-height: 0; overflow-y: auto) - see the site menu in
+     app/v2/dashboard/page.tsx. */
+  overflow: hidden;
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -203,6 +210,8 @@
    full-bleed view can reach the edges. */
 .fcol-centre {
   padding: 0;
+  /* The centre is the ONE pane that scrolls. */
+  overflow-y: auto;
 }
 /* For centre content that DOES want the rails' spacing. */
 .sheetpad {
@@ -273,7 +282,8 @@
     height: auto;
     overflow: visible;
   }
-  .fcol {
-    overflow-y: visible;
+  .fcol,
+  .fcol-centre {
+    overflow: visible;
   }
 }
