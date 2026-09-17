@@ -31,7 +31,13 @@ import { test, expect, type Page } from '@playwright/test'
  * the SPEC changes first and this file follows.
  */
 
-const BASE = process.env.E2E_BASE_URL ?? 'http://localhost:3000'
+/* NO LOCAL DEFAULT. Every navigation below is RELATIVE so it follows the
+   config's baseURL. A local default here is not a convenience, it is a silent
+   environment swap: with `E2E_BASE_URL ?? 'http://localhost:3000'` a plain PROD
+   run pointed itself back at the dev server and measured localhost while
+   reporting as part of a prod re-cert. Twenty-six rows of that run were green
+   about an environment nobody had asked them to test (2026-09-16).
+   Relative URLs make the target exactly one value, set in exactly one place. */
 
 /** Xero's set, in his order. Pinned as a LITERAL on purpose: route discovery
  *  drives coverage, but this pins INTENT, so a silent reorder fails. */
@@ -91,12 +97,12 @@ const CASES: Case[] = [
 const round = (n: number) => Math.round(n)
 
 async function serves(page: Page, route: string) {
-  const res = await page.request.get(BASE + route).catch(() => null)
+  const res = await page.request.get(route).catch(() => null)
   return !!res && res.ok()
 }
 
 async function open(page: Page, route: string) {
-  await page.goto(BASE + route, { waitUntil: 'domcontentloaded' })
+  await page.goto(route, { waitUntil: 'domcontentloaded' })
   // Proof of RENDER, not of 200.
   await expect(page.locator('.frame'), 'the frame rendered (200 alone proves nothing here)').toBeVisible({ timeout: 20_000 })
 }
@@ -107,7 +113,7 @@ async function open(page: Page, route: string) {
  *  PROD domain, so they do not apply on localhost - a local run is effectively
  *  a guest, and a gated route cannot be measured here at all. */
 async function openOrAuthGate(page: Page, route: string): Promise<'frame' | 'authgate'> {
-  await page.goto(BASE + route, { waitUntil: 'domcontentloaded' })
+  await page.goto(route, { waitUntil: 'domcontentloaded' })
   try {
     await page.locator('.frame').waitFor({ state: 'visible', timeout: 15_000 })
     return 'frame'
@@ -199,12 +205,20 @@ async function readFrame(page: Page) {
 
 test.describe('VTT house frame standard - /v2 measured', () => {
   test.beforeAll(async ({ request }) => {
-    const res = await request.get(BASE + PRIMARY).catch(() => null)
-    test.skip(!res || !res.ok(), 'dev server not serving ' + BASE + PRIMARY + ' - start it in the primary checkout (this spec is localhost-only by design)')
+    const res = await request.get(PRIMARY).catch(() => null)
+    /* Names the CAUSE, and the cause differs by target. /v2 is unshipped under
+       the local-first policy, so prod 404s it - expected there, and a skip. On
+       localhost the same 404 means the dev server is down or serving a tree
+       without /v2. Both get reported rather than papered over by quietly
+       measuring somewhere else. */
+    test.skip(!res || !res.ok(),
+      PRIMARY + ' is not served by ' + (process.env.E2E_BASE_URL ?? 'the configured baseURL')
+      + ' (HTTP ' + (res ? res.status() : 'no response') + '). /v2 is not deployed to prod yet, so this is expected there;'
+      + ' on localhost it means the dev server is down or lacks /v2.')
   })
 
   test('/v2 redirects to the dashboard', async ({ page }) => {
-    await page.goto(BASE + '/v2', { waitUntil: 'domcontentloaded' })
+    await page.goto('/v2', { waitUntil: 'domcontentloaded' })
     await expect(page).toHaveURL(new RegExp('/v2/dashboard$'), { timeout: 20_000 })
   })
 
@@ -349,7 +363,7 @@ test.describe('VTT house frame standard - /v2 measured', () => {
   for (const route of GATED_ROUTES) {
     test(`a guest is GATED out of ${route}`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 })
-      await page.goto(BASE + route, { waitUntil: 'domcontentloaded' })
+      await page.goto(route, { waitUntil: 'domcontentloaded' })
       // Parsed, not regex-matched: building the pattern by string escaping is
       // how this assertion silently passed nothing the first time.
       await page.waitForURL(u => u.pathname === '/login', { timeout: 20_000 })
@@ -393,13 +407,17 @@ test.describe('VTT house frame standard - /v2 measured', () => {
   })
 
   /* Rail tabs are 28px from explicit height + line-height, so Tapestry's 13px
-     type floor (vs the reference's 11/10px) must not have moved them. Asserted
-     rather than assumed; skips until a rail carries a strip (1.2b). */
+     type floor (vs the reference's 11/10px) must not have moved them.
+     This file runs as a GUEST by design, and the only rail strip on /v2 is
+     gated on userId, so this row holds here and the real measurement lives in
+     v2-pins-rail-signedin.spec.ts, which carries a session. Kept as a live
+     assertion rather than deleted: the moment any strip renders to a guest, it
+     is measured here too, with no edit. */
   test('rail tab strips are 28px despite the 13px type floor', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 })
     await open(page, PRIMARY)
     const f = await readFrame(page)
-    test.skip(f.railTabs.length === 0, 'the rail TAB STRIP (World Events / My Pins / Whispers) renders only for a LOGGED-IN user - PinsPanel gates it on userId. A localhost run is guest-only because the storageStates were captured against the PROD domain, so this cannot be measured until a localhost session exists.')
+    test.skip(f.railTabs.length === 0, 'no rail strip is visible to a GUEST - PinsPanel gates the tabs on userId. Not a gap: the 28px measurement is made signed-in in v2-pins-rail-signedin.spec.ts and passes there.')
     expect(f.railTabs.every(h => h === RAIL_TAB), 'every rail tab is 28px (got ' + f.railTabs.join(', ') + ')').toBe(true)
   })
 })

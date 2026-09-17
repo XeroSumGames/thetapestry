@@ -1511,3 +1511,170 @@ Reference implementation: Coordinate-success (commit `<pending>`). Sprint is the
 - **Prod-captured `storageState` does NOT apply to localhost, so a local E2E run is GUEST-ONLY - plan specs around that before promising anyone a logged-in local check** (2026-09-16, first /v2 localhost specs under the local-first policy): the suite's sessions in `e2e/.auth/*.json` were captured against `thetapestry.distemperverse.com`, and cookies are origin-scoped, so loading `http://localhost:3000` with `storageState: AUTH.gm` still renders as a guest. Confirmed rather than assumed: all six /v2 pages showed "YOU ARE A GHOST" with the GM state attached. **Consequences to design around.** (1) Anything gated is unreachable locally - `/v2/communities` inherits PRIVATE from `/communities` via the derived public list, so a guest is bounced to `/login?redirect=%2Fv2%2Fcommunities`; the right assertion there is the GATE itself (bounced + destination preserved + frame absent), which is a real security check, not a skip. (2) Logged-in-only UI cannot be measured locally at all - the PINS rail renders its header and rows for a guest but its tab strip is gated on `userId`, so an assertion about those three tabs must HOLD with a stated reason rather than fail for the wrong cause. (3) A spec that needs a real session locally is blocked until someone captures a localhost session - do not accept that task on the assumption the existing fixtures cover it. **Rule:** before writing a local spec, ask whether it needs auth; if it does, say so up front instead of discovering it as a mystery failure.
 
 - **Do not build a regex by string-concatenating escapes - parse the value instead** (2026-09-16): asserting a login bounce, I built `new RegExp('/login\\?redirect=' + ...)`. In a JS string `\\?` collapses to `?`, so the pattern became `/login?redirect=...` where `?` makes the preceding character OPTIONAL - a different assertion than intended. It failed loudly this time, but the same collapse in a more permissive pattern would have PASSED against anything. The fix is not better escaping: `await page.waitForURL(u => u.pathname === '/login')` then `new URL(page.url()).searchParams.get('redirect')` asserts the pathname and the parameter as VALUES, with no escaping surface at all. **Rule:** when asserting a URL, compare parsed parts; keep regexes for genuinely fuzzy matching, and never assemble one from interpolated strings that contain escapes.
+
+### 2026-09-16 - `getByRole('button')` misses a button that carries `role="tab"`
+
+**What happened.** `e2e/v2-pins-rail-signedin.spec.ts` could not find the PINS
+rail tabs. `document.querySelectorAll('.fcol-right button')` returned
+`["World Events","My Pins","Whispers"]` in the same page, at the same moment, in
+the same context - but `getByRole('button', { name: 'My Pins' })` resolved to
+zero elements. I spent the session chasing the session: origin-scoped auth,
+state-file freshness, cookie domains, hydration timing. All of that was real
+(and the auth fix was independently needed), but none of it was this bug.
+
+**Root cause.** The markup is `<button role="tab" class="railtab" aria-selected>`.
+An explicit `role` attribute REPLACES the implicit role. The element is still a
+`<button>` tag - CSS selectors, `querySelectorAll`, `.tagName` all still say
+button - but to the accessibility tree, and therefore to `getByRole`, its role
+is `tab` and `button` does not exist on that page. Playwright was correct and my
+locator was wrong.
+
+**Rules.**
+1. When a role locator finds nothing but a CSS/DOM probe finds the element,
+   STOP looking at the session and dump `locator.ariaSnapshot()`. It prints the
+   roles and accessible names Playwright actually sees, and it ended a multi-hour
+   hunt in one run. Reach for it FIRST, not last.
+2. A DOM probe (`querySelectorAll`) and a role locator are not two views of the
+   same thing. Proving an element exists with the former says nothing about
+   whether the latter can address it. I treated the DOM probe as exonerating the
+   locator; it does not.
+3. Do not infer rendered markup from a grep of this worktree. See the entry
+   below - the file I grepped was not the file the server was running, and that
+   is the permanent condition here, not a one-off.
+
+**Related.** The reverse error is also live here - see "collapsed probe reads as
+passing test". Both are the same family: trusting a probe whose failure mode is
+silence.
+
+### 2026-09-16 - a negative canary false-passes against the shell it exists to catch
+
+**What happened.** The session canary was
+`expect(body).not.toContainText('YOU ARE A GHOST')` - written to catch the case
+where an origin-mismatched storageState makes the whole suite silently assert
+guest behaviour. Run deliberately as a guest, it PASSED. Proven, not reasoned:
+a throwaway spec with `storageState: undefined` went green on that line and red
+on its replacement.
+
+**Root cause.** A `not.toContainText` assertion is satisfied by any page that
+has not rendered the text YET, including the pre-hydration shell and a page
+where the guest wall renders different copy than I assumed. Its success
+condition is "absence", and absence is exactly what a broken run produces. So
+the guard was guaranteed to be green on the failure it was written for.
+
+**Rule.** A canary must assert the PRESENCE of something only the healthy state
+produces, never the absence of something the broken state shows. Here: the rail
+`tablist` is gated on `userId`, so seeing it proves a live session for that
+origin; a guest, a ghost and an unhydrated shell all fail it.
+
+**And prove it.** Every guard of this kind gets one throwaway run under the
+condition it is supposed to catch, to watch it go red, before it is trusted. The
+old shape survived review and reasoning; it did not survive being run once as a
+guest.
+
+
+### 2026-09-16 - the dev server does not serve this worktree, and it cost a true report
+
+**What happened.** I reported the /v2 PINS rail as using hand-rolled bare
+buttons instead of the house tab device. The report was CORRECT. HP fixed it
+(`41dfc8f7`). I then re-measured, saw the house markup, grepped
+`components/MapView.tsx` in my own tree, found the old bare buttons still there,
+and concluded the rail had been right all along - so I sent the hub a retraction
+telling them to kill the fix. I retracted a true report on the strength of
+reading the wrong tree, and asked a lane to drop a good commit.
+
+**Root cause, measured not assumed.**
+
+    PID 57096 :: D:
+odejs
+ode.exe D:\Coding\VTTs\TheTapestry
+ode_modules
+ext\...\start-server.js
+
+The `:3000` dev server runs from the MAIN checkout. This worktree was at
+`cab7e167`, 736 commits behind, and does not contain `components/PinsPanel.tsx`,
+`components/Frame.tsx` or `app/v2/frame.css` AT ALL. So every grep I did about
+rendered behaviour was answering a question about a different program, and
+answering it confidently. Worse, a THIRD lane commits to that tree live, so the
+markup genuinely changed under me mid-debug - which is also why the locator bug
+above took hours instead of minutes.
+
+**Rules.**
+1. **This lane reads app code from one tree and measures a server built from
+   another.** That is the standing condition, not an incident. Anything I claim
+   about what the app RENDERS comes from the rendered page - `ariaSnapshot()`,
+   the DOM, a response body - never from a grep of this checkout. Grep is fine
+   for finding WHERE something is implemented, never for deciding WHAT shipped.
+2. **Before reporting on rendered markup, confirm which tree is being served.**
+   `netstat -ano` to the PID, PID to its command line, that directory's HEAD.
+   Cheap, and it is the difference between a measurement and a guess.
+3. **A retraction needs MORE evidence than the original report, not less.**
+   Withdrawing a true finding has a worse blast radius than filing a wrong one:
+   the first wastes a lane's time, the second destroys work that was already
+   correct. I retracted on a single re-measurement without asking the obvious
+   question - "what changed between the two observations?" The answer was "the
+   fix landed", and it was one `git log` away.
+4. **When a result flips, suspect the target moved before concluding you were
+   wrong.** Both observations were accurate; they were of different builds.
+
+**Standing fix.** Every run prints the served tree's HEAD, so a measurement is
+attributable to a commit and a moved target announces itself.
+
+### 2026-09-16 - a local default in a spec silently swaps the environment
+
+**What happened.** `e2e/v2-frame-standard.spec.ts` opened with
+
+    const BASE = process.env.E2E_BASE_URL ?? 'http://localhost:3000'
+
+and navigated with `page.goto(BASE + route)`. A plain PROD re-cert - no
+`E2E_BASE_URL` set - therefore pointed ITSELF back at the dev server. Twenty-six
+rows came back green, were counted in a "prod re-cert: 197 passed", and had
+measured localhost. Nothing failed, nothing warned. The same defect in
+`v2-pins-rail-signedin.spec.ts` was louder only by luck: its local default
+disagreed with `_fixtures.ts`'s prod default, so it navigated to localhost
+carrying PROD cookies and the canary caught it.
+
+**Root cause.** Two independent places each owned a default for "where are we
+testing" - the spec and `playwright.config.ts` - and nothing made them agree. A
+default is not a convenience when it can disagree with another default; it is a
+second source of truth.
+
+**Rules.**
+1. **Specs navigate RELATIVELY.** `page.goto('/v2/dashboard')`, never
+   `page.goto(BASE + ...)`. The target then has exactly one definition,
+   `baseURL` in the config, and `E2E_BASE_URL` moves the whole run at once -
+   including the storage-state path, which is keyed off the same value.
+2. **A spec that only works in one environment SKIPS there with a named cause,
+   it does not redirect itself.** `/v2` is unshipped under the local-first
+   policy so prod 404s it; that is a skip whose message says so. Quietly testing
+   somewhere else to stay green is the worst available option.
+3. **Ask of any green suite: which environment produced this number?** If the
+   answer needs reading the spec source, the reporting is broken. See the
+   provenance setup added the same day - every run now prints its target and the
+   served tree's HEAD.
+
+### 2026-09-16 - the shell ate the backslash out of my regex, again
+
+**What happened.** `e2e/provenance.setup.ts` parses a Windows path out of a
+process command line. I wrote the character class `[\/]` (backslash OR slash)
+in a quoted heredoc. The file on disk got `[\/]`, which is just an escaped
+forward slash - no backslash in the class at all - so it never matched a Windows
+path and the guard reported "unresolved" forever. My `catch` swallowed the
+detail, so it looked like a permissions or tooling problem for two rounds.
+
+**Root cause.** The backslash crossed three layers (tool call encoding, the
+shell, the heredoc) and each is entitled to eat one. This is the SECOND time
+this exact class has cost me time - see "don't build regexes from interpolated
+escapes", where `'/login\?redirect='` collapsed into an optional character.
+
+**Rules.**
+1. **Do not parse paths with regexes here.** `lastIndexOf('node_modules')` plus
+   index arithmetic cannot be silently de-escaped, reads more plainly, and was
+   shorter than the regex it replaced.
+2. **Never write a backslash into a pattern through a shell hop.** If a pattern
+   genuinely needs one, write the file with the Write tool and read the result
+   back before trusting it.
+3. **Never swallow the error in a diagnostic.** The `catch { return null }` cost
+   more than the bug - it turned "my regex is wrong" into "something mysterious
+   fails". A guard that degrades to a quiet "unknown" is the same failure mode
+   as the canary that passed as a guest: it reports absence of evidence as
+   success. Return the message and print it.

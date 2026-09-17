@@ -18,12 +18,39 @@ export const ACCOUNTS = {
 export type AccountKey = keyof typeof ACCOUNTS
 
 // Captured session state (gitignored - live credentials). One file per account,
-// produced by `node e2e/capture-auth.mjs <key>`  (gm | marv | pesky | percy).
+// minted automatically by the `setup` project in e2e/auth.setup.ts.
+//
+// KEYED BY TARGET ORIGIN, and it must stay that way. Cookies are origin-scoped,
+// so a localhost session and a prod session are NOT interchangeable - but
+// auth.setup.ts REUSES any state file younger than FRESH_MS (50 min). With one
+// shared path, running against localhost and then prod inside that window makes
+// the second run silently reuse the first's session and execute LOGGED OUT: no
+// error, no failed setup, just a suite quietly asserting guest behaviour and a
+// pile of confusing failures. Both directions.
+//
+// Not hypothetical - measured 2026-09-16, the prod state files were 42 minutes
+// old (inside the window) at the moment the /v2 work needed a localhost run.
+// Splitting by host makes isFresh() meaningful PER ENVIRONMENT; the only cost is
+// one extra login the first time each origin is used.
+//
+// The default MUST match playwright.config.ts's baseURL default, or a plain
+// prod run would look like a different environment and re-mint every time.
+const AUTH_ENV = (() => {
+  const base = process.env.E2E_BASE_URL ?? 'https://thetapestry.distemperverse.com'
+  try {
+    return new URL(base).host.replace(/[^a-z0-9]+/gi, '_')
+  } catch {
+    return 'default'
+  }
+})()
+
+const authFile = (key: string) => join(process.cwd(), 'e2e', '.auth', AUTH_ENV, `${key}.json`)
+
 export const AUTH = {
-  gm:    join(process.cwd(), 'e2e', '.auth', 'gm.json'),
-  marv:  join(process.cwd(), 'e2e', '.auth', 'marv.json'),
-  pesky: join(process.cwd(), 'e2e', '.auth', 'pesky.json'),
-  percy: join(process.cwd(), 'e2e', '.auth', 'percy.json'),
+  gm:    authFile('gm'),
+  marv:  authFile('marv'),
+  pesky: authFile('pesky'),
+  percy: authFile('percy'),
 } as const
 
 export function hasAuth(role: AccountKey): boolean {
