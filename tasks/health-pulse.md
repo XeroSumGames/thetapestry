@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-17 06:04 UTC
+
+**Status:** DRIFT
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh CLI not available in sandbox — skipped
+
+**Drift:**
+- **URGENT (live prod bug, Q21+Q22 unanswered):** No non-Thriver player can EVER post an LFG ad — hard DB error, not UI. 1 total LFG post exists (by a Thriver); 0 across all 25 non-Thriver accounts. Fix written + committed on branch `fix/moderation-trigger`, NOT applied to live. Awaiting Xero's go via COMMS Q21 (apply to live DB?) and Q22 (immediate vs. moderation-queue for non-Thriver posts). Hub recommends immediate; nothing happens until Xero answers.
+- HOPED-FOR (94+ days, last evidence 2026-06-16): vehicle popout broadcasts (Section B) - vehicle_updated / firing_arc_toggle not 2-client-verified
+- HOPED-FOR (94+ days): Stress Check 12-string narrative - HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured
+- HOPED-FOR (94+ days): FI Insight Die AWARD path (rolling doubles -> insight_dice+1) — never fired in live play
+
+**Action:** Answer Q21+Q22 in Comms to unblock the LFG fix — this blocks every non-Thriver's path to finding a table. HOPED-FOR items drain at next playtest.
+
+---
+
 ## 2026-09-17 00:04 UTC
 
 **Status:** DRIFT (carry-forward - same 3 items, unchanged)
