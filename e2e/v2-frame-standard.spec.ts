@@ -174,6 +174,10 @@ async function readFrame(page: Page) {
       tabs: Array.from(document.querySelectorAll('.navstrip .navtab')).map(t => ({
         label: (t.textContent || '').trim().toUpperCase(),
         width: t.getBoundingClientRect().width,
+        // A tab can be the RIGHT WIDTH while its label is cut off. Every other
+        // assertion here is about widths, so without this the suite passes a
+        // clipped label happily (Table hub, 2026-09-16).
+        clipped: (t as HTMLElement).scrollWidth - (t as HTMLElement).clientWidth,
       })),
       titlebar: (document.querySelector('.titlebar') as HTMLElement)?.getBoundingClientRect().height ?? -1,
       strip: (document.querySelector('.navstrip') as HTMLElement)?.getBoundingClientRect().height ?? -1,
@@ -300,27 +304,40 @@ test.describe('VTT house frame standard - /v2 measured', () => {
       expect(f.panes.find(p => p.isCentre)!.overflowY, 'the centre scrolls').toBe('auto')
       expect(rails.filter(r => r.selfScroll > 0).map(r => r.name + ' scrolls by ' + r.selfScroll + 'px').join('; ') || 'none', 'no rail scrolls').toBe('none')
       expect(rails.filter(r => r.overhang > 0).map(r => r.name + ' clipped by ' + r.overhang + 'px (' + r.offender + ')').join('; ') || 'none', 'no rail clips').toBe('none')
+      expect(f.tabs.filter(t => t.clipped > 0).map(t => t.label + ' clipped by ' + t.clipped + 'px').join('; ') || 'none',
+        'no tab LABEL is cut off - a tab can be the right width and still clip its text').toBe('none')
     })
   }
 
-  /* ---- 1.2b END STATE: the PINS right rail ----
-     HP confirmed from the approved mockup that ALL SIX pages are three-column -
-     its rightRail() branches on S.view === 'world', which covers every world
-     tab, so there is no "THE RULES stays two-column" exception. Skips until the
-     rail exists so it cannot quietly pass beforehand. */
+  /* ---- COLUMN SHAPE PER SECTION, now that it is DESIGN not staging ----
+     Reversed by the hub 2026-09-16: only /v2/dashboard is three-column. The
+     PINS panel is PORTALED BY MapView because MapView owns its state, and the
+     other five sections render no map, so there is no portal source. Giving
+     them a rail would mean mounting a hidden Leaflet map on THE RULES or a
+     ~25-prop state lift - and worse, on a map-less page the panel's main
+     interaction (click a pin, fly the map to it) is dead, which would ship
+     ~15 rows per page that look clickable and do nothing.
+     So frame--noright on the five is the DESIGN and is ASSERTED, not skipped. */
+  const THREE_COLUMN = ['/v2/dashboard']
   for (const route of GUEST_ROUTES) {
-    test(`1.2b right rail is 260px ${route}`, async ({ page }) => {
-      test.skip(!(await serves(page, route)), route + ' is not built yet (HP, 1.3)')
+    const wantsRight = THREE_COLUMN.includes(route)
+    test(`column shape ${route} - ${wantsRight ? 'three-column with the 260px PINS rail' : 'two-column by design (no map, so no portal source)'}`, async ({ page }) => {
+      test.skip(!(await serves(page, route)), route + ' is not built yet')
       await page.setViewportSize({ width: 1280, height: 800 })
       await open(page, route)
       const f = await readFrame(page)
-      test.skip(!f.hasRightRail, 'right rail (PINS) lands in 1.2b - needs MapView panel state lifted out first')
+      const centre = 1280 - LEFT_RAIL - GAP - (wantsRight ? RIGHT_RAIL + GAP : 0)
 
-      expect(round(f.panes.find(p => p.name === 'fcol-right')!.width), 'right rail is 260px').toBe(RIGHT_RAIL)
-      expect(f.tracks, 'three tracks once the rail exists').toEqual([LEFT_RAIL, 1280 - LEFT_RAIL - RIGHT_RAIL - GAP * 2, RIGHT_RAIL])
-      expect(round(f.tabs[f.tabs.length - 1].width), 'last tab sits exactly over the 260px right rail').toBe(RIGHT_RAIL)
-      expect(f.frameNoRight, 'frame--noright is gone once the rail exists').toBe(false)
-      expect(f.stripNoRight, 'navstrip--noright is gone once the rail exists').toBe(false)
+      expect(f.hasRightRail, wantsRight ? 'this section has the PINS rail' : 'this section has NO right rail, by design').toBe(wantsRight)
+      expect(f.frameNoRight, 'frame--noright is present exactly when there is no right rail').toBe(!wantsRight)
+      expect(f.stripNoRight, 'navstrip--noright is present exactly when there is no right rail').toBe(!wantsRight)
+      expect(f.tracks, wantsRight ? 'three tracks' : 'two tracks').toEqual(
+        wantsRight ? [LEFT_RAIL, centre, RIGHT_RAIL] : [LEFT_RAIL, centre])
+
+      if (wantsRight) {
+        expect(round(f.panes.find(p => p.name === 'fcol-right')!.width), 'right rail is 260px').toBe(RIGHT_RAIL)
+        expect(round(f.tabs[f.tabs.length - 1].width), 'last tab sits exactly over the 260px right rail').toBe(RIGHT_RAIL)
+      }
     })
   }
 
@@ -365,6 +382,14 @@ test.describe('VTT house frame standard - /v2 measured', () => {
     expect(f.panes.length, 'panes were found to measure').toBeGreaterThan(0)
     expect(f.panes.filter(p => p.overflowY !== 'visible').map(p => p.name + ' has overflow-y:' + p.overflowY).join('; ') || 'none',
       'stacked, panes revert to overflow:visible so the page scrolls instead of clipping').toBe('none')
+
+    /* The Table hub found five tabs claiming flex 1 1 33% here while the last
+       took basis 0 and clipped its label - the 820px media block lost a
+       specificity fight with `.navstrip--noright .navtab:last-child`. HP has
+       since set the basis to 0 for all six; this guards the fix and
+       generalises to any future label that outgrows its tab. */
+    expect(f.tabs.filter(t => t.clipped > 0).map(t => t.label + ' clipped by ' + t.clipped + 'px').join('; ') || 'none',
+      'stacked, no tab LABEL is cut off').toBe('none')
   })
 
   /* Rail tabs are 28px from explicit height + line-height, so Tapestry's 13px
