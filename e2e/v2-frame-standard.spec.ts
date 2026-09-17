@@ -50,6 +50,16 @@ const ROUTES = [
   '/v2/rules',
 ]
 
+/** DELIBERATELY GATED, not broken. The /v2 public list is DERIVED from the old
+ *  one by prefixing '/v2', so each /v2 page inherits its original's visibility:
+ *  /characters /stories /campfire /rules are public, /communities is NOT (HP,
+ *  2026-09-16). So a guest being bounced here is the derivation working, and it
+ *  gets a POSITIVE security assertion below rather than a skip - if it ever
+ *  renders as a ghost, a private page has been made public. */
+const GATED_ROUTES = ['/v2/communities']
+/** Measurable by a guest, which is all a localhost run can be (see below). */
+const GUEST_ROUTES = ROUTES.filter(r => !GATED_ROUTES.includes(r))
+
 const LEFT_RAIL = 280
 const RIGHT_RAIL = 260
 const GAP = 1 // the 1px gap IS the divider
@@ -271,12 +281,11 @@ test.describe('VTT house frame standard - /v2 measured', () => {
      The chrome comes from ONE shared client shell, so this is parameterised
      rather than hand-written six times; only the centre differs. Routes HP has
      not built yet SKIP explicitly and go green when they land. */
-  for (const route of ROUTES) {
+  for (const route of GUEST_ROUTES) {
     test(`chrome parity ${route}`, async ({ page }) => {
       test.skip(!(await serves(page, route)), route + ' is not built yet (HP, 1.3) - this goes green when it lands')
       await page.setViewportSize({ width: 1280, height: 800 })
-      const state = await openOrAuthGate(page, route)
-      test.skip(state === 'authgate', route + ' renders the AUTH GATE, not the frame - the other five /v2 sections are guest-reachable, so this one is gated differently (reported to HP). Local auth is impossible here: the storageStates were captured against prod.')
+      await open(page, route)
       const f = await readFrame(page)
 
       expect(f.tabs.map(t => t.label), 'same six tabs, same order, on every section page').toEqual(EXPECTED_TABS)
@@ -299,12 +308,11 @@ test.describe('VTT house frame standard - /v2 measured', () => {
      its rightRail() branches on S.view === 'world', which covers every world
      tab, so there is no "THE RULES stays two-column" exception. Skips until the
      rail exists so it cannot quietly pass beforehand. */
-  for (const route of ROUTES) {
+  for (const route of GUEST_ROUTES) {
     test(`1.2b right rail is 260px ${route}`, async ({ page }) => {
       test.skip(!(await serves(page, route)), route + ' is not built yet (HP, 1.3)')
       await page.setViewportSize({ width: 1280, height: 800 })
-      const state = await openOrAuthGate(page, route)
-      test.skip(state === 'authgate', route + ' renders the AUTH GATE, not the frame (reported to HP)')
+      await open(page, route)
       const f = await readFrame(page)
       test.skip(!f.hasRightRail, 'right rail (PINS) lands in 1.2b - needs MapView panel state lifted out first')
 
@@ -315,6 +323,37 @@ test.describe('VTT house frame standard - /v2 measured', () => {
       expect(f.stripNoRight, 'navstrip--noright is gone once the rail exists').toBe(false)
     })
   }
+
+  /* ---- SECURITY: a gated section must stay gated for a guest ----
+     This is the assertion HP asked for INSTEAD of a skip. /v2/communities
+     inherits PRIVATE from /communities via the derived public list. If it ever
+     renders the frame to a guest, a private page has been made public - so this
+     row should be RED in that case, never quietly skipped. */
+  for (const route of GATED_ROUTES) {
+    test(`a guest is GATED out of ${route}`, async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 })
+      await page.goto(BASE + route, { waitUntil: 'domcontentloaded' })
+      // Parsed, not regex-matched: building the pattern by string escaping is
+      // how this assertion silently passed nothing the first time.
+      await page.waitForURL(u => u.pathname === '/login', { timeout: 20_000 })
+      const url = new URL(page.url())
+      expect(url.pathname, 'a guest is bounced to /login').toBe('/login')
+      expect(url.searchParams.get('redirect'), 'the destination is preserved so login can return the user').toBe(route)
+      await expect(page.locator('.frame'), 'the frame must NOT render for a guest on a private page').toHaveCount(0)
+    })
+  }
+
+  /* The PINS rail renders for a guest: header and rows. Its TAB STRIP does not -
+     PinsPanel gates that on userId, exactly as on the live site - so the 28px
+     row below holds rather than failing for the wrong reason. */
+  test('the PINS right rail renders for a guest (header + rows)', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await open(page, PRIMARY)
+    const right = page.locator('.fcol-right')
+    await expect(right, 'the right rail exists once 1.2b has landed').toHaveCount(1)
+    // Case-insensitive: the caps are CSS text-transform, the DOM text is "Pins".
+    await expect(right, 'the PINS panel renders its header for a guest').toContainText(/pins/i, { timeout: 15_000 })
+  })
 
   /* Stacked, below 820px, the panes must let GO of the viewport height so the
      page grows and scrolls instead of clipping the columns below the first. The
@@ -335,7 +374,7 @@ test.describe('VTT house frame standard - /v2 measured', () => {
     await page.setViewportSize({ width: 1920, height: 1080 })
     await open(page, PRIMARY)
     const f = await readFrame(page)
-    test.skip(f.railTabs.length === 0, 'no rail tabs yet - lands with the 1.2b rails')
+    test.skip(f.railTabs.length === 0, 'the rail TAB STRIP (World Events / My Pins / Whispers) renders only for a LOGGED-IN user - PinsPanel gates it on userId. A localhost run is guest-only because the storageStates were captured against the PROD domain, so this cannot be measured until a localhost session exists.')
     expect(f.railTabs.every(h => h === RAIL_TAB), 'every rail tab is 28px (got ' + f.railTabs.join(', ') + ')').toBe(true)
   })
 })
