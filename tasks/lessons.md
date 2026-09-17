@@ -1,5 +1,17 @@
 # Lessons Learned
 
+## A change cannot break what it cannot reach - measure again before touching anything (2026-09-16)
+
+Three lanes hit the same shape in one week, which is what promotes it from an anecdote to a rule.
+
+1. **Fog of war.** The reported symptom looked like observer status leaking into vision. Reading `TacticalMap.tsx` showed `pcVisionTokens` never consults observer status at all - fog is party-wide by construction. The real cause was scene desync: `sharedSceneId` is only ever set by the `tactical_shared` broadcast, so a client that missed the broadcast is looking at a different scene. Nothing in the vision code could have produced the symptom.
+2. **The blank map centre (HP).** A first screenshot after the /v2 retheme showed an empty centre on `/v2/dashboard` AND on the old `/dashboard`. That reads as "the retheme broke the map". It could not have been: the old page does not load `app/v2/frame.css`. Re-measured five seconds later - Leaflet container 999x721, 20 tiles, fine. The screenshot was racing Leaflet's init.
+3. **The dead dev server (hub).** Declared the server dead off an 8 second timeout. It was compiling.
+
+**The tell is identical every time: the symptom also appears somewhere the change cannot reach.** If the old page is broken too, and the old page never loads your stylesheet, your stylesheet is not the cause. That single question - "is the unaffected surface also showing this?" - separates a real defect from a measurement artifact faster than any amount of code reading, and it costs one extra observation.
+
+**Rules:** (1) Before fixing an apparent regression, find one surface the change provably cannot reach and check whether the symptom is there too. If it is, you are looking at a measurement artifact, a race, or a pre-existing condition - stop and re-measure. (2) Async-initialising widgets (Leaflet, canvas, anything that sizes itself after mount) need a settle wait before ANY screenshot or measurement is treated as evidence; a first-frame capture is not a measurement. (3) Never conclude "dead" or "broken" from a single timeout - for a dev server the ordered checks are bound? right project? answering? (4) The cost of the extra observation is seconds. The cost of skipping it is a fix to code that was never wrong, which is strictly worse than no fix: it burns time AND leaves the real cause live.
+
 ## Refactoring a hot file in many small edits sprays transient errors into a watched dev server / Sentry (2026-08-06)
 
 Consolidating the onboarding tour's order+text into a new `lib/onboarding-tour.ts` meant refactoring `WelcomeModal.tsx` (a file Xero's localhost dev server was actively serving, with Sentry on) across ~10 sequential edits. Each edit hot-reloaded a momentarily-invalid intermediate state, and Sentry + Xero caught THREE transient compile errors in a row: `TOUR_VIDEOS` defined multiple times (added the import before deleting the old local `const`), then `onboardingSection is not defined` (swapped the import before replacing its call sites), then `STEP_POSITIONS is not defined` (deleted the const before updating the effect that read it). Every one self-resolved on the next edit and the final state was clean (tsc 0, all 9 steps render), but Puffer had to stop and ask whether something was half-broken, and the stale errors sat in the browser console buffer looking alarming (they all pointed at the OLD line numbers, e.g. `WelcomeModal.tsx:84`, which no longer existed).
