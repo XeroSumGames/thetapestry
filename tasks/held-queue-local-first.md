@@ -61,6 +61,17 @@ Who ran the full suite against what, and when. **A row in the held table means t
 | 0.3 `defb93a6` `components/PinsPanel.tsx` + `lib/map-pins.ts` | HP | 2026-09-16 | real commit, hook fired, tsc clean, 937 tests, arch OK, depcruise clean. **MapView 2136 -> 1729** (composed tree 1705), off a 2137 ceiling it was sitting exactly on |
 | `hp/v2-frame` composed with 0.1-0.3 | HP | 2026-09-16 | tsc clean, 971 tests / 56 files, arch OK. Also rendered: `/`, `/dashboard`, `/map` all 200 with no compile or runtime error markers |
 
+### Phase 1.4, the frame measurement spec (E2E lane, branch `lane/e2e`)
+
+| Artifact | Gated by | Result |
+|---|---|---|
+| `af264dc6` `e2e/v2-frame-standard.spec.ts` | E2E | 3 viewports PASS on strict equality, 1 explicit SKIP (rail tabs - `/v2/dashboard` renders no RailTabs yet, so it is asserted but cannot yet be measured) |
+| `e8d20dff` no-rail-scroll assertion | E2E | green; proved non-vacuous by injection (see the probe lesson in `tasks/lessons.md`) |
+
+**It is a port of the STANDARD, not of the technique, and that was E2E's correction to the hub's brief.** Mothership's `scripts/test-frame.ts` is a STATIC test: it reads `globals.css` as text and regex-asserts declarations, never opening a browser, so it cannot produce a single measured value (used track widths, the frame's bottom edge, the strip growing on wrap). Measuring in a browser is strictly stronger - a cascade override, a parent that stops filling, or a wrap pushing the frame off screen all PASS a CSS-text check and FAIL a measured one. The hub had read that file and still mischaracterised it.
+
+**Scope correction, also E2E's:** the no-scroll assertion covers RAILS ONLY. The hub said "every `.fcol`", which would have included the centre - the one pane the standard explicitly allows to scroll - and would have gone red on correct behaviour.
+
 ### The /v2 frame artifacts (branch `hp/v2-frame`, taken from `git log origin/main..hp/v2-frame`)
 
 Each is a REAL commit, so its own pre-commit hook fired. Composed copies on `hp/localhost-stack` carry different SHAs and are gated only by the by-hand run recorded underneath.
