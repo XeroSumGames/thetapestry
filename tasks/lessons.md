@@ -1,5 +1,57 @@
 # Lessons Learned
 
+## An assertion that cannot fail is worse than no assertion, because it is counted (2026-09-16)
+
+This appeared SEVEN times in one day across two codebases and three lanes. It is
+the single most common defect we found, and every instance looked like coverage.
+
+**TheTapestry:**
+1. A no-scroll check measuring `document.documentElement`, which cannot scroll on
+   a full-width route because LayoutShell wraps it in an `overflow:auto` div. It
+   reported 0 and meant nothing. (E2E, self-caught.)
+2. A 28px rail-tab row held against a panel whose markup did not contain the
+   element it measured - so it "was never going to measure anything, whatever
+   session it ran under". (E2E.)
+3. A strip-height row asserting exactly 34 - true when written, and guaranteed to
+   break on correct work once a rail landed and a label wrapped. (E2E, found by
+   auditing for the CLASS after a warning aimed at a different assertion.)
+4. A session canary written as `expect(body).not.toContainText('YOU ARE A
+   GHOST')`. A negative is satisfied by any page that has not rendered the text
+   YET, so it was guaranteed GREEN on exactly the logged-out run it existed to
+   catch - and every assertion behind it silently measured a guest. (E2E, proved
+   it red as a guest before trusting the replacement.)
+
+**Mothership, found by the TheTable hub auditing all 282 checks after hearing
+about (4):**
+5-7. A `rule()` helper returning `""` for a selector it could not find, so four
+   `!test(rule(sel))` assertions - no fixed frame height, no fixed strip height,
+   tab names not nowrap, height not from `--bw` - all passed if the RULE ITSELF
+   was renamed or deleted. Absence asserted against nothing. Fixed with a
+   `lacks()` helper that proves the rule exists before asserting what it lacks,
+   and proved by mutation: renaming `.navstrip` used to leave them green and now
+   fails three by name.
+
+**The common shape: a check whose subject can be ABSENT, where absence reads as
+success.** Negative assertions, "not present", "does not scroll", "has no fixed
+height", counts expected to be zero. All of them pass hardest when the thing
+under test is missing entirely.
+
+**Rules:** (1) Every negative or zero-valued assertion needs a positive
+precondition proving its subject exists - the element rendered, the rule is in
+the stylesheet, the session is live. (2) Prefer a POSITIVE signal for state: for
+"are we signed in", assert a thing only a signed-in user gets, not the absence of
+a guest string. (3) Prove a new guard by MUTATION, not by watching it pass -
+break the thing it guards and watch it name the failure. A guard that has never
+failed is not known to work. (4) When one instance is found, audit for the CLASS
+rather than fixing the instance; that is how (4) became (5-7) in another
+codebase, and how (3) was found at all.
+
+**Both directions matter.** `scripts/check-tab-device.mjs` checks that nothing
+outside `Frame.tsx` renders the tab device AND that `Frame.tsx` still carries the
+semantics - because a negative-only guard passes happily on a `Frame.tsx`
+stripped of `aria-selected`, at which point every strip in the app loses them at
+once and no geometry check notices.
+
 ## The dev server serves ONE tree. Grepping your own worktree to explain it is unsound (2026-09-16)
 
 `localhost:3000` is started from the PRIMARY checkout (`D:\Coding\VTTs\TheTapestry`)
