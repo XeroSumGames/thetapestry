@@ -3911,7 +3911,16 @@ function TacticalMap({ campaignId, isGM, initiativeOrder, onTokenClick, onTokenS
           gets the full table-page width. */}
 
       {/* Map canvas area - scrollable when zoomed */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+      {/* data-scene-id is the ONLY identity this client exposes for the scene it
+          is actually showing. There is no player-visible scene name, so without
+          it "the player landed on the SHARED scene" can only be proven by
+          elimination - and elimination is sound at two scenes but silently
+          weaker at three: a regression that landed the player on some OTHER
+          non-active scene would still raise the banner and still pass. One
+          attribute on an element that already exists beats DOM invented for a
+          test, and it answers "which scene is this client on" when debugging a
+          desync report, which is the question that started all of this. */}
+      <div data-scene-id={scene?.id ?? ''} style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         {/* Players stay locked to the last Shared scene (so the GM can prep
             privately). Say so when the GM has moved to another scene, instead of
             silently showing a stale map (Q3, 2026-09-15). */}
