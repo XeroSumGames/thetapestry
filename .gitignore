@@ -72,3 +72,8 @@ docs/Rules/
 # git. Untracked 2026-05-19 (cli-latest via 3ec32d9, the other 8 via
 # this commit).
 supabase/.temp/
+
+# Excel lock files - never artifacts, and one was committed on 2026-09-16
+~$*.xlsx
+~$*.xls
+~$*.docx
