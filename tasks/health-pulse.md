@@ -6,6 +6,25 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-17 00:04 UTC
+
+**Status:** DRIFT (carry-forward - same 3 items, unchanged)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all pass (GitHub MCP confirmed)
+
+**Drift:**
+- HOPED-FOR (93+ days, last playtest evidence 2026-06-16): vehicle popout broadcasts (Section B) - vehicle_updated / firing_arc_toggle not 2-client-verified
+- HOPED-FOR (93+ days): Stress Check 12-string narrative - HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured; drain target Beta-500 dry-run
+- HOPED-FOR (93+ days): FI Insight Die AWARD path (rolling doubles -> insight_dice+1) - has never fired in live play
+
+**Action:** same 3 long-standing HOPED-FOR items; no code regressions. Drain at next playtest session.
+
+---
+
 ## 2026-09-16 21:04 UTC
 
 **Status:** DRIFT (carry-forward - same 3 items + 1 stale-todo, unchanged from 18:03)
