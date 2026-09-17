@@ -13,6 +13,10 @@
 # testing
 /coverage
 
+# Excel lock files - never real content, and a committed one falsely looks like a live lock
+~$*.xlsx
+~$*.xlsm
+
 # next.js
 /.next/
 /out/
