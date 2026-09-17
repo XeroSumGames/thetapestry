@@ -163,6 +163,16 @@ export interface SiteNavProps {
   userRole: string | null
   /** Pending-rumor count for the Moderation Queue badge. 0 hides it. */
   pendingCount: number
+  /**
+   * 'sidebar' (default) renders the inline styles the old sidebar has always
+   * used, so that surface stays byte-identical. 'frame' drops them and lets
+   * app/v2/frame.css style the menu as the approved mockup does.
+   *
+   * A variant rather than a second component on purpose: the link list, the
+   * role gates and the data-tour attributes must not exist twice, or the two
+   * menus drift the first time someone adds a destination.
+   */
+  variant?: 'sidebar' | 'frame'
 }
 
 /**
@@ -170,24 +180,37 @@ export interface SiteNavProps {
  * Thriver-only Tools section. `data-tour` attributes are preserved verbatim -
  * the onboarding tour targets them by selector.
  */
-export function SiteNav({ userRole, pendingCount }: SiteNavProps) {
+export function SiteNav({ userRole, pendingCount, variant = 'sidebar' }: SiteNavProps) {
+  const frame = variant === 'frame'
+  // In frame mode the accent survives as the link's left border colour, which
+  // is what carries the red/blue/purple/green coding across both looks.
+  const navProps = (accent: string) => frame
+    ? { style: { borderLeftColor: accent } as React.CSSProperties }
+    : {
+        style: linkStyle(accent),
+        onMouseEnter: (e: React.MouseEvent<HTMLAnchorElement>) => hover(e, true),
+        onMouseLeave: (e: React.MouseEvent<HTMLAnchorElement>) => hover(e, false),
+      }
+  const headingProps = frame ? { className: 'grp' } : { style: sectionHeading }
+  const Wrap: any = frame ? 'nav' : 'div'
+  const wrapProps = frame ? { className: 'menu' } : { style: { display: 'contents' as const } }
   return (
-    <>
+    <Wrap {...wrapProps}>
       {/* The Tapestry - top-level destinations. Section header suppressed
           per user spec: "Welcome to the Tapestry" is the first link so a
           "THE TAPESTRY" heading right above it reads as redundant. The
           user-header above already provides its own borderBottom, so no
           explicit {divider} is needed here. */}
-      <Link href="/dashboard?tour=1" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>A Guide to the Tapestry</Link>
-      <Link href="/map"         data-tour="dashboard" style={linkStyle('#c0392b')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The World</Link>
-      <Link href="/characters"  data-tour="dashboard survivors" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Survivors</Link>
-      <Link href="/stories"     data-tour="dashboard stories" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Stories</Link>
-      <Link href="/stories/join" data-tour="dashboard" style={linkStyle('#7ab3d4')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Join a Story</Link>
-      <Link href="/communities" data-tour="dashboard communities" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>My Communities</Link>
-      <Link href="/campfire" data-tour="dashboard campfire" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Campfire</Link>
-      <Link href="/rumors"   data-tour="dashboard rumors" style={linkStyle('#8b5cf6')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rumors</Link>
-      <Link href="/rules"    data-tour="dashboard" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>The Rules</Link>
-      <Link href="/quick-reference" data-tour="dashboard" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Reference</Link>
+      <Link href="/dashboard?tour=1" {...navProps('#3a3a3a')}>A Guide to the Tapestry</Link>
+      <Link href="/map"         data-tour="dashboard" {...navProps('#c0392b')}>The World</Link>
+      <Link href="/characters"  data-tour="dashboard survivors" {...navProps('#3a3a3a')}>My Survivors</Link>
+      <Link href="/stories"     data-tour="dashboard stories" {...navProps('#3a3a3a')}>My Stories</Link>
+      <Link href="/stories/join" data-tour="dashboard" {...navProps('#7ab3d4')}>Join a Story</Link>
+      <Link href="/communities" data-tour="dashboard communities" {...navProps('#3a3a3a')}>My Communities</Link>
+      <Link href="/campfire" data-tour="dashboard campfire" {...navProps('#3a3a3a')}>The Campfire</Link>
+      <Link href="/rumors"   data-tour="dashboard rumors" {...navProps('#8b5cf6')}>Rumors</Link>
+      <Link href="/rules"    data-tour="dashboard" {...navProps('#3a3a3a')}>The Rules</Link>
+      <Link href="/quick-reference" data-tour="dashboard" {...navProps('#3a3a3a')}>Quick Reference</Link>
       {/* External link out to the brand site. New tab + rel=noreferrer
           since it leaves the app entirely. Same visual treatment as
           the in-app links so the sidebar stays uniform. */}
@@ -201,57 +224,115 @@ export function SiteNav({ userRole, pendingCount }: SiteNavProps) {
           /campfire 2026-05-01 per user spec; sidebar only shows the
           top-level Tapestry destinations. */}
 
-      {divider}
+      {!frame && divider}
 
       {/* Survivors - character creation paths */}
-      <div style={sectionHeading}>Survivors</div>
-      <Link href="/creating-a-character" data-tour="characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Creating a Survivor</Link>
+      <div {...headingProps}>Survivors</div>
+      <Link href="/creating-a-character" data-tour="characters" {...navProps('#3a3a3a')}>Creating a Survivor</Link>
       {/* Order 2026-08-06 (Xero): Backstory leads since the onboarding tour
           marks it [Recommended]; Quick then Random follow, Paradigms last.
           Supersedes the earlier T3-3 "Random first" onboarding call. */}
-      <Link href="/characters/new"       data-tour="characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Backstory Generation</Link>
-      <Link href="/characters/quick"     data-tour="characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Quick Character</Link>
-      <Link href="/characters/random"    data-tour="characters" style={linkStyle('#7fc458')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Random Character</Link>
-      <Link href="/characters/paradigms"  data-tour="characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Paradigms</Link>
+      <Link href="/characters/new"       data-tour="characters" {...navProps('#3a3a3a')}>Backstory Generation</Link>
+      <Link href="/characters/quick"     data-tour="characters" {...navProps('#3a3a3a')}>Quick Character</Link>
+      <Link href="/characters/random"    data-tour="characters" {...navProps('#7fc458')}>Random Character</Link>
+      <Link href="/characters/paradigms"  data-tour="characters" {...navProps('#3a3a3a')}>Paradigms</Link>
       {roleIsThriver(userRole) && (
-        <Link href="/pregens" data-tour="characters" style={linkStyle('#3a3a3a')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Pregens</Link>
+        <Link href="/pregens" data-tour="characters" {...navProps('#3a3a3a')}>Pregens</Link>
       )}
 
-      {divider}
+      {!frame && divider}
 
       {/* Tools - Thriver-only. Keeps elevated destinations behind the role gate
           so Survivors don't see admin surfaces. */}
       {roleIsThriver(userRole) && (
         <>
-          <div style={sectionHeading}>Tools</div>
+          <div {...headingProps}>Tools</div>
           {/* Order locked 2026-05-16 per Xero: the four daily-driver
               tools (Moderation, Logs, Create Tokens, Migrate Photos)
               ride at the top; the rest of the admin surfaces sit
               below in their previous relative order. */}
           <Link href="/moderate"
-            style={{ ...linkStyle('#EF9F27'), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-            onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
+            {...navProps('#EF9F27')}
+            style={frame
+              ? { borderLeftColor: '#EF9F27', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }
+              : { ...linkStyle('#EF9F27'), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             Moderation Queue
             {pendingCount > 0 && <span style={{ background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 6px', borderRadius: '3px' }}>{pendingCount}</span>}
           </Link>
-          <Link href="/logging"                       style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Logs</Link>
-          <Link href="/ape-log"                       style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Ape Generator Log</Link>
-          <Link href="/tools/feature-manifest"        style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Feature Manifest</Link>
-          <Link href="/tools/token-creator"          style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Create Tokens</Link>
-          <Link href="/tools/migrate-character-photos" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Character Photos</Link>
-          <Link href="/rumors/import"                style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Publish from Snapshot</Link>
-          <Link href="/tools/rescale-tactical-scenes" style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Rescale Tactical Scenes</Link>
-          <Link href="/tools/reseed-campaign"        style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Reseed Campaign</Link>
-          <Link href="/tools/campaign-explorer"      style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Campaign Explorer</Link>
+          <Link href="/logging"                       {...navProps('#EF9F27')}>Logs</Link>
+          <Link href="/ape-log"                       {...navProps('#EF9F27')}>Ape Generator Log</Link>
+          <Link href="/tools/feature-manifest"        {...navProps('#EF9F27')}>Feature Manifest</Link>
+          <Link href="/tools/token-creator"          {...navProps('#EF9F27')}>Create Tokens</Link>
+          <Link href="/tools/migrate-character-photos" {...navProps('#EF9F27')}>Character Photos</Link>
+          <Link href="/rumors/import"                {...navProps('#EF9F27')}>Publish from Snapshot</Link>
+          <Link href="/tools/rescale-tactical-scenes" {...navProps('#EF9F27')}>Rescale Tactical Scenes</Link>
+          <Link href="/tools/reseed-campaign"        {...navProps('#EF9F27')}>Reseed Campaign</Link>
+          <Link href="/tools/campaign-explorer"      {...navProps('#EF9F27')}>Campaign Explorer</Link>
           {/* Not a link: dispatches a window event that MapView listens for
               (components/MapView.tsx), so it only does anything on a page
               where the map is mounted. Behaviour unchanged by this move. */}
           <a href="#"
             onClick={e => { e.preventDefault(); window.dispatchEvent(new CustomEvent('tapestry-copy-map-position')) }}
-            style={linkStyle('#EF9F27')} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>
+            {...navProps('#EF9F27')}>
             Copy Map Position
           </a>
-          {divider}
+          {!frame && divider}
+        </>
+      )}
+    </Wrap>
+  )
+}
+
+export interface SiteTitleBarProps {
+  /** Empty string means a ghost (unauthenticated, or no profile row). */
+  username: string
+  userRole: string | null
+  userId: string | null
+  onlineCount: number
+}
+
+/**
+ * The identity row for the frame's title bar: logo, app name and version, the
+ * Survivors-present count, then the user and their icons pushed right.
+ *
+ * This is where the approved mockup puts identity - NOT the left rail, which is
+ * menu only. SiteIdentity (above) keeps the rail-shaped arrangement the OLD
+ * sidebar renders, and stays exactly as it is; the two are different layouts of
+ * the same information for two different surfaces, which is why the icon
+ * components are shared rather than the block.
+ *
+ * Deliberately no Thriver roster popover here: the mockup's title bar shows the
+ * count alone, so the frame does not need the profiles-by-id lookup the old
+ * sidebar does for names.
+ */
+export function SiteTitleBar({ username, userRole, userId, onlineCount }: SiteTitleBarProps) {
+  const isGuest = !username
+  return (
+    <>
+      <Link href="/v2/dashboard" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+        <img className="tb-logo" src="/DistemperLogoRedv5.png" alt="Distemper" />
+      </Link>
+      <span className="tb-app">The Tapestry <small>v0.5</small></span>
+      <span className="tb-sep" />
+      {onlineCount > 0 && <span className="tb-clip">Survivors present: {onlineCount}</span>}
+      <span className="tb-spacer" />
+      {isGuest ? (
+        <Link href="/signup" style={{ color: '#7fc458', fontSize: '13px', letterSpacing: '.12em', textTransform: 'uppercase', textDecoration: 'underline' }}>
+          You are a Ghost
+        </Link>
+      ) : (
+        <>
+          <span className="who">
+            {username}
+            {roleIsThriver(userRole) && <span className="role">(Thriver)</span>}
+          </span>
+          <span className="tb-icons">
+            <NotificationBell />
+            <MessagesBell />
+            <Link href="/campfire" title="The Campfire" style={{ fontSize: '16px', lineHeight: 1, display: 'flex', alignItems: 'center', textDecoration: 'none' }}>&#128293;</Link>
+            <BugReportButton />
+            {roleIsThriver(userRole) && userId && <RecorderToggleButton userId={userId} />}
+          </span>
         </>
       )}
     </>

@@ -1,65 +1,48 @@
 /* ============================ THE HOUSE FRAME ===========================
    Two rails, a flexible centre. Standard for every Xero Sum Games VTT -
-   D:\Coding\VTTs\TheTable\tasks\vtt-frame-standard.md, decided by Xero
-   2026-09-12, measurements settled 2026-09-14.
+   D:\Coding\VTTs\TheTable\tasks\vtt-frame-standard.md.
 
-   COPIED, NOT DERIVED, from the Mothership VTT reference implementation
-   (D:\Coding\VTTs\mothership-vtt\app\globals.css "THE HOUSE FRAME"), whose own
-   geometry came from TheTableau's TerminalFrame. The instruction is explicit:
-   copy a reference, do not re-derive the frame from the measurement table.
-   Rendered by components/Frame.tsx.
+   SOURCE OF TRUTH IS NOW THE APPROVED MOCKUP, D:\ClaudeOutput\tapestry-frame.html,
+   on Xero's 2026-09-16 directive ("make the dev server look like this"). The
+   GEOMETRY is identical to the Mothership reference this was first copied from
+   (280/1fr/260, titlebar 45, navstrip min 34, railtab 28, the 820px stack), so
+   nothing the standard measures changes. What the mockup supplies that the
+   reference did not is the Tapestry cosmetics: its own token values, a red
+   selected-tab underline rather than ink, and the title-bar identity row.
 
-   Loaded ONLY by app/v2/layout.tsx, deliberately, rather than added to
-   app/globals.css. Phase 0 has to guarantee the OLD pages are byte-identical,
-   and the cheapest way to guarantee that is for them to parse none of this.
-   (Checked first: none of these class names collide with anything already in
-   globals.css.)
+   Loaded ONLY by app/v2/layout.tsx, so the old pages parse none of it.
 
-   TWO DELIBERATE DEVIATIONS FROM THE REFERENCE, both documented rather than
-   silent:
-
-   1. TOKENS. Mothership's own token names (--panel, --ink, --line-soft, ...)
-      are re-pointed to the palette of the mockup Xero approved, as explicit
-      hex in the .v2frame block below - see the reasoning there. The geometry
-      rules are then verbatim. Only the colours move; not one number does.
-
-   2. FONT SIZES. The reference uses 11px section tabs and 10px rail tabs.
-      Tapestry's floor is 13px - Xero raised it from 12 for readability and
-      scripts/check-font-sizes.mjs enforces it. The floor wins here, and it
-      costs NOTHING geometrically: both heights are set by explicit height /
-      line-height, not by font size, so the 34px strip and 28px rail tabs still
-      measure exactly as the standard requires. Verify with the measurement
-      test (plan 1.4) rather than taking this comment's word for it. */
+   RAIL RULE, made house-wide by the Table hub 2026-09-16 (their ccb7962), and
+   independently what the mockup already did: a rail never scrolls itself; its
+   long list scrolls in its own box. .fcol is overflow:hidden, .fcol-centre is
+   the one pane that scrolls, .railscroll is the in-rail scroller. */
 
 .v2frame {
-  /* Mothership's frame tokens, re-pointed to the palette of the MOCKUP XERO
-     APPROVED (hub, 2026-09-16). Explicit hex rather than aliases onto
-     Tapestry's globals.css tokens, because two of the values differ from the
-     nearest existing token and matching the signed-off mockup wins: panel is
-     #141414 where Tapestry's --surface is #1a1a1a (which is the "raised"
-     value here), and the grid divider is the softer #2a2a2a where --border is
-     #2e2e2e. Aliasing would have quietly restyled the frame away from what he
-     already looked at. The ground (#0f0f0f) does come from --bg, which already
-     matches. NO GEOMETRY CHANGED with this restyle - that is the one way this
-     port goes wrong without anyone noticing. */
+  /* Verbatim from the mockup's :root. NOTE --line and --divider: the grid gap
+     is the DARKER #2e2e2e and the hairlines are #2a2a2a. An earlier pass here
+     had those two swapped - invisible in a screenshot, wrong against the design
+     he approved. */
+  --bg: #0f0f0f;
   --panel: #141414;
-  --line: #2e2e2e;
-  --line-soft: #2a2a2a;
+  --raised: #1a1a1a;
+  --hi: #242424;
+  --divider: #2e2e2e;
+  --line: #2a2a2a;
   --ink: #f5f2ee;
-  --ink-dim: #cce0f5;
-  --accent: #c0392b;
-  --f-body: 'Carlito', sans-serif;
-  /* Only .tb-mark uses this, and nothing renders .tb-mark until the 1.2
-     title bar. Distemper matches the live sidebar's brand treatment; the
-     hub's mockup note said "Carlito throughout". Resolved when the title
-     bar is built, not guessed at now. */
-  --f-display: 'Distemper', sans-serif;
-  --label-weight: 700;
-  --track: 0.04em;
-  --bw: 1px;
+  --label: #cce0f5;
+  --dim: #9a9a9a;
+  --red: #c0392b;
+  --redink: #f5a89a;
+  --green: #7fc458;
+  --online: #39ff14;
+  --amber: #EF9F27;
+  --blue: #7ab3d4;
+  --purple: #d48bd4;
+  --f: 'Carlito', 'Calibri', system-ui, sans-serif;
 
   --titlebar-h: 45px;
   --navstrip-h: 34px; /* the strip's MINIMUM - it grows when a tab name wraps */
+  --railtab-h: 28px;
 }
 
 .frameroot {
@@ -67,59 +50,62 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  font-family: var(--f);
+  color: var(--ink);
 }
 
+/* ---- title bar ---- */
 .titlebar {
   flex: none;
   height: var(--titlebar-h);
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   padding: 0 20px;
   background: var(--panel);
-  /* Inset, not a border: a real border would change this row's height. */
   box-shadow: inset 0 -1px 0 var(--line);
-  /* line-height 1 so mixed type sizes across the row centre on one line
-     rather than each sitting at its own leading. */
   line-height: 1;
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
 }
-.tb-mark {
-  font-family: var(--f-display);
-  font-size: 15px;
-  line-height: 1;
-  letter-spacing: var(--track);
-}
-.tb-dim {
-  font-size: 13px;
-  line-height: 1;
-  letter-spacing: 0.1em;
-  color: var(--ink-dim);
-}
-.tb-sep {
-  width: 1px;
-  height: 16px;
-  background: var(--line);
+.tb-logo { flex: none; height: 22px; width: auto; display: block; }
+.tb-app {
   flex: none;
+  font-family: 'Distemper', 'Carlito', sans-serif;
+  font-size: 18px;
+  text-transform: uppercase;
+  color: var(--ink);
 }
-.tb-spacer {
-  margin-left: auto;
+.tb-app small { font-size: 13px; }
+/* The one title-bar item allowed to shorten: it clips before anything moves. */
+.tb-clip {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green);
 }
+.tb-sep { flex: none; width: 1px; height: 18px; background: var(--divider); }
+.tb-spacer { margin-left: auto; }
+.who {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.who .role { color: var(--red); }
+.tb-icons { flex: none; display: flex; align-items: center; gap: 9px; }
 
-/* The section strip, VTT standard 2026-09-14 (Xero): at least 34px, and it
-   GROWS when a tab name wraps rather than cutting the name off. The first tab
-   sits exactly over the left rail (280px), the last exactly over the right
-   rail (260px), and the tabs between share what is left equally - the
-   arrangement measured on TheTableau's live site.
-
-   (The reference file carries an older comment claiming every tab is equal
-   width and that a 280px first tab was "invented". Its own CSS contradicts
-   that and matches the 280/260 standard, so the stale paragraph is not copied
-   here - copying a comment that contradicts its code would be worse than
-   omitting it.) */
+/* ---- section strip ---- */
 .navstrip {
   flex: none;
   display: flex;
-  gap: 0;
   min-height: var(--navstrip-h);
   background: var(--bg);
   box-shadow: inset 0 -1px 0 var(--line);
@@ -130,181 +116,197 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 5px;
+  text-align: center;
+  padding: 6px 10px;
   background: none;
   border: 0;
-  box-shadow: inset -1px 0 0 var(--line-soft);
-  color: var(--ink-dim);
-  font-family: var(--f-body);
+  border-right: 1px solid var(--line);
+  font-family: var(--f);
   font-size: 13px;
-  /* 10 + 14 + 10 is the 34px minimum on one line; each wrapped line adds 14. */
   line-height: 14px;
-  padding: 10px 6px;
-  text-align: center;
-  font-weight: var(--label-weight);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
   cursor: pointer;
 }
-.navtab:first-child {
-  flex: 0 0 280px;
-}
-.navtab:last-child {
-  flex: 0 0 260px;
-  box-shadow: none;
-}
-/* No right rail, nothing for the last tab to sit over. */
-.navstrip--noright .navtab:last-child {
-  flex: 1 1 0;
-}
-@media (max-width: 820px) {
-  .navtab:first-child,
-  .navtab:last-child {
-    flex: 1 1 0;
-  }
-}
-.navtab:hover {
-  color: var(--ink);
-}
+.navtab:first-child { flex: 0 0 280px; }
+.navtab:last-child { flex: 0 0 260px; border-right: 0; }
+.navstrip--noright .navtab:last-child { flex: 1 1 0; }
+.navtab:hover { color: var(--ink); background: #151515; }
 .navtab[aria-selected='true'] {
   color: var(--ink);
-  background: var(--panel);
-  box-shadow: inset 0 -2px 0 var(--ink);
+  background: var(--raised);
+  box-shadow: inset 0 -2px 0 var(--red);
 }
 
-/* 280px / 1fr / 260px, 1px gap over the divider colour, pinned, overflow
-   hidden. No minmax on the centre: the reference has none, and adding one
-   changes when the columns give way. */
+/* ---- the panes ---- */
 .frame {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: 280px 1fr 260px;
   gap: 1px;
   /* The gap IS the divider - no borders, so nothing here carries layout. */
-  background: var(--line-soft);
-  /* Fills exactly what the title bar and section strip leave. A flex child of
-     .frameroot rather than a calc(), so a strip that grows when a name wraps
-     takes height from the panes instead of pushing the frame off screen. */
-  flex: 1;
-  min-height: 0;
+  background: var(--divider);
   overflow: hidden;
 }
-.frame--noright {
-  grid-template-columns: 280px 1fr;
-}
+.frame--noright { grid-template-columns: 280px 1fr; }
 .fcol {
-  background: var(--bg);
-  /* RAILS DO NOT SCROLL. House rule, made structural by the Table hub
-     2026-09-16 (their ccb7962) after this frame's first real content overflowed
-     its rail. The reference had `overflow-y: auto` here and simply never
-     carried content tall enough to expose it, which meant the promise held by
-     luck. Rail content that can outgrow its column owns its own scroll box
-     (flex: 1 1 auto; min-height: 0; overflow-y: auto) - see the site menu in
-     app/v2/dashboard/page.tsx. */
-  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
   padding: 14px;
+  background: var(--raised);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  min-width: 0;
-  scrollbar-width: thin;
+  overflow: hidden;
 }
-/* The centre is padding:0 - the section supplies its own, so a map or a
-   full-bleed view can reach the edges. */
+/* The centre is the ONE pane that scrolls, and supplies its own padding so a
+   map or full-bleed view can reach the edges. */
 .fcol-centre {
   padding: 0;
-  /* The centre is the ONE pane that scrolls. */
+  position: relative;
+  background: var(--bg);
   overflow-y: auto;
 }
-/* For centre content that DOES want the rails' spacing. */
-.sheetpad {
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-/* Rail content that can outgrow its column owns its own scroll box - the other
-   half of the rails-do-not-scroll rule.
+/* Rail content that can outgrow its column owns its own scroll box. The
+   negative margin lets rows run to the rail edge while the scrollbar sits
+   outside the padding, as the mockup has it.
 
-   A class rather than an inline style so a breakpoint can reach it. The
-   stacked reset below is DEFENSIVE, not a fix for an observed bug: measured
-   stacked, .fcol is overflow:visible and its height is content-driven, so
-   flex-grow has nothing to grow into and this box does not trap anything
-   either way. It is written down so that stays true if a rail ever gains a
-   fixed height at that breakpoint. */
+   A class rather than an inline style so a breakpoint can reach it. The stacked
+   reset below is DEFENSIVE: measured stacked, .fcol is overflow:visible with a
+   content-driven height, so this traps nothing either way. */
 .railscroll {
-  flex: 1 1 auto;
+  flex: 1;
   min-height: 0;
   overflow-y: auto;
+  margin: 0 -14px;
+  padding: 0 14px;
 }
+.fcol::-webkit-scrollbar, .railscroll::-webkit-scrollbar { width: 3px; }
+.fcol::-webkit-scrollbar-thumb, .railscroll::-webkit-scrollbar-thumb { background: var(--line); }
 
-.fcol::-webkit-scrollbar {
-  width: 3px;
-}
-.fcol::-webkit-scrollbar-thumb {
-  background: var(--line);
-}
-
-/* A rail's tab strip - the house device for multiplexing a fixed-width
-   column. Fixed height so nothing in the rail below it shifts. */
+/* ---- a rail's tab strip ---- */
 .railtabs {
-  display: flex;
-  gap: 1px;
-  background: var(--line-soft);
   flex: none;
+  display: flex;
+  height: var(--railtab-h);
+  margin: -14px -14px 12px;
+  box-shadow: inset 0 -1px 0 var(--line);
 }
 .railtab {
   flex: 1;
-  height: 28px;
   padding: 0 4px;
-  background: var(--bg);
+  background: none;
   border: 0;
-  color: var(--ink-dim);
-  font-family: var(--f-body);
+  color: var(--dim);
+  font-family: var(--f);
   font-size: 13px;
-  line-height: 28px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
 }
-.railtab:hover:not(:disabled) {
+.railtab:hover:not(:disabled) { color: var(--ink); }
+.railtab[aria-selected='true'] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--red); }
+.railtab:disabled { opacity: 0.45; cursor: default; }
+
+/* ---- the site menu, in the left rail ---- */
+.menu a {
+  display: block;
+  padding: 12px 1px 12px 13px;
+  margin-left: -14px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+}
+.menu a:hover { color: var(--amber); }
+.menu .grp {
+  margin: 18px 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--ink);
 }
-.railtab[aria-selected='true'] {
-  background: var(--panel);
+
+/* ---- the pins rail ---- */
+.pinshead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.pinrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--line);
+}
+.pinrow .ct { margin-left: auto; color: var(--ink); }
+.pinrow .pn {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.pinrow .eye { color: var(--green); }
+.v2search {
+  width: 100%;
+  height: 28px;
+  background: #141414;
+  border: 1px solid #333;
+  border-radius: 3px;
+  padding: 0 8px;
+  font-family: var(--f);
   color: var(--ink);
-  font-weight: var(--label-weight);
-}
-.railtab:disabled {
-  opacity: 0.45;
-  cursor: default;
+  font-size: 13px;
+  margin-bottom: 8px;
 }
 
-/* RAIL CONTAINMENT. A rail is 280px or 260px wide and exactly as tall as the
-   viewport minus the chrome. BOTH are fixed. Nothing in a rail may assume more
-   of either - a long list scrolls in its own box rather than growing the rail.
-   (Xero, 2026-09-12, on a rail whose character name ran off the right.) */
+/* ---- centre placeholder for sections not yet framed ---- */
+.v2empty {
+  margin: 14px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--raised);
+  color: var(--label);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.v2empty b {
+  display: block;
+  color: var(--ink);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
 
-/* The one breakpoint, as the reference has it: the columns simply stack. No
-   drawers, nothing hidden. */
+/* The one breakpoint, as the reference and the mockup both have it: the
+   columns simply stack. No drawers, nothing hidden. */
 @media (max-width: 820px) {
-  /* Stacked, the page grows and scrolls. The root must let go of the screen
-     height too, or the stacked columns are clipped at the bottom. */
-  .frameroot {
-    height: auto;
-    overflow: visible;
-  }
-  .frame,
-  .frame--noright {
+  .frameroot { height: auto; overflow: visible; }
+  .navtab, .navtab:first-child, .navtab:last-child { flex: 1 1 33%; }
+  .frame, .frame--noright {
     grid-template-columns: 1fr;
     flex: none;
     height: auto;
     overflow: visible;
   }
-  .fcol,
-  .fcol-centre {
-    overflow: visible;
-  }
-  /* Let rail lists run at full height; the frame's own scroll container takes
-     over. Belt and braces - see the note on .railscroll. */
-  .railscroll {
-    flex: none;
-    overflow-y: visible;
-  }
+  .fcol, .fcol-centre { overflow: visible; }
+  /* Let rail lists run at full height; the frame's scroll container takes over.
+     Belt and braces - see the note on .railscroll. */
+  .railscroll { flex: none; overflow-y: visible; }
 }
