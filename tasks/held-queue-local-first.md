@@ -11,6 +11,7 @@ Under the local-first policy (`tasks/decisions.md` 2026-09-16), finished work is
 | Visual dice roller (Q4) | `fb3a805b` | `hp/localhost-stack`, `hp/dice-roller` | yes | |
 | Player NPC folder drag-drop (Q9) | `cd199dd8` (orig `00c0cc0f`) | `hp/localhost-stack`, `hp/player-bugs` | yes | Hub-approved |
 | Fog of war / shared scene (Q3) | `b626ad26` | `hp/player-bugs` | NO | Hub-approved. BLOCKED: needs `campaigns.shared_scene_id` in the one live database before it runs even on localhost |
+| **Phase 0 + 1.2a: the /v2 frame** (9 commits) | branch `hp/v2-frame`, tip `cf101f35` | `hp/v2-frame`; composed onto `hp/localhost-stack` with DIFFERENT SHAs | yes, at `/v2/dashboard` | See the frame attestation block below. Old pages unchanged: `/dashboard` still 200 and untouched |
 | Campaign Sheet: NPCs Met panel (Q6 part 2) | `9806b067` | `hp/campaign-sheet-actions` (paired with Eat / Rest / Relax), `ac9920e8` on `hp/localhost-stack` | yes | Hub-approved 2026-09-16. Compact index rows that open the existing `/npc-sheet` popout; new `revealedRelationshipsForParty` builder in `lib/data/npc-roster.ts`. Ships as a PAIR with Eat / Rest / Relax per the sequencing rule |
 | Failed NPC-reorder save now reported (follow-up to Q9) | `4da79f40` | `hp/player-bugs`, `6be9c1d8` on `hp/localhost-stack` | yes | Hub-approved 2026-09-16, gates run on main + Q9 + this (950 tests). Fixes BOTH call sites: the player tab and `components/NpcRoster.tsx` `handleNpcDrop`, the GM roster reorder, which had the identical swallowed error and which my review did not flag |
 
@@ -22,10 +23,11 @@ Coming, not yet built: Q6 part 2 Campaign Sheet NPC cards (branches off `hp/camp
 
 1. **Every feature keeps its own branch cut from `origin/main`.** Not from the composition. This is the important one: Xero evaluates and approves feature by feature, so each item has to stay independently shippable. A single linear stack would force "all or nothing", which fights the policy.
 2. **`hp/localhost-stack` is a DISPOSABLE composition,** never the source of truth. It exists so Xero has one tree with everything in it. Rebase it onto `main` whenever docs land. If it is ever lost, it is rebuilt from the feature branches.
-3. **A branch LABEL on a linear stack does not create independence.** Pointing a new branch at a commit in the middle of a composed stack drags everything beneath it along as parents. To make a held item genuinely shippable on its own it must be cherry-picked onto `origin/main` as its own branch. (Found 2026-09-16: the route tool and Eat / Rest / Relax existed only inside `hp/localhost-stack`, so "ship just the route tool" had nothing to ship, and the sequencing rule below could not be applied because the branch it referred to did not exist. The ledger table showed this and the hub missed it.)
-4. **Nothing lives only in a working tree.** Every held commit must be reachable from a named branch. (Learned 2026-09-16: the route tool and Eat / Rest / Relax briefly existed only in the primary checkout, where a stray reset would have destroyed them.)
-5. **Two features touching the same file get SEQUENCED, not parallelised.** Build the second on top of the first's branch and treat them as a pair that ships together. Eat / Rest / Relax and Q6 part 2 both edit `app/campaign-sheet/page.tsx`, so Q6 part 2 branches off `hp/campaign-sheet-actions`. Xero is unlikely to want one without the other in the same file, and it avoids re-resolving the same conflict on every recomposition.
-6. **ANYTHING produced by cherry-pick is UNGATED until someone runs the suite by hand.** A conflict-free cherry-pick fires no pre-commit hook, so the act of creating the artifact proves nothing about it. This covers more than it first appears:
+3. **A COMPOSED SHA is a different object from its branch original - never quote one as the artifact.** Cherry-picking rewrites the commit, so every item on `hp/localhost-stack` has a different SHA from the same work on its feature branch (e.g. the frame is `aa4b12df` on `hp/v2-frame` and `5caac149` composed). Take artifact SHAs from `git log origin/main..<branch>`, never from a chat message or from the primary checkout's HEAD. (The hub did exactly this on 2026-09-16, reading a composed SHA during a dev-server pre-flight and nearly writing it into the attestation table as a lane's artifact; HP bounced it.)
+4. **A branch LABEL on a linear stack does not create independence.** Pointing a new branch at a commit in the middle of a composed stack drags everything beneath it along as parents. To make a held item genuinely shippable on its own it must be cherry-picked onto `origin/main` as its own branch. (Found 2026-09-16: the route tool and Eat / Rest / Relax existed only inside `hp/localhost-stack`, so "ship just the route tool" had nothing to ship, and the sequencing rule below could not be applied because the branch it referred to did not exist. The ledger table showed this and the hub missed it.)
+5. **Nothing lives only in a working tree.** Every held commit must be reachable from a named branch. (Learned 2026-09-16: the route tool and Eat / Rest / Relax briefly existed only in the primary checkout, where a stray reset would have destroyed them.)
+6. **Two features touching the same file get SEQUENCED, not parallelised.** Build the second on top of the first's branch and treat them as a pair that ships together. Eat / Rest / Relax and Q6 part 2 both edit `app/campaign-sheet/page.tsx`, so Q6 part 2 branches off `hp/campaign-sheet-actions`. Xero is unlikely to want one without the other in the same file, and it avoids re-resolving the same conflict on every recomposition.
+7. **ANYTHING produced by cherry-pick is UNGATED until someone runs the suite by hand.** A conflict-free cherry-pick fires no pre-commit hook, so the act of creating the artifact proves nothing about it. This covers more than it first appears:
    - the composed stack (`hp/localhost-stack`), which is what Xero actually tests, and
    - **every independent feature branch cut per rule 1**, because those are cherry-picks onto `origin/main` too.
 
@@ -58,6 +60,36 @@ Who ran the full suite against what, and when. **A row in the held table means t
 | 0.2 `492d29ca` `components/SiteMenu.tsx` | HP | 2026-09-16 | real commit, hook fired, tsc clean, 937 tests, arch OK. Sidebar 372 -> 205 lines |
 | 0.3 `defb93a6` `components/PinsPanel.tsx` + `lib/map-pins.ts` | HP | 2026-09-16 | real commit, hook fired, tsc clean, 937 tests, arch OK, depcruise clean. **MapView 2136 -> 1729** (composed tree 1705), off a 2137 ceiling it was sitting exactly on |
 | `hp/v2-frame` composed with 0.1-0.3 | HP | 2026-09-16 | tsc clean, 971 tests / 56 files, arch OK. Also rendered: `/`, `/dashboard`, `/map` all 200 with no compile or runtime error markers |
+
+### The /v2 frame artifacts (branch `hp/v2-frame`, taken from `git log origin/main..hp/v2-frame`)
+
+Each is a REAL commit, so its own pre-commit hook fired. Composed copies on `hp/localhost-stack` carry different SHAs and are gated only by the by-hand run recorded underneath.
+
+| Branch SHA | What |
+|---|---|
+| `ff39745b` | 0.1 let `/v2` skip the old sidebar and share the guest rules |
+| `492d29ca` | 0.2 site menu + identity extracted out of Sidebar (372 -> 205 lines) |
+| `defb93a6` | 0.3 PINS panel extracted out of MapView (**2136 -> 1729**, off a 2137 ceiling) |
+| `889c4ffc` | guest gate extracted to `lib/auth/public-pages.ts` + 30 property tests |
+| `aa4b12df` | 1.1 the house frame, copied from the Mothership reference |
+| `e024caf2` | frame colours matched to the approved mockup, geometry unchanged |
+| `8a500df4` | 1.2a `/v2/dashboard`, the first page in the frame |
+| `a139d3c3` | the left rail must not scroll - nav gets its own scroll box |
+| `cf101f35` | `siteMenuProfile` shaped as Sidebar's REPLACEMENT (selects `username, role, avatar_url`, matching Sidebar's own query) |
+
+**Measured independently at three widths by HP and then by the hub in a browser; the numbers agree exactly:**
+
+| Width | Title bar | Strip | Left rail | First tab | Grid | Frame bottom | Gap | Rail overflow |
+|---|---|---|---|---|---|---|---|---|
+| 1920x1080 | 45 | 34 | 280 | 280 | `280px 1639px` | 1080 | 0 | 0 |
+| 1280x800 | 45 | 34 | 280 | 280 | `280px 999px` | 800 | 0 | 0 |
+| 900x800 (label wraps) | 45 | **48** | 280 | 280 | `280px 619px` | 800 | 0 | 0 |
+
+The 900px row is the one that matters: the strip GROWS and the frame still ends exactly at the viewport bottom, which is the standard's actual requirement. The right rail is deliberately suppressed on this page (two-column fallback); it arrives with 1.2b.
+
+**An HTTP 200 proves almost nothing on a Tapestry page.** `LayoutShell` returns a blank div server-side until its auth check resolves, so every page's server HTML is the pre-auth shell and a 200 means only that the route compiled. `/v2` pages are guest-visible, so a real browser renders them fully - which is how both lanes actually verified this. Look at Phase 1 pages in a browser; do not curl them.
+
+**Open with Xero:** the identity block appears BOTH in the 45px title bar and in the left rail, which reads as duplication. The mockup he approved put identity in the TITLE BAR with the rail as menu-only, so the recommendation to him is to apply that. Held until he confirms; `492d29ca` serves either arrangement.
 
 ### Follow-up owed AFTER the Phase 0 extractions land
 
