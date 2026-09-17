@@ -11,6 +11,7 @@ Under the local-first policy (`tasks/decisions.md` 2026-09-16), finished work is
 | Visual dice roller (Q4) | `fb3a805b` | `hp/localhost-stack`, `hp/dice-roller` | yes | |
 | Player NPC folder drag-drop (Q9) | `cd199dd8` (orig `00c0cc0f`) | `hp/localhost-stack`, `hp/player-bugs` | yes | Hub-approved |
 | Fog of war / shared scene (Q3) | `b626ad26` | `hp/player-bugs` | NO | Hub-approved. BLOCKED: needs `campaigns.shared_scene_id` in the one live database before it runs even on localhost |
+| Campaign Sheet: NPCs Met panel (Q6 part 2) | `9806b067` | `hp/campaign-sheet-actions` (paired with Eat / Rest / Relax), `ac9920e8` on `hp/localhost-stack` | yes | Hub-approved 2026-09-16. Compact index rows that open the existing `/npc-sheet` popout; new `revealedRelationshipsForParty` builder in `lib/data/npc-roster.ts`. Ships as a PAIR with Eat / Rest / Relax per the sequencing rule |
 | Failed NPC-reorder save now reported (follow-up to Q9) | `4da79f40` | `hp/player-bugs`, `6be9c1d8` on `hp/localhost-stack` | yes | Hub-approved 2026-09-16, gates run on main + Q9 + this (950 tests). Fixes BOTH call sites: the player tab and `components/NpcRoster.tsx` `handleNpcDrop`, the GM roster reorder, which had the identical swallowed error and which my review did not flag |
 
 Already live, shipped before the policy change: GM NPC-card First Impressions (Q2, `4b0274bb`).
@@ -35,6 +36,10 @@ Coming, not yet built: Q6 part 2 Campaign Sheet NPC cards (branches off `hp/camp
 5. Push. Then HP rebases `hp/localhost-stack` onto the new `main` and recomposes what is still held.
 
 Docs-only commits keep going to `main` throughout: they are how the lanes coordinate and they change nothing a user sees.
+
+### Follow-up owed AFTER the campaign-sheet pair lands
+
+Add `app/campaign-sheet/page.tsx` to the LOC ceilings in `tasks/_baselines/arch.json`, measured from `main` AFTER the pair is pushed. **Do not add it before.** HP suggested adding it now, which would have backfired, and the numbers show why: that page is 910 lines on `main` but 1032 with the held pair, against a 25-line grace band. A ceiling pinned at 910 today would make the held work fail the gate by 122 lines the moment it landed. This is a general trap of the held queue: **never set a ratchet baseline from a number measured on an unshipped tree.** The same applies to `node scripts/check-arch.mjs --save` while anything is held - it would ratchet ceilings down to values the held work cannot meet.
 
 ## Standing rule: verify the dev server before sending Xero to it
 
