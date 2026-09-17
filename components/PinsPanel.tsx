@@ -98,10 +98,17 @@ export default function PinsPanel({
             {/* Search + regions header */}
             <div style={{ padding: '8px', borderBottom: '1px solid #2e2e2e' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
-                <button onClick={() => setSidebarOpen(false)}
-                  style={{ padding: '2px 6px', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '14px', cursor: 'pointer', lineHeight: 1, marginRight: '4px' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
-                  onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>✕</button>
+                {/* Closing means "slide the panel off the map", which only has a
+                    meaning when the panel IS on the map. In a rail the panel is
+                    the rail, so there is nothing to close - and the portal makes
+                    the click inert while the hover still lights up, i.e. a
+                    control that looks live and does nothing. Hidden instead. */}
+                {!inRail && (
+                  <button onClick={() => setSidebarOpen(false)}
+                    style={{ padding: '2px 6px', background: 'none', border: 'none', color: '#3a3a3a', fontSize: '14px', cursor: 'pointer', lineHeight: 1, marginRight: '4px' }}
+                    onMouseEnter={e => (e.currentTarget.style.color = '#f5a89a')}
+                    onMouseLeave={e => (e.currentTarget.style.color = '#3a3a3a')}>✕</button>
+                )}
                 <span style={{ ...LABEL_STYLE_TIGHT }}>Pins</span>
                 <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#f5f2ee', fontFamily: 'Carlito, sans-serif' }}>{displayedPins.length} total</span>
               </div>
