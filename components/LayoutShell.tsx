@@ -12,12 +12,34 @@ const PUBLIC_PAGES = ['/', '/map', '/dashboard', '/stories', '/campaigns', '/cha
 // Used for the SRD rules viewer where every section gets its own subroute.
 const PUBLIC_PREFIXES = ['/rules']
 
+// The /v2 frame (tasks/plan-one-frame-new-pages-2026-09-15.md) mounts the SAME
+// pages under a prefix, so its guest rules must match the old ones exactly.
+//
+// DERIVED from the lists above rather than hand-written as a second list, for
+// two reasons. First, the two can never drift: add a page to PUBLIC_PAGES and
+// its /v2 twin becomes public in the same edit. Second, it makes the safety
+// argument checkable by inspection - every added entry begins with '/v2', which
+// cannot match any pathname that does not, so NO existing path changes
+// behaviour here. This is the login gate; a superset is the only safe shape.
+const V2_PREFIX = '/v2'
+const PUBLIC_PAGES_ALL = [
+  ...PUBLIC_PAGES,
+  // '/' maps to '/v2', not '/v2/', so the frame's own landing page is covered.
+  ...PUBLIC_PAGES.map(p => (p === '/' ? V2_PREFIX : V2_PREFIX + p)),
+]
+const PUBLIC_PREFIXES_ALL = [...PUBLIC_PREFIXES, ...PUBLIC_PREFIXES.map(p => V2_PREFIX + p)]
+
 // Pages that always hide the sidebar
 const NO_SIDEBAR_PAGES = ['/login', '/signup', '/press']
 // Pages that use their own full-width layout (popouts + the table view).
 // CONVENTION: any new popout route should end in `-sheet` or `-popout`
 // (or live under `/popout/...`) so it's auto-included here without an edit.
 const FULL_WIDTH_PATTERN = /^\/stories\/[^/]+\/table$|^\/vehicle$|^\/gm-screen$|^\/handout$|-sheet$|-popout$|^\/popout\//
+// The /v2 frame draws its own chrome (title bar + rails), so it skips the old
+// sidebar exactly as the table and the popouts do. Deliberately its own rule
+// rather than folded into FULL_WIDTH_PATTERN, so that pattern keeps describing
+// only the popout naming convention documented above it.
+const V2_PATTERN = /^\/v2($|\/)/
 
 function MobileBanner() {
   const [isPhone, setIsPhone] = useState(false)
@@ -170,8 +192,8 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   // login round-trip. Previously this pushed to a bare /login and silently
   // dropped the destination, so invited users ended up at /dashboard.
   const isPublicPage =
-    PUBLIC_PAGES.some(p => pathname === p) ||
-    PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/')) ||
+    PUBLIC_PAGES_ALL.some(p => pathname === p) ||
+    PUBLIC_PREFIXES_ALL.some(p => pathname === p || pathname.startsWith(p + '/')) ||
     pathname === '/map'
   if (!isAuthenticated && !isPublicPage && !['/login', '/signup'].includes(pathname)) {
     const search = typeof window !== 'undefined' ? window.location.search : ''
@@ -202,7 +224,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     )
   }
 
-  const hideSidebar = NO_SIDEBAR_PAGES.includes(pathname) || FULL_WIDTH_PATTERN.test(pathname)
+  const hideSidebar = NO_SIDEBAR_PAGES.includes(pathname) || FULL_WIDTH_PATTERN.test(pathname) || V2_PATTERN.test(pathname)
 
   if (hideSidebar) {
     return <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}><MobileBanner />{children}</div>
