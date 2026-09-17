@@ -20,6 +20,7 @@ import {
   uploadPinAttachment, listPinAttachments, pinAttachmentPublicUrl, removePinAttachments,
 } from '../lib/data/map'
 import { usePostgresSubscription } from '../lib/realtime/usePostgresSubscription'
+import { createPortal } from 'react-dom'
 import PinsPanel from './PinsPanel'
 import { TIMELINE_STEP_MS, type Pin } from '../lib/map-pins'
 
@@ -83,9 +84,22 @@ interface MapViewProps {
   embedded?: boolean
   showSidebar?: boolean
   showHeader?: boolean
+  /**
+   * When set, the PINS panel is PORTALED into this element instead of rendering
+   * as the canvas's flex sibling. That is how the /v2 frame puts it in the
+   * right rail. Absent (the old Dashboard and /map), nothing changes.
+   *
+   * Two couplings move with it, both handled here: the canvas is flex:1 beside
+   * a fixed-width sibling, so portaling widens it automatically; and the map's
+   * own control column stops clearing 306px, because the panel is no longer
+   * over the map. The invalidateSize effect also keys on this, or Leaflet keeps
+   * the old dimensions and renders at the wrong size - which looks like a
+   * rendering bug rather than a missing call.
+   */
+  pinsPanelTarget?: HTMLElement | null
 }
 
-export default function MapView({ embedded = false, showHeader = true, showSidebar: showSidebarProp = false }: MapViewProps) {
+export default function MapView({ embedded = false, showHeader = true, showSidebar: showSidebarProp = false, pinsPanelTarget = null }: MapViewProps) {
   const mapRef = useRef<any>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<Record<string, any>>({})
@@ -1211,10 +1225,65 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
     // here so 50ms is enough for the DOM reflow to finish).
     const t = setTimeout(() => map.invalidateSize(), 50)
     return () => clearTimeout(t)
-  }, [sidebarOpen])
+  }, [sidebarOpen, pinsPanelTarget])
 
   const lbl: React.CSSProperties = { display: 'block', fontSize: '13px', color: '#f5f2ee', letterSpacing: '.05em', textTransform: 'uppercase', marginBottom: '4px' }
   const inp: React.CSSProperties = { width: '100%', padding: '7px 9px', background: '#242424', border: '1px solid #3a3a3a', borderRadius: '3px', color: '#f5f2ee', fontSize: '14px', fontFamily: 'Carlito, sans-serif', boxSizing: 'border-box' }
+
+  // The PINS panel. Inline it is a fixed-width flex sibling of the canvas;
+  // given a target it is PORTALED into that element instead, which is how the
+  // /v2 frame puts it in the right rail. Portaling rather than lifting ~25
+  // pieces of state out keeps this component the owner and leaves the old
+  // Dashboard byte-identical - the prop is simply absent there.
+  const pinsPanelProps = {
+    setSidebarOpen: setSidebarOpen,
+    sidebarTab: sidebarTab,
+    setSidebarTab: setSidebarTab,
+    userId: userId,
+    userRole: userRole,
+    pins: pins,
+    usernames: usernames,
+    thriverUserIds: thriverUserIds,
+    worldCommunities: worldCommunities,
+    campaignPins: campaignPins,
+    hiddenFolders: hiddenFolders,
+    setHiddenFolders: setHiddenFolders,
+    pinSearch: pinSearch,
+    setPinSearch: setPinSearch,
+    sortMode: sortMode,
+    expandedPinId: expandedPinId,
+    setExpandedPinId: setExpandedPinId,
+    pinAttachments: pinAttachments,
+    setPinAttachments: setPinAttachments,
+    expandedFolders: expandedFolders,
+    setExpandedFolders: setExpandedFolders,
+    collapsedCampaigns: collapsedCampaigns,
+    setCollapsedCampaigns: setCollapsedCampaigns,
+    timelinePlaying: timelinePlaying,
+    playTimeline: playTimeline,
+    stopTimeline: stopTimeline,
+    whispers: whispers,
+    whisperDraft: whisperDraft,
+    setWhisperDraft: setWhisperDraft,
+    postingWhisper: postingWhisper,
+    postWhisper: postWhisper,
+    deletingWhisperId: deletingWhisperId,
+    deleteWhisper: deleteWhisper,
+    flyToPin: flyToPin,
+    startEdit: startEdit,
+    handleDeletePin: handleDeletePin,
+    handleTogglePublic: handleTogglePublic,
+    displayedPins: displayedPins,
+    timelineOnly: timelineOnly,
+    mapInstanceRef: mapInstanceRef,
+    markersRef: markersRef,
+    getCategoryEmoji: getCategoryEmoji,
+  }
+  const pinsPanelNode = pinsPanelTarget
+    ? createPortal(<PinsPanel inRail {...pinsPanelProps} />, pinsPanelTarget)
+    : ((!embedded || showSidebarProp) && sidebarOpen
+        ? <PinsPanel {...pinsPanelProps} />
+        : null)
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
@@ -1369,52 +1438,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
 
         <div ref={mapRef} style={{ flex: 1, height: '100%', background: '#aad3df' }} />
 
-        {(!embedded || showSidebarProp) && sidebarOpen && (
-          <PinsPanel
-            setSidebarOpen={setSidebarOpen}
-            sidebarTab={sidebarTab}
-            setSidebarTab={setSidebarTab}
-            userId={userId}
-            userRole={userRole}
-            pins={pins}
-            usernames={usernames}
-            thriverUserIds={thriverUserIds}
-            worldCommunities={worldCommunities}
-            campaignPins={campaignPins}
-            hiddenFolders={hiddenFolders}
-            setHiddenFolders={setHiddenFolders}
-            pinSearch={pinSearch}
-            setPinSearch={setPinSearch}
-            sortMode={sortMode}
-            expandedPinId={expandedPinId}
-            setExpandedPinId={setExpandedPinId}
-            pinAttachments={pinAttachments}
-            setPinAttachments={setPinAttachments}
-            expandedFolders={expandedFolders}
-            setExpandedFolders={setExpandedFolders}
-            collapsedCampaigns={collapsedCampaigns}
-            setCollapsedCampaigns={setCollapsedCampaigns}
-            timelinePlaying={timelinePlaying}
-            playTimeline={playTimeline}
-            stopTimeline={stopTimeline}
-            whispers={whispers}
-            whisperDraft={whisperDraft}
-            setWhisperDraft={setWhisperDraft}
-            postingWhisper={postingWhisper}
-            postWhisper={postWhisper}
-            deletingWhisperId={deletingWhisperId}
-            deleteWhisper={deleteWhisper}
-            flyToPin={flyToPin}
-            startEdit={startEdit}
-            handleDeletePin={handleDeletePin}
-            handleTogglePublic={handleTogglePublic}
-            displayedPins={displayedPins}
-            timelineOnly={timelineOnly}
-            mapInstanceRef={mapInstanceRef}
-            markersRef={markersRef}
-            getCategoryEmoji={getCategoryEmoji}
-          />
-        )}
+        {pinsPanelNode}
 
         {/* Pins toggle button is rendered inside the search bar row below */}
         {!embedded && showHeader && (
@@ -1423,7 +1447,7 @@ export default function MapView({ embedded = false, showHeader = true, showSideb
           </div>
         )}
 
-          <div style={{ position: 'absolute', top: '6px', right: sidebarOpen ? '306px' : '6px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', transition: 'right .2s' }}>
+          <div style={{ position: 'absolute', top: '6px', right: sidebarOpen && !pinsPanelTarget ? '306px' : '6px', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', transition: 'right .2s' }}>
             <form onSubmit={handleSearch} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
               {(!embedded || showSidebarProp) && !sidebarOpen && (
                 <button type="button" onClick={() => setSidebarOpen(true)}

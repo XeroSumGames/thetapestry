@@ -71,6 +71,13 @@ export interface PinsPanelProps {
   mapInstanceRef: any
   markersRef: any
   getCategoryEmoji: (c: string) => string
+  /**
+   * Rendered into a frame rail rather than as the map's flex sibling. The
+   * inline placement hardcodes 300px and a left border because it sits beside
+   * the canvas; a rail is 260px and supplies its own edge, so both would be
+   * wrong there.
+   */
+  inRail?: boolean
 }
 
 export default function PinsPanel({
@@ -82,10 +89,12 @@ export default function PinsPanel({
   stopTimeline, whispers, whisperDraft, setWhisperDraft, postingWhisper,
   postWhisper, deletingWhisperId, deleteWhisper, flyToPin, startEdit,
   handleDeletePin, handleTogglePublic, displayedPins, timelineOnly,
-  mapInstanceRef, markersRef, getCategoryEmoji,
+  mapInstanceRef, markersRef, getCategoryEmoji, inRail = false,
 }: PinsPanelProps) {
   return (
-          <div style={{ width: '300px', flexShrink: 0, background: '#1a1a1a', borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', zIndex: 500 }}>
+          <div style={inRail
+            ? { width: '100%', height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }
+            : { width: '300px', flexShrink: 0, background: '#1a1a1a', borderLeft: '1px solid #2e2e2e', display: 'flex', flexDirection: 'column', zIndex: 500 }}>
             {/* Search + regions header */}
             <div style={{ padding: '8px', borderBottom: '1px solid #2e2e2e' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px' }}>
