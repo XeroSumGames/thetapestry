@@ -221,10 +221,14 @@
   gap: 14px;
 }
 /* Rail content that can outgrow its column owns its own scroll box - the other
-   half of the rails-do-not-scroll rule. A class rather than an inline style
-   specifically so the stacked breakpoint below can relax it: stacked, the page
-   grows and scrolls as one column, and a rail scroll box there would trap a
-   long list in a short window instead of letting it run. */
+   half of the rails-do-not-scroll rule.
+
+   A class rather than an inline style so a breakpoint can reach it. The
+   stacked reset below is DEFENSIVE, not a fix for an observed bug: measured
+   stacked, .fcol is overflow:visible and its height is content-driven, so
+   flex-grow has nothing to grow into and this box does not trap anything
+   either way. It is written down so that stays true if a rail ever gains a
+   fixed height at that breakpoint. */
 .railscroll {
   flex: 1 1 auto;
   min-height: 0;
@@ -297,7 +301,8 @@
   .fcol-centre {
     overflow: visible;
   }
-  /* Let rail lists run at full height; the page is the scroller now. */
+  /* Let rail lists run at full height; the frame's own scroll container takes
+     over. Belt and braces - see the note on .railscroll. */
   .railscroll {
     flex: none;
     overflow-y: visible;
