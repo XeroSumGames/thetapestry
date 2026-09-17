@@ -25,7 +25,13 @@ Coming, not yet built: Q6 part 2 Campaign Sheet NPC cards (branches off `hp/camp
 3. **A branch LABEL on a linear stack does not create independence.** Pointing a new branch at a commit in the middle of a composed stack drags everything beneath it along as parents. To make a held item genuinely shippable on its own it must be cherry-picked onto `origin/main` as its own branch. (Found 2026-09-16: the route tool and Eat / Rest / Relax existed only inside `hp/localhost-stack`, so "ship just the route tool" had nothing to ship, and the sequencing rule below could not be applied because the branch it referred to did not exist. The ledger table showed this and the hub missed it.)
 4. **Nothing lives only in a working tree.** Every held commit must be reachable from a named branch. (Learned 2026-09-16: the route tool and Eat / Rest / Relax briefly existed only in the primary checkout, where a stray reset would have destroyed them.)
 5. **Two features touching the same file get SEQUENCED, not parallelised.** Build the second on top of the first's branch and treat them as a pair that ships together. Eat / Rest / Relax and Q6 part 2 both edit `app/campaign-sheet/page.tsx`, so Q6 part 2 branches off `hp/campaign-sheet-actions`. Xero is unlikely to want one without the other in the same file, and it avoids re-resolving the same conflict on every recomposition.
-6. **Gates run on the COMPOSED tree, not just per branch.** The composition is what Xero actually tests, and per-branch gates do not prove the combination works. Same reasoning as the merge-commit lesson: a clean commit says nothing about the tree it lands in. Worse than the rule implies: **a cherry-pick fires no pre-commit hook**, so a composed stack has never been gated by the act of composing it. First composed run, 2026-09-16: green, 971 tests across 56 files, tsc clean, arch OK.
+6. **ANYTHING produced by cherry-pick is UNGATED until someone runs the suite by hand.** A conflict-free cherry-pick fires no pre-commit hook, so the act of creating the artifact proves nothing about it. This covers more than it first appears:
+   - the composed stack (`hp/localhost-stack`), which is what Xero actually tests, and
+   - **every independent feature branch cut per rule 1**, because those are cherry-picks onto `origin/main` too.
+
+   Rules 1 and 6 therefore pull against each other: the more branches we split out for piecemeal approval, the more ungated artifacts exist, and each one is something Xero may point at and say "ship that". A cherry-picked branch is indistinguishable from a normally-committed one in the log, so the failure is silent. (HP walked into this on 2026-09-16: `hp/route-tool` and `hp/campaign-sheet-actions` had never been gated in that arrangement, and it only surfaced because the hub asked for "gate-clean" explicitly and HP could not honestly confirm it.)
+
+   **So: existence of a branch is NOT readiness.** Record the attestation below, and the hub re-runs the suite at approval time regardless (landing step 3), which is the backstop that actually protects the live site.
 
 ## How an item lands when Xero approves it
 
@@ -36,6 +42,18 @@ Coming, not yet built: Q6 part 2 Campaign Sheet NPC cards (branches off `hp/camp
 5. Push. Then HP rebases `hp/localhost-stack` onto the new `main` and recomposes what is still held.
 
 Docs-only commits keep going to `main` throughout: they are how the lanes coordinate and they change nothing a user sees.
+
+## Gate attestations
+
+Who ran the full suite against what, and when. **A row in the held table means the work exists, NOT that it has been gated** - that distinction is the whole point of this section. The hub re-runs the suite at approval time on the exact tree that would ship, so this section is a working signal rather than the final guarantee.
+
+| Artifact | Gated by | When | Result |
+|---|---|---|---|
+| `hp/route-tool` (`a3ccd111`) | HP | 2026-09-16 | tsc clean, 937 tests / 55 files, arch OK |
+| `hp/campaign-sheet-actions` tip (`9806b067`) | HP | 2026-09-16 | pre-commit hook fired (real commit, not a cherry-pick): 937 tests |
+| `hp/localhost-stack` composed tree (6 commits) | HP | 2026-09-16 | tsc clean, 971 tests / 56 files, arch OK |
+| main + Q9 + persistNpcSort follow-up | Hub | 2026-09-16 | tsc clean, 950 tests, arch OK, depcruise clean |
+| main + Q9 + fog (Q3) | Hub | 2026-09-15 | tsc clean, 946 tests, arch OK, depcruise clean |
 
 ### Follow-up owed AFTER the campaign-sheet pair lands
 
