@@ -24,11 +24,15 @@ remembering, it gets its own entry in `decisions.md` too.
 **Question numbering (2026-09-14, Xero's ask):** every question actually put
 to Xero from here on gets a global sequential tag (`Q1`, `Q2`, ...), NOT
 renumbered retroactively for anything asked before this date. Next number to
-assign: **Q14**.
+assign: **Q17**.
 
 ---
 
 ## OPEN
+
+- **[2026-09-16, Q14] BLOCKING - okay one additive live-DB column, `campaigns.shared_scene_id`?** Nullable, additive, nothing reads it until the fog-of-war fix is switched on, removable. The hub applies it (not Xero, not HP) on his explicit go, then verifies. Unblocks the ONLY one of seven finished items he currently cannot evaluate even on localhost, since localhost and live share one database. Fix it unblocks: a player who reloads or joins late lands on whatever scene is marked active - often the GM's private prep scene, not the played one (the "no fog" report from District Zero). Hub recommends YES.
+- **[2026-09-16, Q15] Dice roller design fork - chat-only roll, or does he want scored d20 outcomes?** d20 rolls land in chat like `/r` always has - no Success/Failure/Wild Success, doesn't feed Insight. This is forced, not a shortcut: the scored engine is 2d6-only (its thresholds are meaningless for a d20, and roll_log has no die-size field, so a stored d20 would render as a scored roll with a GM Award button on it). HP recommends keeping it chat-only; scored d20s would be a real rules-engine change (new roll_log field + a non-2d6 outcome model) deserving its own scoping pass, not a side effect of this button. HP wants to hear "yes that's what I wanted" or "no, scored" BEFORE he judges the feature.
+- **[2026-09-16, Q16] Sequencing - start Phase 0 of the one-frame build now, or after the current 5-item queue?** Phase 0 is invisible prep (pulling reusable pieces out of large files, nothing looks different, all localhost). Hub recommends "yes, after the queue" - finish + evaluate the 5 items first since those are bugs players hit today, then start Phase 0.
 
 - **[2026-09-15, Q13] Hand-raise / interject (Q8) - 6 GM-side design questions, HP has a recommended default for each.** Blocking the build. Item 5 confirms Q8's "one thing" ruling (one button, not two). Full list:
   1. Where does the GM see a raised hand? REC: icon on the player's seat in the party panel (alternative: notification popup).
