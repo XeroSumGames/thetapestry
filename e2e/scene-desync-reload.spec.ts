@@ -30,10 +30,30 @@ import { SUPABASE_URL, captureAnonKey, getInviteCode, resolveCreds, type SupaCre
  * SAFETY: seeds its own throwaway [E2E] campaign and deletes it in `finally`.
  * It never touches THE ARENA or any campaign a person uses.
  *
+ * WHAT IS PROVEN, AND HOW. The banner's own render condition is
+ * `!isGM && scene && scenes.some(s => s.is_active && s.id !== scene.id)`, so its
+ * presence IS the statement "this non-GM is on a scene that is not the active
+ * one" - that half is direct. "The player lands on the SHARED scene" is then an
+ * inference BY ELIMINATION: this spec seeds exactly two scenes, so "not the
+ * active one" leaves only the shared one. That is deliberate, not an oversight.
+ * n=2 is guaranteed rather than assumed because the fixture is ours, and closing
+ * the gap directly would mean adding a data-testid to app code for something the
+ * fixture already settles (hub ruling, 2026-09-16). If this spec ever grows a
+ * third scene, that inference dies and the identity must be asserted directly.
+ *
+ * @deploy-signal - THIS ROW IS EXPECTED TO BE RED AGAINST PROD, DELIBERATELY.
+ * The column is live on the shared DB but the hydration code is not deployed
+ * under the local-first policy. The red does not say "a feature is missing", it
+ * says A PLAYER-FACING BUG THAT BROKE A REAL TABLE IS STILL LIVE IN PRODUCTION,
+ * and it turns green on deploy. Count it separately from incidental failures, or
+ * it becomes wallpaper and stops being read - which is the whole argument
+ * against permanently-red suites, and the only thing that makes this exception
+ * safe. To see incidental prod failures alone:
+ *     npx playwright test --grep-invert @deploy-signal
+ * To see only the deploy signals:
+ *     npx playwright test --grep @deploy-signal
+ *
  * Run: E2E_BASE_URL=http://localhost:3000 npx playwright test e2e/scene-desync-reload.spec.ts
- * Against PROD this is expected to FAIL until the fix deploys - the column is
- * live on the shared DB but the hydration code is not on prod under the
- * local-first policy. That red is a deploy signal, not a defect.
  */
 
 const H = (c: SupaCreds) => ({ apikey: c.anonKey, Authorization: `Bearer ${c.accessToken}` })
@@ -44,7 +64,15 @@ const BANNER = /different scene/i
 test.describe('Tactical scene desync - a reloading player follows the SHARED scene', () => {
   test.skip(!canAuth('gm') || !canAuth('marv'), 'needs gm + marv sessions/creds')
 
-  test('shared_scene_id decides what a cold-loading player sees, and the stale banner tracks it', async ({ browser }) => {
+  test('@deploy-signal shared_scene_id decides what a cold-loading player sees, and the stale banner tracks it', async ({ browser }) => {
+    /* Say so in the run output, so a red here is never mistaken for an
+       incidental failure by someone reading the log rather than this file. */
+    const target = process.env.E2E_BASE_URL ?? 'https://thetapestry.distemperverse.com'
+    if (!/localhost|127\.0\.0\.1/.test(target)) {
+      console.log(`[deploy-signal] ${target} - if this row FAILS, the scene-desync fix is NOT deployed there `
+        + 'and the table-breaking bug is still live for players. It is not an incidental failure.')
+    }
+
     const gmCtx = await browser.newContext({ storageState: AUTH.gm })
     const plCtx = await browser.newContext({ storageState: AUTH.marv })
     const gm = await gmCtx.newPage()
