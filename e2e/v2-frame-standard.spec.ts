@@ -103,19 +103,35 @@ test.describe('VTT house frame standard - /v2 measured', () => {
       expect(round(frame.y + frame.height), 'frame bottom is exactly ' + c.h).toBe(c.h)
       expect(round(c.h - (frame.y + frame.height)), 'no gap below the frame').toBe(0)
 
-      /* ---- nothing scrolls that should not ---- */
-      const overflow = await page.evaluate(() => {
+      /* ---- nothing scrolls that should not ----
+         NO RAIL MAY SCROLL. A long list owns its own scroll box INSIDE the
+         rail; the column itself never scrolls (standard 1b, 2026-09-16).
+         The CENTRE is deliberately excluded - it is the one pane the standard
+         allows to scroll, so asserting it here would forbid correct behaviour.
+         This check is NOT in the Mothership reference and cannot be: its rail
+         content never gets long enough to overflow. Ours did - the site menu
+         measured 1206px in a 721px rail at 1280x800 and scrolled the whole
+         column, on a faithful copy of the frame, because .fcol is still
+         overflow-y:auto here. HP fixed it at the page; if the fix later moves
+         into .fcol house-wide, this assertion still holds. */
+      const scrollState = await page.evaluate(() => {
         const d = document.scrollingElement as HTMLElement
-        const rail = document.querySelector('.fcol-left') as HTMLElement | null
-        return {
-          pageY: d.scrollHeight - d.clientHeight,
-          pageX: d.scrollWidth - d.clientWidth,
-          rail: rail ? rail.scrollHeight - rail.clientHeight : -1,
-        }
+        const rails = Array.from(document.querySelectorAll('.fcol'))
+          .filter(el => !el.classList.contains('fcol-centre'))
+          .map(el => ({
+            name: el.className.split(/\s+/).find(c => c.startsWith('fcol-')) ?? 'fcol',
+            over: (el as HTMLElement).scrollHeight - (el as HTMLElement).clientHeight,
+          }))
+        return { pageY: d.scrollHeight - d.clientHeight, pageX: d.scrollWidth - d.clientWidth, rails }
       })
-      expect(overflow.pageY, 'the document never scrolls vertically').toBeLessThanOrEqual(0)
-      expect(overflow.pageX, 'the document never scrolls horizontally').toBeLessThanOrEqual(0)
-      expect(overflow.rail, 'the left rail does not overflow its own height').toBeLessThanOrEqual(0)
+      expect(scrollState.pageY, 'the document never scrolls vertically').toBeLessThanOrEqual(0)
+      expect(scrollState.pageX, 'the document never scrolls horizontally').toBeLessThanOrEqual(0)
+      expect(scrollState.rails.length, 'at least one rail was found to measure').toBeGreaterThan(0)
+      const overflowing = scrollState.rails.filter(r => r.over > 0)
+      expect(
+        overflowing.map(r => r.name + ' overflows its own height by ' + r.over + 'px').join('; ') || 'none',
+        'NO rail may scroll - a long list must scroll in its OWN box inside the rail (standard 1b)',
+      ).toBe('none')
     })
   }
 
