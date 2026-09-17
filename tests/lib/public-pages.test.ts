@@ -89,6 +89,15 @@ describe('isPublicPath: paths that must stay behind the login gate', () => {
   }
 
   it('never carries a bare /v2 in the prefix list, which would expose the whole frame', () => {
+    // POSITIVE FIRST. Both assertions below are negative, and a negative
+    // assertion is satisfied by an EMPTY list - `[].every(...)` is true and
+    // `[]` contains nothing - so on their own they would be green on exactly
+    // the breakage they exist to catch. Anchoring on real membership first is
+    // what makes the guard capable of failing.
+    // (E2E hit the same shape in a Playwright guard using not.toContainText as
+    // a stand-in for "we are signed in"; it passed while logged out.)
+    expect(PUBLIC_PREFIXES_ALL).toContain('/rules')
+    expect(PUBLIC_PREFIXES_ALL).toContain('/v2/rules')
     expect(PUBLIC_PREFIXES_ALL).not.toContain(V2_PREFIX)
     expect(PUBLIC_PREFIXES_ALL.every(p => p !== '/v2' && p !== '/v2/')).toBe(true)
   })
