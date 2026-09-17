@@ -1,5 +1,53 @@
 # Lessons Learned
 
+## A fixture that keeps n small is not closing the gap, it is avoiding it (2026-09-16)
+
+The eighth instance of the unfailable-assertion pattern, and the hub produced
+this one in a RULING after having just consolidated the other seven.
+
+The scene-desync spec proves two things. (b) directly: the banner's own render
+condition IS the statement "this non-GM is on a scene that is not the active
+one". (a) - that the player landed on the SHARED scene specifically - only by
+elimination, because the fixture seeds exactly two scenes, so "not the active
+one" leaves only the shared one.
+
+E2E reported that distinction honestly and offered to assert the scene identity
+directly. **The hub ruled against it: "the fixture already closes it - n=2 is
+guaranteed rather than assumed, because the fixture is ours."** True, and
+irrelevant. HP pushed back:
+
+> A fixture that closes a gap by keeping n=2 is not closing it, it is avoiding
+> it. That is a property of the FIXTURE, not of the app, and a real campaign has
+> as many scenes as the GM has made.
+
+The concrete failure: at n=3, a regression that dumps the player on a THIRD
+non-active scene raises the banner and the test PASSES. The assertion is correct
+about what it checks and silently not checking the thing it is named after.
+
+**Resolution:** seed a third scene so n=3 is the NORMAL case, and assert the
+scene identity ALONGSIDE the banner rather than instead of it - they are two
+different checks and a regression can break either alone. Identity says hydration
+picked the right scene; the banner says the player was told the GM moved on.
+
+**Rules:** (1) When a test's soundness depends on the fixture staying small,
+that is not coverage, it is a constraint the app never agreed to - grow the
+fixture until it looks like production and assert properly. (2) Prefer asserting
+the thing you mean over inferring it from an arrangement you control. (3) An
+approving ruling can INTRODUCE this defect; a hub saying "that is already covered"
+is an assertion about coverage and needs the same scrutiny as the test.
+
+**On the affordance it needed:** the identity assertion required
+`data-scene-id` on the map container. The hub first refused it as test
+scaffolding in shipped code. It is not - it is one attribute on an element that
+already existed, and it earns its place with the suite deleted, because "which
+scene is this client showing" is the exact question that produced this fix and
+will be the first question asked at the next desync report. **The test to apply:
+a diagnostic affordance the suite happens to use, versus scaffolding that exists
+only for the suite.** The former survives someone tidying; a bare `data-testid`
+does not, which is why convenient locators rot.
+
+Caught by HP, against a hub ruling, on the hub's own commit-to-nothing principle.
+
 ## An assertion that cannot fail is worse than no assertion, because it is counted (2026-09-16)
 
 This appeared SEVEN times in one day across two codebases and three lanes. It is
