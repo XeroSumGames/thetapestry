@@ -34,6 +34,53 @@ was also our backup, and removing it removed both. (3) A manual step that
 protects against a rare catastrophic event WILL rot, because nothing reminds you;
 attach it to a frequent action instead.
 
+### Then BOTH verifications of it were scoped wrong, in opposite directions
+
+The hub declared the exposure closed with `git log main --not --remotes` = 0.
+That inspects ONE branch. HP re-ran it across all local refs and found **29
+commits outside the window** - all, as it turned out, patch-equivalent to work
+already on the preview branch, so the conclusion survived but the check did not.
+
+HP's replacement, `git cherry origin/v2/localhost-preview <branch>` per local
+branch, is scoped to ONE UPSTREAM. Run by the hub it reported **60 commits
+"exist ONLY here"** across five branches - every one of them already backed up on
+`origin/main`, which that check never consults.
+
+So the hub under-reported by looking at too few branches, and HP over-reported by
+looking at too few remotes. **The over-report is the more dangerous one:** a
+guard that names 60 healthy commits as at-risk is ignored within a day, and is
+then present and silent when something really is exposed. That is the wolf-crying
+shape that `check-tab-device` was deliberately built to avoid.
+
+**The check that holds - patch-equivalence against ANY remote:**
+
+    git for-each-ref --format='%(refname:short)' refs/heads/ | while read b; do
+      best=999
+      for r in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin/); do
+        n=$(git cherry "$r" "$b" 2>/dev/null | grep -c '^+')
+        [ -n "$n" ] && [ "$n" -lt "$best" ] && best=$n
+      done
+      [ "$best" -gt 0 ] && [ "$best" -ne 999 ] && echo "  $b: $best commit(s) with no patch-equivalent anywhere"
+    done
+
+`git cherry` rather than `--not --remotes` because patch-equivalence ignores the
+rebased duplicates that would otherwise produce phantom exposure.
+
+**NOT a post-commit hook**, despite rule (3) pointing that way. It would fire on
+every commit, including the entirely normal window between committing and pushing
+the backup - so its steady state would be "reporting exposure", and we would have
+built the wolf-crier on purpose. It belongs bolted to the backup PUSH, which is
+the frequent action the habit already hangs on: push, then verify, and expect
+silence.
+
+**The generalisation, HP's, one rung above the vacuous-assertion rule:** a check
+that CAN fail still proves nothing beyond what it was pointed at. The canary
+passed while logged out; `--not --remotes` passed while nineteen branches went
+unexamined; `git cherry` failed loudly while sixty safe commits were misjudged -
+the same error, inverted, inside the fix for it. **So state the scope in the same
+breath as the result.** "Zero" invites "nothing anywhere". "Zero on main,
+unmeasured elsewhere" gets checked.
+
 ## A fixture that keeps n small is not closing the gap, it is avoiding it (2026-09-16)
 
 The eighth instance of the unfailable-assertion pattern, and the hub produced
