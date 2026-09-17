@@ -220,6 +220,17 @@
   flex-direction: column;
   gap: 14px;
 }
+/* Rail content that can outgrow its column owns its own scroll box - the other
+   half of the rails-do-not-scroll rule. A class rather than an inline style
+   specifically so the stacked breakpoint below can relax it: stacked, the page
+   grows and scrolls as one column, and a rail scroll box there would trap a
+   long list in a short window instead of letting it run. */
+.railscroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .fcol::-webkit-scrollbar {
   width: 3px;
 }
@@ -285,5 +296,10 @@
   .fcol,
   .fcol-centre {
     overflow: visible;
+  }
+  /* Let rail lists run at full height; the page is the scroller now. */
+  .railscroll {
+    flex: none;
+    overflow-y: visible;
   }
 }

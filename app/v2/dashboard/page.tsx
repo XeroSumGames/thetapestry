@@ -132,7 +132,7 @@ export default function V2DashboardPage() {
               inline query, and duplicating that read here would need a lib/data
               helper of its own. Thrivers still get the link, just without the
               number, until 1.2b. */}
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <div className="railscroll" style={{ display: 'flex', flexDirection: 'column' }}>
             <SiteNav userRole={userRole} pendingCount={0} />
           </div>
         </>
