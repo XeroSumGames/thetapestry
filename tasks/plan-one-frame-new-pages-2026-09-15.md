@@ -215,14 +215,62 @@ merely underspecified - it is unspecifiable.
 
 ### Still open at the end of Phase 1
 
-**1.2b, the pins state lift, is the only gap between the frame and the mockup.**
-Until it lands every `/v2` page is two-column and `Frame` emits
-`frame--noright`. That is STAGING, not a legitimate two-column page, and must
-not be asserted as the expected state: a spec pinning `frame--noright` would go
-red the moment the lift lands, which is a test failing on correct work. End
-state is all six at three columns with the 260px PINS rail. There is no "THE
-RULES stays two-column" exception - the mockup's right rail branches on the
-world view, not on the DASHBOARD tab.
+**1.2b is DONE on `/v2/dashboard`, and it was NOT the lift this plan
+described.** Measured at 1280x800, independently by both lanes: grid
+`280px 738px 260px`, `frame--noright` gone, leaflet widened to 738 with 16
+tiles, map controls back to a 6px offset.
+
+**The plan was wrong about the approach and the correction is worth keeping.**
+This section previously specified lifting MapView's panel state into a shared
+container - roughly 25 props plus three documented couplings. Instead `MapView`
+KEEPS ownership and renders the panel through `createPortal` into an element the
+rail supplies. The old Dashboard and `/map` are untouched because the prop is
+simply ABSENT there, which means "nothing else moved" is provable rather than
+argued - worth more than the smaller diff, and much more next to a 456-line
+extraction. Prefer this shape for the remaining panels.
+
+The portal target is STATE, not a ref. That is load-bearing twice over: a ref
+would not re-render the map with its target, so the panel would never mount at
+all; and keying the mount on the target rather than on `sidebarOpen` is what
+stops the panel's close button emptying the rail (see below).
+
+All three couplings recorded in 0.3 came true, which is what made this routine:
+the canvas is `flex:1` beside a fixed-width sibling so it widened by itself; the
+hardcoded `right: sidebarOpen ? '306px' : '6px'` would have left the zoom and
+layer buttons floating 300px inside the canvas edge over open map; and
+`invalidateSize` keyed only on `sidebarOpen` would have left Leaflet drawing at
+pre-portal dimensions, which presents as a rendering bug rather than a missing
+call.
+
+`PinsPanel` gained `inRail` for its ROOT BOX ONLY - inline it is 300px with a
+left border because it sits beside the canvas; a rail is 260px and draws its own
+edge.
+
+**Open defect:** the panel's `✕` at `components/PinsPanel.tsx:101` is rendered
+unconditionally rather than gated on `inRail`, and calls `setSidebarOpen(false)`.
+In the rail it is INERT - clicked, measured, the rail stays at 260px with all its
+children - because the mount follows the portal target. But it hovers to
+`#f5a89a`, so it looks live and does nothing. Gate it on `!inRail`: in the rail
+the panel IS the rail and there is nothing to close. Had the portal been keyed on
+`sidebarOpen`, this would have been an empty 260px dead column with no way to
+restore the panel.
+
+**RULED 2026-09-16 by the hub: all six sections get the right rail.** The
+mockup's `rightRail()` branches on the world view, not on the DASHBOARD tab, so
+three-column everywhere is what Xero approved; both the hub and HP have told the
+E2E lane that six three-column pages are the end state; and it is coherent on the
+merits, because the standard makes the right rail the PLAYER's panel and World
+Events / My Pins / Whispers are no more map-specific than a notes panel. A rail
+that appears on one page and vanishes on the next five reads as a bug whatever
+the CSS permits. Until that follow-up lands, the other five stay two-column and
+must be treated as EXPECTED-ABSENT-FOR-NOW - do NOT invert them into asserted
+two-column, which is the same trap one page later.
+
+**Rail tabs need a session.** The rail tab strip (World Events / My Pins /
+Whispers) only renders for a logged-in user; `PinsPanel` gates it on `userId`, as
+on the live site. Logged out the rail shows its header, count and pin rows but no
+tab strip. A logged-out spec asserting three rail tabs at 28px fails on correct
+pre-`/v2` behaviour, not on the frame.
 
 **Ratchets stay untouched.** `components/MapView.tsx` is at 1705 against a 2137
 ceiling and `app/vehicle/page.tsx` at 1458 against 1459. Both must be ratcheted
