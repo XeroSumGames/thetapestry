@@ -107,3 +107,112 @@ When Xero has tested Phases 1 and 2 locally and says to ship, the hub pushes the
 ## Recommended sequencing
 
 HP's current queue is bugs players hit today (NPC folders, fog of war, hand-raise, dice roller, Campaign Sheet Party Status). Those get finished and evaluated locally first. A dependable table matters more for the Kickstarter than the new layout, and Phase 0.4 is safest when nobody else is editing the table page.
+
+---
+
+## As built: Phase 1 decisions worth keeping (recorded 2026-09-16 by the hub)
+
+Phase 1 is navigable on localhost. These are the decisions taken during the
+build that are NOT inferable from reading the resulting files, which is the only
+reason they are written down.
+
+### The six routes, and why one label does not match its path
+
+| Section strip label | Route |
+|---|---|
+| DASHBOARD | `/v2/dashboard` |
+| MY SURVIVORS | `/v2/characters` |
+| MY STORIES | `/v2/stories` |
+| MY COMMUNITIES | `/v2/communities` |
+| THE CAMPFIRE | `/v2/campfire` |
+| THE RULES | `/v2/rules` |
+
+`/v2` redirects to `/v2/dashboard`. Source of truth is `V2_SECTIONS` in
+`components/V2Shell.tsx`.
+
+**MY SURVIVORS deliberately maps to `/v2/characters`, not `/v2/survivors`, and
+this is load-bearing on the login gate.** `PUBLIC_PAGES_ALL` in
+`lib/auth/public-pages.ts` is DERIVED by prefixing each old public path with
+`/v2`. So `/characters` being public makes `/v2/characters` public in the same
+edit, permanently, with nobody remembering to do it. Spelling it
+`/v2/survivors` would have required a hand-written entry and reintroduced
+exactly the drift the derivation exists to prevent - on the guest gate, where
+drift is most expensive. The same derivation is why `/v2/communities` correctly
+stays behind the login: `/communities` was never public.
+
+The general rule: the user-facing LABEL and the security-relevant IDENTIFIER
+have different owners. Rename the label freely; the path mirrors the original.
+
+**Consequence for anyone testing:** logged out, five of the six render the real
+frame (dashboard, characters, stories, campfire, rules). `/v2/communities`
+serves a LOGIN FORM with `?redirect=%2Fv2%2Fcommunities`. That is correct. A
+sweep that measures it logged out will find no rails and report a frame failure
+that does not exist.
+
+### Server components reach the frame as a prop, not an import
+
+`app/rules/page.tsx` is a SERVER component; the other four sections are client
+ones. A server component cannot be imported INTO a client component, but it can
+be passed into one as a prop. So each `/v2` page is a thin server wrapper that
+hands its existing page in as the `centre` of `components/V2Shell.tsx`.
+`/v2/dashboard` is the single client exception, because the map is a dynamic
+import with `ssr: false` (Leaflet touches `window` on import).
+
+This constrains anyone who touches these pages and is the first thing they will
+trip over.
+
+### The onboarding tour entry is deliberately NOT mapped
+
+"A Guide to the Tapestry" still points at `/dashboard?tour=1` even though
+`/v2/dashboard` exists. The tour targets the OLD sidebar's links BY SELECTOR, so
+pointing it into the frame would break it SILENTLY - no error, no exception, at
+the exact moment a new user first meets the product. It stays on the old pages
+until the switch. This is trap-avoidance, not a missing page.
+
+### Left rail links that still leave the frame
+
+Deliberate, because no `/v2` page exists for them yet, and a dead link is worse
+than an ejecting one: Join a Story, Rumors, Quick Reference, the Survivors group
+(Creating a Survivor, Backstory Generation, Quick Character, Random Character,
+Paradigms), and Thriver Tools. The DistemperVerse link is external and correctly
+leaves. Implemented as a lookup through `navHref()`, which is the identity
+function in `sidebar` mode, so the old sidebar is untouched.
+
+### Precedence: the standard governs geometry, the mockup governs the rest
+
+The house VTT frame standard governs frame GEOMETRY - rails 280/260, title bar
+45, section strip 34 growing on wrap, rail tabs 28, the 820px stack. It is
+SILENT on Tapestry cosmetics, so for anything it does not cover, the approved
+mockup (`D:\ClaudeOutput\tapestry-frame.html`) wins: menu type at 14px with a
+2px accent border, the red selected-tab underline, tab padding and tracking.
+Do not split the difference toward the old sidebar's 15px/3px.
+
+### Colour handoffs name the role and the value, never a range
+
+`--line` and `--divider` shipped SWAPPED because the hub's handoff quoted them
+as the range "#2a2a2a to #2e2e2e" without saying which was which. The mockup's
+own `:root` settled it: the grid gap is the darker `#2e2e2e`, hairlines are
+`#2a2a2a`. Invisible in a screenshot, wrong against what Xero approved, and the
+class of error that survives review because nobody diffs two greys.
+
+The Table hub's stronger form, from Mothership where the same pair INVERTS in
+lightness between the Terminal and Zine identities while the roles stay fixed:
+name the role, name the value, and never let a token's name imply a shade.
+There is no stable "darker one" to point at, so a range-based handoff is not
+merely underspecified - it is unspecifiable.
+
+### Still open at the end of Phase 1
+
+**1.2b, the pins state lift, is the only gap between the frame and the mockup.**
+Until it lands every `/v2` page is two-column and `Frame` emits
+`frame--noright`. That is STAGING, not a legitimate two-column page, and must
+not be asserted as the expected state: a spec pinning `frame--noright` would go
+red the moment the lift lands, which is a test failing on correct work. End
+state is all six at three columns with the 260px PINS rail. There is no "THE
+RULES stays two-column" exception - the mockup's right rail branches on the
+world view, not on the DASHBOARD tab.
+
+**Ratchets stay untouched.** `components/MapView.tsx` is at 1705 against a 2137
+ceiling and `app/vehicle/page.tsx` at 1458 against 1459. Both must be ratcheted
+from `main` only, never from the composed tree, or the baseline records numbers
+that do not exist on main.
