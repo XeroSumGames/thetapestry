@@ -8,6 +8,36 @@ export const CAMPAIGN_ID = '35ed2133-498a-43d2-bbd6-21da05233af2' // THE ARENA
 // The disposable accounts: GM + three players, all members of THE ARENA. The
 // account role (thriver/survivor/ghost, from lib/auth/roles) is a SEPARATE axis
 // from the campaign GM/player role - fill userId / accountRole in as confirmed.
+// RESERVED ACCOUNTS - read this before picking a "spare" account.
+//
+// Several product surfaces are rate-limited PER USER PER CLOCK HOUR by
+// check_rate_limit() in their RLS INSERT policies. As of 2026-09-16 there are
+// seven budgets sharing one counter table (hub inventory):
+//
+//     bug_report 10 | forum_thread 10 | lfg_post 5 | map_pin 50
+//     message 120   | war_story 5     | whisper 60
+//
+// TWO PROPERTIES MAKE THIS BITE HARDER THAN IT LOOKS:
+//   1. The counter increments BEFORE it compares, so DENIED attempts also
+//      consume budget. Retries deepen the denial instead of escaping it, and a
+//      rate-limited spec can never present as "flaky, passed on retry".
+//   2. rate_limits has `USING (false)` for SELECT, so NOTHING in this suite can
+//      read the remaining budget. A spent budget is invisible until an INSERT
+//      fails with a 42501 that looks exactly like an RLS regression.
+//
+// Consequence: a spec that exhausts a budget silently breaks every OTHER spec
+// using that account+action for the rest of the hour.
+//
+//   percy  -> RESERVED by e2e/lfg-rate-limit.spec.ts, which DELIBERATELY spends
+//             the whole lfg_post budget every run. DO NOT AUTHOR LFG POSTS AS
+//             percy. Other actions on percy are fine.
+//   gm     -> authors lfg_post in campfire-lfg-warstory + lfg-interest-notification
+//             (2 of 5 per full run, so 2 runs/hour is fine and a 3rd will fail).
+//   marv   -> the interested/second party in those specs.
+//
+// If you need an account for a NEW rate-limited surface, prefer pesky, and add
+// its reservation here rather than only in your spec - whoever reaches for a
+// spare account reads this list, not every spec.
 export const ACCOUNTS = {
   gm:    { label: 'Xero (GM)',             email: 'xerosumgames@gmail.com',   userId: '5806fd27-fcac-4163-b8a8-61476150962c' },
   marv:  { label: 'Marv (player 1)',       email: 'tony_bushell@hotmail.com', userId: '02c22e46-acd0-44d5-b8ff-1b70e8d2fd00' },
