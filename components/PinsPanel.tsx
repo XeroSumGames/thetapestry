@@ -24,6 +24,7 @@
 import type { Dispatch, SetStateAction } from 'react'
 import { isThriver as roleIsThriver } from '../lib/auth/roles'
 import { TIMELINE_STEP_MS, type Pin } from '../lib/map-pins'
+import { RailTabs } from './Frame'
 import { PIN_CATEGORIES, getCategoryFilter } from '../lib/pin-categories'
 import { LABEL_STYLE_TIGHT } from '../lib/style-helpers'
 import { bumpPinViewCount, listPinAttachments, pinAttachmentPublicUrl } from '../lib/data/map'
@@ -120,7 +121,32 @@ export default function PinsPanel({
               )}
             </div>
             {/* Tabs */}
-            {userId && (
+            {/* IN A RAIL, USE THE HOUSE RAIL-TAB DEVICE. These were bare buttons
+                with no role="tab" and no aria-selected, so assistive tech saw
+                three unlabelled controls and could not report which was active -
+                an accessibility defect independent of any layout standard, and
+                the reason this changed. Adopting RailTabs also stops a rail panel
+                inventing its own tab device (which quietly opts out of the shared
+                frame) and brings the height to the standard's 28px for free.
+
+                INLINE IS UNTOUCHED, byte for byte, including the data-tour hooks
+                the onboarding tour targets - the old /map and /dashboard must not
+                move. Same gate-on-inRail pattern as SiteNav's variant and the
+                hidden close button. */}
+            {userId && inRail && (
+              <div className="pinsrailtabs">
+                <RailTabs
+                  tabs={[
+                    { id: 'public', label: 'World Events' },
+                    { id: 'mine', label: 'My Pins' },
+                    { id: 'whispers', label: 'Whispers' },
+                  ]}
+                  active={sidebarTab}
+                  onPick={id => setSidebarTab(id as any)}
+                />
+              </div>
+            )}
+            {userId && !inRail && (
               <div style={{ display: 'flex', borderBottom: '1px solid #2e2e2e' }}>
                 {(['public', 'mine', 'whispers'] as const).map(tab => (
                   <button key={tab} onClick={() => setSidebarTab(tab)} data-tour={tab === 'public' ? 'world' : tab === 'mine' ? 'pins' : tab === 'whispers' ? 'whispers' : undefined}

@@ -234,6 +234,12 @@
 }
 
 /* ---- the pins rail ---- */
+/* The rail tab strip normally sits flush at the top of a rail, so .railtabs
+   pulls itself up by the rail's 14px padding. In the pins rail it follows the
+   PINS header instead, so that top pull would ride up over it - the approved
+   mockup overrides exactly this case the same way. */
+.pinsrailtabs .railtabs { margin: 0 -14px 10px; }
+
 .pinshead {
   display: flex;
   justify-content: space-between;
