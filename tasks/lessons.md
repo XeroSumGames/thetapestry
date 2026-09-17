@@ -1,5 +1,39 @@
 # Lessons Learned
 
+## Local-first made "not deployed" and "not backed up" the same thing (2026-09-16)
+
+Raised by the E2E lane, and it is a hazard the local-first policy INTRODUCED
+that nobody named when the policy was adopted.
+
+Under local-first nothing reaches `main` until Xero has tested it, and pushing
+`main` is what deploys. The unexamined consequence: at the point E2E flagged it,
+**28 commits existed only on one machine's disk with no remote copy of any kind**
+- the whole `/v2` frame, the accessibility fix, the fix for the bug that broke a
+real table, and the attribute a new spec asserts against. A drive failure would
+have lost days of work across two lanes.
+
+**Those are different properties and the policy only asks for one of them.** Not
+deployed is the requirement. Not backed up is an accident of how we implemented
+it.
+
+**Fix, and it costs nothing:** push the composed tree to a NON-main branch
+(`v2/localhost-preview`). Only `main` deploys, so a branch push backs the work up
+without putting a byte in front of a user. The freeze is about the live site, not
+about git.
+
+**Make it a habit, not a memory.** The backup drifted ten commits behind before
+this was noticed, because refreshing it was something the hub did manually and
+then forgot. The person who MOVES the composition is the person who refreshes the
+backup - which is the single writer on the primary checkout. One writer, one
+responsibility, done in the same breath as composing.
+
+**Rules:** (1) A work-holding policy needs an explicit answer to "where does the
+second copy live", or the answer defaults to nowhere. (2) When a policy forbids
+an action, check what the action was incidentally providing - pushing to `main`
+was also our backup, and removing it removed both. (3) A manual step that
+protects against a rare catastrophic event WILL rot, because nothing reminds you;
+attach it to a frequent action instead.
+
 ## A fixture that keeps n small is not closing the gap, it is avoiding it (2026-09-16)
 
 The eighth instance of the unfailable-assertion pattern, and the hub produced
