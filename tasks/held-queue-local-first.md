@@ -6,8 +6,8 @@ Under the local-first policy (`tasks/decisions.md` 2026-09-16), finished work is
 
 | Item | Commit | Branch | On localhost? | Notes |
 |---|---|---|---|---|
-| Route tool: speed slider + Travel blip | `25c16983` | `hp/route-tool` (being cut), `hp/localhost-stack` | yes | Had NO individual branch until 2026-09-16; see the trap note below |
-| Campaign Sheet: Eat / Rest / Relax wired | `c7a2f7db` | `hp/campaign-sheet-actions` (being cut), `hp/localhost-stack` | yes | Touches `app/campaign-sheet/page.tsx`. Q6 part 2 branches off this one, per the sequencing rule |
+| Route tool: speed slider + Travel blip | `25c16983` | `hp/route-tool` (`a3ccd111`), `hp/localhost-stack` | yes | Had NO individual branch until 2026-09-16; see the trap note below |
+| Campaign Sheet: Eat / Rest / Relax wired | `c7a2f7db` | `hp/campaign-sheet-actions` (`63711d1f`), `hp/localhost-stack` | yes | Touches `app/campaign-sheet/page.tsx`. Q6 part 2 branches off this one, per the sequencing rule |
 | Visual dice roller (Q4) | `fb3a805b` | `hp/localhost-stack`, `hp/dice-roller` | yes | |
 | Player NPC folder drag-drop (Q9) | `cd199dd8` (orig `00c0cc0f`) | `hp/localhost-stack`, `hp/player-bugs` | yes | Hub-approved |
 | Fog of war / shared scene (Q3) | `b626ad26` | `hp/player-bugs` | NO | Hub-approved. BLOCKED: needs `campaigns.shared_scene_id` in the one live database before it runs even on localhost |
@@ -24,7 +24,7 @@ Coming, not yet built: Q6 part 2 Campaign Sheet NPC cards (branches off `hp/camp
 3. **A branch LABEL on a linear stack does not create independence.** Pointing a new branch at a commit in the middle of a composed stack drags everything beneath it along as parents. To make a held item genuinely shippable on its own it must be cherry-picked onto `origin/main` as its own branch. (Found 2026-09-16: the route tool and Eat / Rest / Relax existed only inside `hp/localhost-stack`, so "ship just the route tool" had nothing to ship, and the sequencing rule below could not be applied because the branch it referred to did not exist. The ledger table showed this and the hub missed it.)
 4. **Nothing lives only in a working tree.** Every held commit must be reachable from a named branch. (Learned 2026-09-16: the route tool and Eat / Rest / Relax briefly existed only in the primary checkout, where a stray reset would have destroyed them.)
 5. **Two features touching the same file get SEQUENCED, not parallelised.** Build the second on top of the first's branch and treat them as a pair that ships together. Eat / Rest / Relax and Q6 part 2 both edit `app/campaign-sheet/page.tsx`, so Q6 part 2 branches off `hp/campaign-sheet-actions`. Xero is unlikely to want one without the other in the same file, and it avoids re-resolving the same conflict on every recomposition.
-6. **Gates run on the COMPOSED tree, not just per branch.** The composition is what Xero actually tests, and per-branch gates do not prove the combination works. Same reasoning as the merge-commit lesson: a clean commit says nothing about the tree it lands in.
+6. **Gates run on the COMPOSED tree, not just per branch.** The composition is what Xero actually tests, and per-branch gates do not prove the combination works. Same reasoning as the merge-commit lesson: a clean commit says nothing about the tree it lands in. Worse than the rule implies: **a cherry-pick fires no pre-commit hook**, so a composed stack has never been gated by the act of composing it. First composed run, 2026-09-16: green, 971 tests across 56 files, tsc clean, arch OK.
 
 ## How an item lands when Xero approves it
 
