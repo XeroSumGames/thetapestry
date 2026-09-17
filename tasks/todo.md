@@ -6,7 +6,7 @@
 
 ## 🎯 CURRENT OPEN - 2026-05-15
 
-> **SHIPPING POLICY CHANGED 2026-09-16 (Xero):** nothing is pushed to `main` until he has tested it on localhost and says to ship. Finished work waits on branches, branch-backed, composed into the primary checkout for him to evaluate. Docs-only commits still go to `main`. See `tasks/decisions.md` 2026-09-16 and `tasks/plan-one-frame-new-pages-2026-09-15.md`.
+> **SHIPPING POLICY CHANGED 2026-09-16 (Xero):** nothing is pushed to `main` until he has tested it on localhost and says to ship. Finished work waits on branches, branch-backed, composed into the primary checkout for him to evaluate. Docs-only commits still go to `main`. See `tasks/decisions.md` 2026-09-16 and `tasks/plan-one-frame-new-pages-2026-09-15.md`. **What is held, the branch rules, and how an item lands: `tasks/held-queue-local-first.md` (hub maintains it).**
 
 > **NORTH STAR: [tasks/north-star.md](north-star.md)** - everything below ladders up to "TheTapestry stable/polished/fun for the 9/1 Kickstarter" (Beta-500 7/1; billing ~10/1 post-KS). #1 = reliable core table loop (tactical-map render fix + the 2-client verify gate `tasks/tactical-map-verify-2client-testplan-2026-05-27.md`). #2 = KS first-impression / polish.
 
