@@ -1956,3 +1956,36 @@ escapes", where `'/login\?redirect='` collapsed into an optional character.
    fails". A guard that degrades to a quiet "unknown" is the same failure mode
    as the canary that passed as a guest: it reports absence of evidence as
    success. Return the message and print it.
+
+### 2026-09-16 - why a retraction slips through: it reads as costly honesty
+
+Refinement of the rule above, from the hub, and it is sharper than mine.
+
+I had argued a retraction needs MORE evidence than the original report on
+blast-radius grounds: withdrawing a true finding destroys work that was already
+correct, whereas filing a wrong one only costs someone time. True, but it does
+not explain why the bad retraction nearly succeeded.
+
+**The hub's version does: a retraction gets LESS scrutiny than a claim, because
+self-incrimination reads as credible.** A lane arguing against its own finding
+looks like integrity, so it bypasses exactly the check it most needs. Their
+words: "a lane withdrawing its own finding is the most credible message there
+is... one `git show` settled it. A claim needs a source even when - especially
+when - it is someone arguing against their own interest."
+
+**The question that would have caught it**, and which I did not ask because the
+second observation agreed with a conclusion I found comfortable (the app is
+fine, only my locator is broken): **"what changed BETWEEN my two observations?"**
+Both were accurate. They were of different builds. One `git log` away.
+
+**Corollary from HP, same day, same shape.** Grepping the pre-fix `PinsPanel.tsx`
+for `inRail` returns FOUR hits - so a presence grep reads as "the split already
+existed" when the tab block was the one place it was NOT applied. A true count,
+a false answer. Identical in form to counting `.railtab` on a page where the
+strip never renders: the measurement is real, the inference is not.
+
+**And the standing arrangement behind all of it** (HP again): the `:3000` server
+runs from the primary checkout, and EVERY lane's worktree is somewhere else. Any
+lane explaining a localhost measurement by grepping its own tree is reading a
+different codebase. Read the SERVED tree - the primary checkout is the only one
+that answers the question.
