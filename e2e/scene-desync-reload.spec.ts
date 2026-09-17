@@ -117,7 +117,16 @@ test.describe('Tactical scene desync - a reloading player follows the SHARED sce
       }
       const sharedId = await mkScene('E2E Shared With Players', false)
       const gmOnlyId = await mkScene('E2E GM Private Prep', true)
-      expect(sharedId).not.toBe(gmOnlyId)
+      /* A THIRD scene that is neither shared nor active, seeded deliberately.
+         This spec used to seed two, and at n=2 "the player is not on the active
+         scene" leaves only the shared one - so the banner alone was enough to
+         infer identity. At n=3 that inference dies: a regression that dumped the
+         player on this decoy would STILL raise the banner and STILL pass, because
+         the banner only ever says "not the active scene". Rather than keep the
+         fixture small enough for the weak assertion to hold, the fixture now makes
+         the hard case normal and the identity is measured directly (HP, bd102e18). */
+      const decoyId = await mkScene('E2E Decoy - never shared, never active', false)
+      expect(new Set([sharedId, gmOnlyId, decoyId]).size, 'three distinct scenes').toBe(3)
 
       const setShared = async (value: string | null) => {
         const res = await gm.request.patch(`${SUPABASE_URL}/rest/v1/campaigns?id=eq.${campaignId}`,
@@ -137,15 +146,19 @@ test.describe('Tactical scene desync - a reloading player follows the SHARED sce
          Settling is polled on the MAP, not the banner - waiting on the banner
          itself would make "never rendered" indistinguishable from "not yet
          rendered", and the absent case is half of what this test reads. */
-      const coldLoadBanner = async (): Promise<boolean> => {
+      const coldLoad = async (): Promise<{ sceneId: string; banner: boolean }> => {
         await pl.goto(`/stories/${campaignId}/table`, { waitUntil: 'domcontentloaded' })
-        await expect.poll(
-          async () => pl.locator('canvas, [class*=tactical], [class*=map]').first().isVisible().catch(() => false),
-          { timeout: 30_000, message: 'tactical map never rendered for the player' }).toBe(true)
-        // The scene list hydrates just after the map mounts; give that its own
-        // settle window so an absent banner means absent, not early.
-        await pl.waitForTimeout(3_000)
-        return pl.getByText(BANNER).first().isVisible().catch(() => false)
+        /* Settle on the scene id being NON-EMPTY rather than on the container
+           existing: data-scene-id renders as '' until the client has picked a
+           scene, so waiting for the element would read the undecided frame. */
+        const holder = pl.locator('[data-scene-id]').first()
+        await expect.poll(async () => (await holder.getAttribute('data-scene-id').catch(() => null)) || '',
+          { timeout: 30_000, message: 'the player client never settled on a scene' }).not.toBe('')
+        const sceneId = (await holder.getAttribute('data-scene-id')) ?? ''
+        // The banner renders off the same scene list; give it its own beat so
+        // ABSENT means absent rather than not-yet.
+        await pl.waitForTimeout(1_500)
+        return { sceneId, banner: await pl.getByText(BANNER).first().isVisible().catch(() => false) }
       }
 
       /* THREE reads, set -> clear -> set, not two.
@@ -156,13 +169,42 @@ test.describe('Tactical scene desync - a reloading player follows the SHARED sce
          Toggling BACK rules that out: the banner has to follow the column in
          both directions, so "first load" cannot be the explanation. */
       await setShared(sharedId)
-      const withShared = await coldLoadBanner()
+      const a = await coldLoad()
 
       await setShared(null)
-      const withoutShared = await coldLoadBanner()
+      const b = await coldLoad()
 
       await setShared(sharedId)
-      const withSharedAgain = await coldLoadBanner()
+      const c = await coldLoad()
+
+      /* FOURTH read, pointing the column at the DECOY.
+         a/b/c only ever toggle between two scenes, so an implementation that
+         had simply hard-coded "prefer the non-active one" would satisfy all
+         three. Pointing shared_scene_id at a third scene forces the client to
+         actually FOLLOW the column: there are now two non-active scenes and
+         only the column says which. This is the read that makes the identity
+         assertion a measurement of the mechanism rather than of a coincidence. */
+      await setShared(decoyId)
+      const d = await coldLoad()
+      expect(d.sceneId,
+        'pointing shared_scene_id at a THIRD scene must move the player to it. Landing on the shared-or-active scene instead means the client is not following the column, it is guessing.').toBe(decoyId)
+      expect(d.banner,
+        'the decoy is not the active scene either, so the player must still be told the GM is elsewhere.').toBe(true)
+
+      const withShared = a.banner, withoutShared = b.banner, withSharedAgain = c.banner
+
+      /* IDENTITY - the direct measurement the banner can only approximate. */
+      expect(a.sceneId,
+        'with shared_scene_id set, a cold-loading player must hydrate onto the SHARED scene. The GM-private scene here is the original table-breaking bug; the decoy means the banner alone could not have told us which.').toBe(sharedId)
+      expect(b.sceneId,
+        'with shared_scene_id NULL there is nothing to hydrate from, so the player correctly falls back to the ACTIVE scene.').toBe(gmOnlyId)
+      expect(c.sceneId,
+        'restoring shared_scene_id must put the player back on the shared scene, or the first read tracked load order rather than the column.').toBe(sharedId)
+      expect([a.sceneId, b.sceneId, c.sceneId].includes(decoyId),
+        'while the column points elsewhere, no read may land on the decoy - it is neither shared nor active, so displaying it means scene selection is reading neither signal.').toBe(false)
+
+      expect([a.sceneId, b.sceneId, c.sceneId, d.sceneId].join(),
+        'the displayed scene must follow shared_scene_id across all three scenes and back').toBe([sharedId, gmOnlyId, sharedId, decoyId].join())
 
       expect(withShared,
         'with shared_scene_id pointing at a NON-active scene, a cold-loading player must be held on the shared scene and told the GM has moved on. False here means the player silently followed the GM onto their private prep scene - the original table-breaking bug.').toBe(true)
