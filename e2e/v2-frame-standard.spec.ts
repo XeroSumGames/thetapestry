@@ -81,12 +81,33 @@ async function panes(page: Page) {
       const e = el as HTMLElement
       const cs = getComputedStyle(e)
       const rect = e.getBoundingClientRect()
-      // The lowest edge of any direct child. `overflow: hidden` CLIPS silently,
-      // so a child reaching past the column bottom is invisible damage that
-      // "nothing scrolls" would happily pass.
+      /* The lowest edge of anything the COLUMN itself is responsible for.
+         `overflow: hidden` clips silently, so content past the column bottom is
+         invisible damage.
+         Walk ALL descendants, not just direct children, so a deep element that
+         escapes the column is caught. But skip anything whose overflow is owned
+         by an inner SCROLL BOX: a partly-scrolled list item is healthy, and
+         counting it reads a working rail as a clip - the Table hub hit exactly
+         that at 1024x640, flagging an inventory item that was simply scrolled
+         inside its own list. The scroll box itself is still measured on its own
+         pass, so a mis-sized box is still caught. */
+      const scrolls = (el: Element) => {
+        const o = getComputedStyle(el).overflowY
+        return o === 'auto' || o === 'scroll'
+      }
       let lowest = -Infinity
-      for (const child of Array.from(e.children)) {
-        lowest = Math.max(lowest, child.getBoundingClientRect().bottom)
+      let offender = ''
+      for (const node of Array.from(e.querySelectorAll('*'))) {
+        let ownedByInnerScroller = false
+        for (let p = node.parentElement; p && p !== e; p = p.parentElement) {
+          if (scrolls(p)) { ownedByInnerScroller = true; break }
+        }
+        if (ownedByInnerScroller) continue
+        const b = node.getBoundingClientRect().bottom
+        if (b > lowest) {
+          lowest = b
+          offender = (node.getAttribute('class') || node.tagName).split(/\s+/)[0]
+        }
       }
       return {
         name: e.className.split(/\s+/).find(c => c.startsWith('fcol-')) ?? 'fcol',
@@ -95,6 +116,7 @@ async function panes(page: Page) {
         overflowX: cs.overflowX,
         selfScroll: e.scrollHeight - e.clientHeight,
         overhang: lowest === -Infinity ? 0 : Math.round(lowest - rect.bottom),
+        offender,
       }
     })
   })
@@ -182,7 +204,7 @@ test.describe('VTT house frame standard - /v2 measured', () => {
          today's incidental clearance, which changes whenever the page gains a
          row. */
       const clipped = rails.filter(r => r.overhang > 0)
-        .map(r => r.name + ' content runs ' + r.overhang + 'px past the column bottom (CLIPPED, invisible)')
+        .map(r => r.name + ' content runs ' + r.overhang + 'px past the column bottom (CLIPPED, invisible) - lowest offender: ' + r.offender)
       expect(clipped.join('; ') || 'none', 'no rail CLIPS its content - the lowest child must sit inside the column').toBe('none')
 
       /* ---- the document itself never scrolls ---- */
