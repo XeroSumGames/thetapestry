@@ -14,6 +14,7 @@
 # The hook itself:
 #   - check-font-sizes.mjs (no inline fontSize < 13px, no banned color combo)
 #   - check-role-literals.mjs (no inline role-string comparisons)
+#   - check-tab-device.mjs (only Frame.tsx renders the role=tablist tab device)
 #   - check-preview-sync.mjs (preview file kept in sync with narrative source)
 #   - check-em-dashes.mjs (no em-dash / en-dash in code, per project rule)
 #   - check-arch.mjs (architecture ratchets: LOC ceilings, seam leakage, prod console)
@@ -38,6 +39,7 @@ cat > "$HOOK_PATH" <<'EOF'
 set -e
 node scripts/check-font-sizes.mjs
 node scripts/check-role-literals.mjs
+node scripts/check-tab-device.mjs
 node scripts/check-preview-sync.mjs
 node scripts/check-em-dashes.mjs
 node scripts/check-arch.mjs
