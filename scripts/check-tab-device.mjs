@@ -43,7 +43,7 @@
 // "the gate-on-inRail pattern and the duplicates it owes". Do not adopt the
 // house markup there before the tour moves to the new selectors.
 
-import { readFileSync, globSync } from 'node:fs'
+import { readFileSync, existsSync, globSync } from 'node:fs'
 
 const OWNER = 'components/Frame.tsx'
 const ALLOW = 'tab-device-allow'
@@ -85,14 +85,28 @@ for (const f of files) {
 }
 
 // Check 2: the owner must still carry the semantics it is the sole source of.
-const owner = readFileSync(OWNER, 'utf8')
-const missing = [
-  ['role="tablist"', /role=["']tablist["']/],
-  ['role="tab"', /role=["']tab["']/],
-  ['aria-selected', /aria-selected/],
-]
-  .filter(([, re]) => !re.test(owner))
-  .map(([what]) => what)
+//
+// The owner may legitimately not exist on this branch. components/Frame.tsx
+// arrived with the /v2 work, so any branch from before it - including
+// origin/main while that work is unpushed - has no tab device at all. There the
+// NEGATIVE check still means something (nothing may render a strip) and the
+// positive one has nothing to read. Crashing there would break commits on every
+// pre-frame branch, which is the same rollout hazard as the missing script, one
+// layer down: a guard has to be correct on every branch it can run from, not
+// just the one it was written on.
+let missing = []
+if (existsSync(OWNER)) {
+  const owner = readFileSync(OWNER, 'utf8')
+  missing = [
+    ['role="tablist"', /role=["']tablist["']/],
+    ['role="tab"', /role=["']tab["']/],
+    ['aria-selected', /aria-selected/],
+  ]
+    .filter(([, re]) => !re.test(owner))
+    .map(([what]) => what)
+} else {
+  console.log(`[check-tab-device] ${OWNER} is not on this branch - no tab device here yet, so only the negative check applies.`)
+}
 
 let bad = false
 
@@ -115,6 +129,11 @@ if (missing.length) {
 }
 
 if (bad) process.exit(1)
+// Say only what was actually checked. With no owner on this branch the positive
+// half did not run, and claiming it passed would be the same false-verification
+// we keep catching in each other.
 console.log(
-  `[check-tab-device] OK - the tab device is rendered only by ${OWNER}, and carries tablist/tab/aria-selected. Scanned ${files.length} files.`,
+  existsSync(OWNER)
+    ? `[check-tab-device] OK - the tab device is rendered only by ${OWNER}, and carries tablist/tab/aria-selected. Scanned ${files.length} files.`
+    : `[check-tab-device] OK - nothing renders the tab device on this branch (${OWNER} absent, so the semantics check did not run). Scanned ${files.length} files.`,
 )
