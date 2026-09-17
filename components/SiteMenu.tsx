@@ -159,6 +159,32 @@ export function SiteIdentity({ username, userRole, userId, onlineCount, presentU
   )
 }
 
+/**
+ * Destinations that exist inside the /v2 frame. In frame mode a menu link
+ * pointing at one of these is rewritten so the rail keeps you in the frame -
+ * the rail is the biggest, most familiar target on screen, so a link that
+ * ejects you reads as the frame being broken even when every section tab works.
+ *
+ * Anything NOT listed keeps pointing at today's page and leaves the frame. That
+ * is deliberate: an ejecting link is bad, a dead link is worse. The list grows
+ * as /v2 pages are built.
+ *
+ * "The World" maps to the Dashboard because the Dashboard's centre IS the world
+ * map - the same component /map renders.
+ *
+ * "A Guide to the Tapestry" is deliberately NOT mapped: the onboarding tour
+ * targets the OLD sidebar's links by selector, so it has to stay on the old
+ * pages until the switch (plan, Risks).
+ */
+const V2_HREF: Record<string, string> = {
+  '/map': '/v2/dashboard',
+  '/characters': '/v2/characters',
+  '/stories': '/v2/stories',
+  '/communities': '/v2/communities',
+  '/campfire': '/v2/campfire',
+  '/rules': '/v2/rules',
+}
+
 export interface SiteNavProps {
   userRole: string | null
   /** Pending-rumor count for the Moderation Queue badge. 0 hides it. */
@@ -192,6 +218,7 @@ export function SiteNav({ userRole, pendingCount, variant = 'sidebar' }: SiteNav
         onMouseLeave: (e: React.MouseEvent<HTMLAnchorElement>) => hover(e, false),
       }
   const headingProps = frame ? { className: 'grp' } : { style: sectionHeading }
+  const navHref = (h: string) => (frame ? V2_HREF[h] ?? h : h)
   const Wrap: any = frame ? 'nav' : 'div'
   const wrapProps = frame ? { className: 'menu' } : { style: { display: 'contents' as const } }
   return (
@@ -201,16 +228,16 @@ export function SiteNav({ userRole, pendingCount, variant = 'sidebar' }: SiteNav
           "THE TAPESTRY" heading right above it reads as redundant. The
           user-header above already provides its own borderBottom, so no
           explicit {divider} is needed here. */}
-      <Link href="/dashboard?tour=1" {...navProps('#3a3a3a')}>A Guide to the Tapestry</Link>
-      <Link href="/map"         data-tour="dashboard" {...navProps('#c0392b')}>The World</Link>
-      <Link href="/characters"  data-tour="dashboard survivors" {...navProps('#3a3a3a')}>My Survivors</Link>
-      <Link href="/stories"     data-tour="dashboard stories" {...navProps('#3a3a3a')}>My Stories</Link>
-      <Link href="/stories/join" data-tour="dashboard" {...navProps('#7ab3d4')}>Join a Story</Link>
-      <Link href="/communities" data-tour="dashboard communities" {...navProps('#3a3a3a')}>My Communities</Link>
-      <Link href="/campfire" data-tour="dashboard campfire" {...navProps('#3a3a3a')}>The Campfire</Link>
-      <Link href="/rumors"   data-tour="dashboard rumors" {...navProps('#8b5cf6')}>Rumors</Link>
-      <Link href="/rules"    data-tour="dashboard" {...navProps('#3a3a3a')}>The Rules</Link>
-      <Link href="/quick-reference" data-tour="dashboard" {...navProps('#3a3a3a')}>Quick Reference</Link>
+      <Link href={navHref('/dashboard?tour=1')} {...navProps('#3a3a3a')}>A Guide to the Tapestry</Link>
+      <Link href={navHref('/map')}         data-tour="dashboard" {...navProps('#c0392b')}>The World</Link>
+      <Link href={navHref('/characters')}  data-tour="dashboard survivors" {...navProps('#3a3a3a')}>My Survivors</Link>
+      <Link href={navHref('/stories')}     data-tour="dashboard stories" {...navProps('#3a3a3a')}>My Stories</Link>
+      <Link href={navHref('/stories/join')} data-tour="dashboard" {...navProps('#7ab3d4')}>Join a Story</Link>
+      <Link href={navHref('/communities')} data-tour="dashboard communities" {...navProps('#3a3a3a')}>My Communities</Link>
+      <Link href={navHref('/campfire')} data-tour="dashboard campfire" {...navProps('#3a3a3a')}>The Campfire</Link>
+      <Link href={navHref('/rumors')}   data-tour="dashboard rumors" {...navProps('#8b5cf6')}>Rumors</Link>
+      <Link href={navHref('/rules')}    data-tour="dashboard" {...navProps('#3a3a3a')}>The Rules</Link>
+      <Link href={navHref('/quick-reference')} data-tour="dashboard" {...navProps('#3a3a3a')}>Quick Reference</Link>
       {/* External link out to the brand site. New tab + rel=noreferrer
           since it leaves the app entirely. Same visual treatment as
           the in-app links so the sidebar stays uniform. */}
@@ -228,16 +255,16 @@ export function SiteNav({ userRole, pendingCount, variant = 'sidebar' }: SiteNav
 
       {/* Survivors - character creation paths */}
       <div {...headingProps}>Survivors</div>
-      <Link href="/creating-a-character" data-tour="characters" {...navProps('#3a3a3a')}>Creating a Survivor</Link>
+      <Link href={navHref('/creating-a-character')} data-tour="characters" {...navProps('#3a3a3a')}>Creating a Survivor</Link>
       {/* Order 2026-08-06 (Xero): Backstory leads since the onboarding tour
           marks it [Recommended]; Quick then Random follow, Paradigms last.
           Supersedes the earlier T3-3 "Random first" onboarding call. */}
-      <Link href="/characters/new"       data-tour="characters" {...navProps('#3a3a3a')}>Backstory Generation</Link>
-      <Link href="/characters/quick"     data-tour="characters" {...navProps('#3a3a3a')}>Quick Character</Link>
-      <Link href="/characters/random"    data-tour="characters" {...navProps('#7fc458')}>Random Character</Link>
-      <Link href="/characters/paradigms"  data-tour="characters" {...navProps('#3a3a3a')}>Paradigms</Link>
+      <Link href={navHref('/characters/new')}       data-tour="characters" {...navProps('#3a3a3a')}>Backstory Generation</Link>
+      <Link href={navHref('/characters/quick')}     data-tour="characters" {...navProps('#3a3a3a')}>Quick Character</Link>
+      <Link href={navHref('/characters/random')}    data-tour="characters" {...navProps('#7fc458')}>Random Character</Link>
+      <Link href={navHref('/characters/paradigms')}  data-tour="characters" {...navProps('#3a3a3a')}>Paradigms</Link>
       {roleIsThriver(userRole) && (
-        <Link href="/pregens" data-tour="characters" {...navProps('#3a3a3a')}>Pregens</Link>
+        <Link href={navHref('/pregens')} data-tour="characters" {...navProps('#3a3a3a')}>Pregens</Link>
       )}
 
       {!frame && divider}
@@ -251,7 +278,7 @@ export function SiteNav({ userRole, pendingCount, variant = 'sidebar' }: SiteNav
               tools (Moderation, Logs, Create Tokens, Migrate Photos)
               ride at the top; the rest of the admin surfaces sit
               below in their previous relative order. */}
-          <Link href="/moderate"
+          <Link href={navHref('/moderate')}
             {...navProps('#EF9F27')}
             style={frame
               ? { borderLeftColor: '#EF9F27', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }
@@ -259,15 +286,15 @@ export function SiteNav({ userRole, pendingCount, variant = 'sidebar' }: SiteNav
             Moderation Queue
             {pendingCount > 0 && <span style={{ background: '#c0392b', color: '#fff', fontSize: '13px', padding: '1px 6px', borderRadius: '3px' }}>{pendingCount}</span>}
           </Link>
-          <Link href="/logging"                       {...navProps('#EF9F27')}>Logs</Link>
-          <Link href="/ape-log"                       {...navProps('#EF9F27')}>Ape Generator Log</Link>
-          <Link href="/tools/feature-manifest"        {...navProps('#EF9F27')}>Feature Manifest</Link>
-          <Link href="/tools/token-creator"          {...navProps('#EF9F27')}>Create Tokens</Link>
-          <Link href="/tools/migrate-character-photos" {...navProps('#EF9F27')}>Character Photos</Link>
-          <Link href="/rumors/import"                {...navProps('#EF9F27')}>Publish from Snapshot</Link>
-          <Link href="/tools/rescale-tactical-scenes" {...navProps('#EF9F27')}>Rescale Tactical Scenes</Link>
-          <Link href="/tools/reseed-campaign"        {...navProps('#EF9F27')}>Reseed Campaign</Link>
-          <Link href="/tools/campaign-explorer"      {...navProps('#EF9F27')}>Campaign Explorer</Link>
+          <Link href={navHref('/logging')}                       {...navProps('#EF9F27')}>Logs</Link>
+          <Link href={navHref('/ape-log')}                       {...navProps('#EF9F27')}>Ape Generator Log</Link>
+          <Link href={navHref('/tools/feature-manifest')}        {...navProps('#EF9F27')}>Feature Manifest</Link>
+          <Link href={navHref('/tools/token-creator')}          {...navProps('#EF9F27')}>Create Tokens</Link>
+          <Link href={navHref('/tools/migrate-character-photos')} {...navProps('#EF9F27')}>Character Photos</Link>
+          <Link href={navHref('/rumors/import')}                {...navProps('#EF9F27')}>Publish from Snapshot</Link>
+          <Link href={navHref('/tools/rescale-tactical-scenes')} {...navProps('#EF9F27')}>Rescale Tactical Scenes</Link>
+          <Link href={navHref('/tools/reseed-campaign')}        {...navProps('#EF9F27')}>Reseed Campaign</Link>
+          <Link href={navHref('/tools/campaign-explorer')}      {...navProps('#EF9F27')}>Campaign Explorer</Link>
           {/* Not a link: dispatches a window event that MapView listens for
               (components/MapView.tsx), so it only does anything on a page
               where the map is mounted. Behaviour unchanged by this move. */}
@@ -329,7 +356,7 @@ export function SiteTitleBar({ username, userRole, userId, onlineCount }: SiteTi
           <span className="tb-icons">
             <NotificationBell />
             <MessagesBell />
-            <Link href="/campfire" title="The Campfire" style={{ fontSize: '16px', lineHeight: 1, display: 'flex', alignItems: 'center', textDecoration: 'none' }}>&#128293;</Link>
+            <Link href="/v2/campfire" title="The Campfire" style={{ fontSize: '16px', lineHeight: 1, display: 'flex', alignItems: 'center', textDecoration: 'none' }}>&#128293;</Link>
             <BugReportButton />
             {roleIsThriver(userRole) && userId && <RecorderToggleButton userId={userId} />}
           </span>
