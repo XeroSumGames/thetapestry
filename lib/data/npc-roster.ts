@@ -218,3 +218,28 @@ export function uploadNpcPortrait(path: string, blob: Blob) {
 export function npcPortraitPublicUrl(path: string) {
   return db().storage.from(NPC_BUCKET).getPublicUrl(path)
 }
+
+/**
+ * Party-wide "met" rows: revealed relationships for ANY of the given party
+ * characters. Powers the Campaign Sheet's NPCs Met panel, where the ask is
+ * everyone the PARTY has met rather than everyone the viewer personally has,
+ * so this deliberately spans characters instead of taking a single viewer id.
+ *
+ * Filters by npc_id rather than campaign_id because npc_relationships
+ * .campaign_id is NULLABLE and legacy rows leave it unset.
+ *
+ * Both lists are compacted first: a NULL inside a PostgREST .in() list 400s
+ * the WHOLE query rather than skipping that entry (tasks/lessons.md
+ * 2026-08-02), and an empty list is an early return rather than a round trip.
+ */
+export async function revealedRelationshipsForParty(npcIds: string[], characterIds: string[]) {
+  const npcs = npcIds.filter(Boolean)
+  const chars = characterIds.filter(Boolean)
+  if (npcs.length === 0 || chars.length === 0) return { data: [], error: null }
+  return db()
+    .from('npc_relationships')
+    .select('npc_id, character_id, relationship_cmod')
+    .eq('revealed', true)
+    .in('npc_id', npcs)
+    .in('character_id', chars)
+}

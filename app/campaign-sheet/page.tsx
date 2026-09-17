@@ -29,6 +29,8 @@ import { OUTCOME } from '../../lib/roll-outcomes'
 import { exportSessionLog } from '../../lib/session-export'
 import { dayToCalendar, eventsOnDay, pastAndPresentEvents, hourTo12h } from '../../lib/distemper-timeline'
 import { isThriver as roleIsThriver } from '../../lib/auth/roles'
+import { npcsForRoster, revealedRelationshipsForParty } from '../../lib/data/npc-roster'
+import { openPopout } from '../../lib/popout'
 
 interface PartyRow {
   character_id: string
@@ -70,6 +72,17 @@ interface PendingHeal {
   }
 }
 
+// One NPC the party has met, for the NPCs Met panel. met_by is how many party
+// characters have actually met them, not a relationship strength.
+type MetNpc = {
+  id: string
+  name: string
+  portrait_url: string | null
+  three_words: string[] | null
+  hidden_from_players: boolean
+  met_by: number
+}
+
 export default function CampaignSheetPage() {
   const params = useSearchParams()
   const campaignId = params.get('c') ?? ''
@@ -92,12 +105,18 @@ export default function CampaignSheetPage() {
   const [pending, setPending] = useState<PendingHeal[]>([])
   const [healModal, setHealModal] = useState(false)
   const [isThriver, setIsThriver] = useState(false)
+  const [metNpcs, setMetNpcs] = useState<MetNpc[]>([])
 
   const isGM = !!myUserId && !!gmUserId && myUserId === gmUserId
   // gmLike = isGM || isThriver. Thrivers get GM-side controls on every
   // campaign via platform godmode (DB RLS already widened; this is the
   // matching UI gate).
   const gmLike = isGM || isThriver
+
+  // hidden_from_players is the GM's "not yet" switch on an NPC, so it is
+  // filtered at RENDER rather than in the loader: gmLike depends on state that
+  // is still resolving while the load runs, and filtering there would race it.
+  const visibleMetNpcs = metNpcs.filter(n => gmLike || !n.hidden_from_players)
 
   const refetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -127,7 +146,35 @@ export default function CampaignSheetPage() {
         rations_count: ratCount,
       }
     }))
+    return charIds as string[]
   }, [supabase, campaignId])
+
+  // Every NPC the PARTY has met, i.e. an npc_relationships row with
+  // revealed = true for any party character. Party-wide on purpose: the ask is
+  // everyone the party has met, not everyone the viewer personally has, which
+  // also avoids needing a "which character am I" mapping this page does not have.
+  const loadMetNpcs = useCallback(async (charIds: string[]) => {
+    if (charIds.length === 0) { setMetNpcs([]); return }
+    const { data: npcRows, error: npcErr } = await npcsForRoster(campaignId)
+    if (npcErr) { reportSupabaseError(npcErr, 'campaign-sheet:met-npcs-roster'); return }
+    const rows = (npcRows ?? []) as any[]
+    const { data: rels, error: relErr } = await revealedRelationshipsForParty(rows.map(n => n.id), charIds)
+    if (relErr) { reportSupabaseError(relErr, 'campaign-sheet:met-npcs-relationships'); return }
+    const metBy = new Map<string, Set<string>>()
+    for (const r of (rels ?? []) as any[]) {
+      if (!r.npc_id || !r.character_id) continue
+      if (!metBy.has(r.npc_id)) metBy.set(r.npc_id, new Set())
+      metBy.get(r.npc_id)!.add(r.character_id)
+    }
+    setMetNpcs(rows.filter(n => metBy.has(n.id)).map(n => ({
+      id: n.id,
+      name: n.name ?? 'Unknown',
+      portrait_url: n.portrait_url ?? null,
+      three_words: Array.isArray(n.three_words) ? n.three_words : null,
+      hidden_from_players: !!n.hidden_from_players,
+      met_by: metBy.get(n.id)!.size,
+    })))
+  }, [campaignId])
 
   // Consume one Luxury Ration: decrement count by 1, drop stress by 1
   // (min 0), write a feed row. GM-callable from each PartyCard. Per
@@ -276,8 +323,10 @@ export default function CampaignSheetPage() {
           setStartCanonDay(stored.canon_day)
         }
       }
-      await Promise.all([loadParty(), loadVehicles(), loadPending()])
+      const [charIds] = await Promise.all([loadParty(), loadVehicles(), loadPending()])
       setLoaded(true)
+      // After setLoaded so the sheet paints without waiting on two more reads.
+      void loadMetNpcs(charIds ?? [])
     }
     load()
     // Catch-up reload. The clock_advanced/clock_set broadcasts are fire-and-
@@ -468,6 +517,20 @@ export default function CampaignSheetPage() {
           ) : (
             <div>
               {party.map(p => <PartyCard key={p.character_id} row={p} onConsumeLuxury={() => consumeLuxuryRation(p)} />)}
+            </div>
+          )}
+        </Panel>
+
+        {/* ── NPCs Met ───────────────────────────────────────── */}
+        <Panel title="NPCs Met">
+          {visibleMetNpcs.length === 0 ? (
+            <Muted text="Nobody the party has met yet." />
+          ) : (
+            <div>
+              {visibleMetNpcs.map(n => (
+                <MetNpcRow key={n.id} npc={n} partySize={party.length}
+                  onOpen={() => openPopout(`/npc-sheet?c=${campaignId}&npc=${n.id}${gmLike ? '&gm=1' : ''}`, `npc-${n.id}`, { w: 571, h: 400 })} />
+              ))}
             </div>
           )}
         </Panel>
@@ -719,6 +782,32 @@ function Panel({ title, children }: { title: string, children: React.ReactNode }
       </h2>
       {children}
     </section>
+  )
+}
+
+// One met-NPC row. Deliberately NOT PlayerNpcCard: that is a full popout card
+// (portrait, notes, loot, its own modals and close button) and a grid of them
+// would be unusable here. This is the index; clicking opens the real card in
+// the existing /npc-sheet popout, so there is no second card to keep in sync.
+function MetNpcRow({ npc, partySize, onOpen }: { npc: MetNpc, partySize: number, onOpen: () => void }) {
+  const words = (npc.three_words ?? []).filter(Boolean).join(' / ')
+  return (
+    <button onClick={onOpen} title={`Open ${npc.name}`}
+      style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', padding: '8px 12px', marginBottom: 6, background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: 3, color: '#f5f2ee', fontFamily: 'Carlito, sans-serif', fontSize: 13, cursor: 'pointer' }}>
+      {npc.portrait_url ? (
+        <img src={npc.portrait_url} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+      ) : (
+        <span style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: '#2e2e2e', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#cce0f5', fontSize: 13 }}>
+          {(npc.name || '?').charAt(0).toUpperCase()}
+        </span>
+      )}
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', fontWeight: 700 }}>{npc.name}</span>
+        {words && <span style={{ display: 'block', color: '#cce0f5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{words}</span>}
+      </span>
+      {npc.hidden_from_players && <span style={{ color: '#f5a89a', flexShrink: 0 }}>hidden</span>}
+      <span style={{ color: '#cce0f5', flexShrink: 0 }} title={`Met by ${npc.met_by} of ${partySize} at the table`}>{npc.met_by}/{partySize}</span>
+    </button>
   )
 }
 
