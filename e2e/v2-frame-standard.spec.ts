@@ -206,9 +206,14 @@ test.describe('VTT house frame standard - /v2 measured', () => {
       expect(round(f.strip), 'the strip is never below its 34px minimum').toBeGreaterThanOrEqual(STRIP_MIN)
       if (c.stripGrows) {
         expect(round(f.strip), 'a wrapped tab label GROWS the strip above its 34px minimum').toBeGreaterThan(STRIP_MIN)
-      } else {
-        expect(round(f.strip), 'no label wraps at this width, so the strip sits at its 34px minimum').toBe(STRIP_MIN)
       }
+      /* NO exact-34 assertion at the non-wrapping widths, deliberately. Whether
+         a label wraps depends on tab WIDTH, and tab width changes when the 1.2b
+         right rail lands: the middle tabs go 149px -> 121px at 1024, and 124px
+         already wraps today. Asserting "exactly 34" here would turn the suite
+         RED on HP's correct work - the precise failure mode we keep trying to
+         design out. The standard only promises a 34px MINIMUM that grows on
+         wrap, so that is all that is asserted. */
 
       /* Geometry DERIVED from the standard, not hard-coded per phase, so the
          same assertions hold before and after the 1.2b right rail lands. */
@@ -276,7 +281,7 @@ test.describe('VTT house frame standard - /v2 measured', () => {
 
       expect(f.tabs.map(t => t.label), 'same six tabs, same order, on every section page').toEqual(EXPECTED_TABS)
       expect(round(f.titlebar), 'title bar is 45px').toBe(TITLEBAR)
-      expect(round(f.strip), 'section strip is at its 34px minimum here').toBe(STRIP_MIN)
+      expect(round(f.strip), 'section strip is at least its 34px minimum (not pinned exactly - tab widths, and so wrapping, change when the 1.2b rail lands)').toBeGreaterThanOrEqual(STRIP_MIN)
       expect(round(f.panes.find(p => p.name === 'fcol-left')!.width), 'left rail is 280px').toBe(LEFT_RAIL)
       expect(round(f.tabs[0].width), 'first tab sits over the left rail').toBe(LEFT_RAIL)
       expect(f.frameBottom, 'frame bottom is exactly 800').toBe(800)
