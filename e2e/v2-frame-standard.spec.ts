@@ -207,13 +207,34 @@ test.describe('VTT house frame standard - /v2 measured', () => {
         .map(r => r.name + ' content runs ' + r.overhang + 'px past the column bottom (CLIPPED, invisible) - lowest offender: ' + r.offender)
       expect(clipped.join('; ') || 'none', 'no rail CLIPS its content - the lowest child must sit inside the column').toBe('none')
 
-      /* ---- the document itself never scrolls ---- */
-      const doc = await page.evaluate(() => {
-        const d = document.scrollingElement as HTMLElement
-        return { y: d.scrollHeight - d.clientHeight, x: d.scrollWidth - d.clientWidth }
+      /* ---- the PAGE never scrolls while the frame is pinned ----
+         NOT measured against documentElement. On full-width routes (every /v2
+         page and the story table) LayoutShell wraps the route in an unclassed
+         div with `overflow: auto`, and THAT is the scroller - documentElement
+         reports 0 no matter what. Verified here: at 800x700 stacked the wrapper
+         reports 350px scrollable while documentElement reports 0, so a
+         documentElement check is wrong in BOTH directions - blind to real
+         overflow, and unable to see correct scrolling either.
+         The wrapper has no class, so it is found by walking up from .frameroot
+         to the nearest scrolling ancestor rather than by selector. */
+      const scroller = await page.evaluate(() => {
+        let n: HTMLElement | null = document.querySelector('.frameroot') as HTMLElement
+        while (n) {
+          const o = getComputedStyle(n).overflowY
+          if (o === 'auto' || o === 'scroll') break
+          n = n.parentElement
+        }
+        const el = n ?? (document.scrollingElement as HTMLElement)
+        return {
+          found: !!n,
+          tag: el.tagName.toLowerCase() + (el.getAttribute('class') ? '.' + el.getAttribute('class') : ''),
+          y: el.scrollHeight - el.clientHeight,
+          x: el.scrollWidth - el.clientWidth,
+        }
       })
-      expect(doc.y, 'the document never scrolls vertically').toBeLessThanOrEqual(0)
-      expect(doc.x, 'the document never scrolls horizontally').toBeLessThanOrEqual(0)
+      expect(scroller.found, 'found the real scroll container by walking up from .frameroot').toBe(true)
+      expect(scroller.y, 'the page never scrolls vertically while the frame is pinned (measured on ' + scroller.tag + ', the REAL scroller, not documentElement)').toBeLessThanOrEqual(0)
+      expect(scroller.x, 'the page never scrolls horizontally').toBeLessThanOrEqual(0)
     })
   }
 
