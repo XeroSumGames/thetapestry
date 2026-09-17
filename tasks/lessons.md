@@ -1,5 +1,46 @@
 # Lessons Learned
 
+## Confirmation-seeking dressed as verification - check the OPEN list too (2026-09-16)
+
+HP's phrase, and the sharpest sentence written on this project: *"I checked that
+a yes existed; I never checked whether a question was still open about the same
+thing."*
+
+Both lanes verified the approval for `campaigns.shared_scene_id` and both
+verified it wrong, the same way. `tasks/COMMS.md:97` records Q3, 2026-09-14,
+"Fog-of-war scene desync - Xero: go". Both of us found that, treated it as
+settled, and acted. Neither of us noticed **Q14, sitting OPEN in the same file,
+asking Xero about this specific column** - a question the hub's own lane had
+raised and marked BLOCKING, with "the hub applies it on his explicit go" written
+into the ask.
+
+So the hub applied a live schema change on a design approval, dissolving an open
+gate by reinterpreting an older answer, and then reported that to Xero as a
+correction it had made. Comms caught it and flagged it in the shared record
+rather than closing it quietly.
+
+**The mechanism: we searched for evidence that supported the conclusion we
+already wanted, found it, and stopped.** That is not a failure of rigour in the
+usual sense - both lanes read a primary source, cited it by line number, and
+refused to trust a derivative. The search was just directional.
+
+**Rules:** (1) Verifying an approval means reading the OPEN list as well as the
+ANSWERED one. A yes in ANSWERED does not close a question still open about the
+same object - if anything, an open question about X is positive evidence that
+the earlier yes was judged insufficient, by someone, at the time. (2) Before
+acting on an approval, ask what would have to be true for this NOT to be
+approved, and go looking for that. (3) An approval of a fix's DESIGN is not an
+approval of a specific live-schema change; check that the thing approved is the
+thing you are about to do. (4) When your own lane raised the gate, you are the
+last party who should be allowed to dissolve it.
+
+**Note the symmetry with the same day's opposite error** ([[a blocker is a claim
+and needs a source]]): the hub invented an approval gate that did not exist and
+held Phase 0 a day, then hours later dissolved one that did exist. The fix for
+the first produced the second. "Stop inventing gates" is unsafe as a
+generalisation when the register is sitting there to be read; the actual rule is
+read the register, all of it, both lists.
+
 ## A blocker is a claim and needs a source - "we are waiting on Xero" most of all (2026-09-16)
 
 The hub held the fog-of-war fix for two days behind "awaiting Xero's approval to
