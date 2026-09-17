@@ -342,3 +342,44 @@ defect while it was being reported.
 are right; here a width was plausible while a LABEL was cut off. A row asserting
 no tab's `scrollWidth` exceeds its `clientWidth` at stacked widths catches this
 and generalises to any future label that outgrows its tab.
+
+### The gate-on-inRail pattern, and the duplicates it creates
+
+Three changes now use the same shape, which makes it the house idiom for this
+migration rather than a one-off: `SiteNav`'s `variant` prop, the pins panel's
+hidden `✕`, and the pins rail tabs adopting `RailTabs`. In each case the OLD
+surface keeps its exact existing markup and only the `/v2` incarnation changes.
+
+That is what lets Phase 0 promise the old pages are unchanged, and it is not
+optional politeness: the onboarding tour targets the old sidebar and the old
+pins panel BY SELECTOR, so changing their markup breaks the tour SILENTLY, with
+no error, for a brand new user at first contact.
+
+**But every use of the pattern creates a duplicate rendering path, and a
+duplicate with no expiry note becomes permanent.** The TheTable hub's rule from
+auditing Mothership: having a component prevents drift only when it is the ONLY
+way to render the device. Mothership's rail tabs are correct everywhere not
+because anyone was careful but because nothing else can render a strip.
+
+Ours could. `components/Frame.tsx:101` has exported a correct
+`role="tablist"` / `role="tab"` / `aria-selected` strip the whole time, and
+`app/v2/frame.css` carries both a `--railtab-h: 28px` token and a
+`.pinsrailtabs .railtabs` rule written specifically for this panel - and the
+panel still hand-rolled three bare, semantics-free buttons, because a second
+path existed and was there first. The defect was invisible to every geometry
+check we had: the buttons measured a plausible 29px and were unreadable to
+assistive technology. Only reading the markup found it, and only a signed-in
+session could reach it at all.
+
+**FOLLOW-UPS OWED WHEN THE OLD PAGES RETIRE** - delete the duplicate, do not
+leave it:
+
+- `components/PinsPanel.tsx` `!inRail` branch: the hand-rolled tab strip with
+  its `data-tour` attributes. Collapse to `RailTabs` only.
+- `components/SiteMenu.tsx`: the `variant: 'sidebar'` inline styles.
+- The `navHref()` lookup's pass-through entries, once every destination has a
+  `/v2` page.
+- The tour itself must move to the new selectors BEFORE any of the above.
+
+Until then each duplicate is a live invitation for the next call site to pick
+the wrong branch, which is exactly how the rail tabs went wrong.
