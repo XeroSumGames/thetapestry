@@ -10,6 +10,25 @@ Newest first.
 
 ---
 
+## 2026-09-16: nothing reaches the live site until Xero has tested it locally and says to ship (revises the 2026-09-15 shipping approach, not the design)
+
+**Decision:** all TheTapestry work is now built and evaluated on the LOCAL dev server, and nothing is pushed to `main` until Xero has tested it and explicitly approves the deploy. Xero, 2026-09-16: *"ok, i like the plan, but think we should go another way. let's make the changes locally and evaluate there before pushing live. let's not change anything to the live site till we have thoroughly tested it"*. This supersedes the previous default of pushing finished work straight to `main` and treating the Vercel deploy as the dev environment, and it supersedes the "ship live at /v2, unlinked" half of the 2026-09-15 one-frame plan. The one-frame DESIGN (decisions 1A / 2C / 3A / 4A, the DASHBOARD tab and rail swap, the Dashboard as landing page) is unchanged.
+
+**What it changes in practice:**
+- Finished work accumulates on branches and in the primary checkout, unpushed, for Xero to evaluate on localhost. `main` stays as it is, so the live site stays as it is.
+- Docs-only commits (plans, todo, lessons, decisions) still go to `main`, because they are how the lanes coordinate and they change nothing a user sees.
+- Every unpushed item must stay BRANCH-BACKED, never only in a working tree, so the primary checkout can be treated as a disposable composition and rebased freely.
+- Bug fixes are affected too, not just the frame work: the two reviewed fixes of 2026-09-15 (Q9 player NPC folders `00c0cc0f`, Q3 shared scene `b626ad26`) are held unpushed rather than deployed.
+- **The single-database caveat:** `.env.local` and the linked Supabase project are the same live project (`jbudzglgtxeoaufpejrv`); there is no staging database. A change needing a new column or policy needs it in that live database before it can be tested even on localhost, so those still need Xero's explicit, named go. Local testing also writes real data into the live database.
+
+**Alternatives considered:** (a) keep pushing to live, since Xero was the only real user; (b) live-but-unlinked new pages at `/v2`, which was the 2026-09-15 plan; (c) local-only until tested, then ship on his word.
+
+**Why (c) won:** Xero's call. The context that made (a) reasonable has changed - there are playtesters on the live site now, the Kickstarter is the target, and the one-frame work touches the shell behind every page plus the table page used mid-session. Finding a regression on localhost costs a rebase; finding it live costs a playtest.
+
+**What would change our mind:** Xero saying to resume pushing, or a fix urgent enough that he chooses to ship it without a local pass. Either is his call, stated per case.
+
+---
+
 ## 2026-09-15: TheTapestry one-frame - final placement picks (supersedes 2026-09-14 on decisions 2 and 4) plus the Dashboard
 
 **Decision:** still frame only, contents unchanged (see 2026-09-14). Xero's final picks, from the mockup:
