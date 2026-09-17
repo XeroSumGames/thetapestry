@@ -172,11 +172,23 @@ until the switch. This is trap-avoidance, not a missing page.
 ### Left rail links that still leave the frame
 
 Deliberate, because no `/v2` page exists for them yet, and a dead link is worse
-than an ejecting one: Join a Story, Rumors, Quick Reference, the Survivors group
-(Creating a Survivor, Backstory Generation, Quick Character, Random Character,
-Paradigms), and Thriver Tools. The DistemperVerse link is external and correctly
-leaves. Implemented as a lookup through `navHref()`, which is the identity
-function in `sidebar` mode, so the old sidebar is untouched.
+than an ejecting one: Join a Story, Rumors, Quick Reference, and the Survivors
+group (Creating a Survivor, Backstory Generation, Quick Character, Random
+Character, Paradigms). The DistemperVerse link is external and correctly leaves.
+Implemented as a lookup through `navHref()`, which is the identity function in
+`sidebar` mode, so the old sidebar is untouched.
+
+**The whole THRIVER TOOLS section also leaves the frame**, and it is called out
+separately because only Xero and other Thrivers can see it - which makes him the
+ONLY person who will ever hit it, and therefore the likeliest source of a "the
+new layout is broken" report. Every item: Moderation Queue, Logs, Ape Generator
+Log, Feature Manifest, Create Tokens, Character Photos, Publish from Snapshot,
+Rescale Tactical Scenes, Reseed Campaign, Campaign Explorer, Copy Map Position.
+
+`Copy Map Position` is not a link at all - it dispatches a `window` event that
+`MapView` listens for, so it only does anything on a page where the map is
+mounted. That was true before `/v2` and is unchanged by it. Worth knowing before
+someone "fixes" it into a route.
 
 ### Precedence: the standard governs geometry, the mockup governs the rest
 
