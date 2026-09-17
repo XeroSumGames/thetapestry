@@ -111,6 +111,14 @@ export default function V2DashboardPage() {
       navActive="dashboard"
       onNav={onNav}
       left={
+        // THE RAIL ITSELF MUST NOT SCROLL. Measured at 1280x800 the menu is
+        // 1206px tall in a 721px rail, so without this the whole column
+        // scrolls - which the standard forbids ("rails never scroll; long
+        // lists scroll in their own box"). The reference's .fcol is
+        // overflow-y:auto and simply never had content long enough to hit it.
+        // Fixed here rather than in frame.css so the shared geometry stays a
+        // faithful copy; if 1.4 decides every rail should behave this way, the
+        // rule belongs in .fcol and this wrapper goes away.
         <>
           <SiteIdentity
             username={username}
@@ -124,7 +132,9 @@ export default function V2DashboardPage() {
               inline query, and duplicating that read here would need a lib/data
               helper of its own. Thrivers still get the link, just without the
               number, until 1.2b. */}
-          <SiteNav userRole={userRole} pendingCount={0} />
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <SiteNav userRole={userRole} pendingCount={0} />
+          </div>
         </>
       }
       centre={<MapView embedded />}
