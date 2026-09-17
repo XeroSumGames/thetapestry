@@ -54,6 +54,22 @@ Who ran the full suite against what, and when. **A row in the held table means t
 | `hp/localhost-stack` composed tree (6 commits) | HP | 2026-09-16 | tsc clean, 971 tests / 56 files, arch OK |
 | main + Q9 + persistNpcSort follow-up | Hub | 2026-09-16 | tsc clean, 950 tests, arch OK, depcruise clean |
 | main + Q9 + fog (Q3) | Hub | 2026-09-15 | tsc clean, 946 tests, arch OK, depcruise clean |
+| 0.1 `ff39745b` LayoutShell `/v2` gate | HP, then Hub | 2026-09-16 | HP: real commit, hook fired, tsc clean, 937 tests, arch OK. Hub: independently proved the gate over 143 paths (133 real routes + edge cases) - ZERO non-`/v2` paths changed public status; `/v2/moderate`, `/v2/logging`, `/v2/gm-screen`, `/v2/stories/*/table` all stay private; `/v20`, `/v2foo`, `/av2` correctly not matched |
+| 0.2 `492d29ca` `components/SiteMenu.tsx` | HP | 2026-09-16 | real commit, hook fired, tsc clean, 937 tests, arch OK. Sidebar 372 -> 205 lines |
+| 0.3 `defb93a6` `components/PinsPanel.tsx` + `lib/map-pins.ts` | HP | 2026-09-16 | real commit, hook fired, tsc clean, 937 tests, arch OK, depcruise clean. **MapView 2136 -> 1729** (composed tree 1705), off a 2137 ceiling it was sitting exactly on |
+| `hp/v2-frame` composed with 0.1-0.3 | HP | 2026-09-16 | tsc clean, 971 tests / 56 files, arch OK. Also rendered: `/`, `/dashboard`, `/map` all 200 with no compile or runtime error markers |
+
+### Follow-up owed AFTER the Phase 0 extractions land
+
+Ratchet `components/MapView.tsx` DOWN in `tasks/_baselines/arch.json`: the PINS extraction takes it from 2136 to 1729, off a ceiling of 2137 it was sitting exactly on. That is a real win and worth locking in - but only once it is on `main`, for the same reason as the campaign-sheet ceiling below: **do not run `check-arch --save` while anything is held.** From a composed tree it would pin 1705, which `main`'s own 2136 then fails.
+
+### Brief additions for 0.4 (the table-page extraction), learned the hard way in 0.2 and 0.3
+
+Both of these cost HP a failed commit or a rewrite on a SINGLE extraction. 0.4 moves five blocks, so expect each one to hit them:
+
+1. **Expect to need a shared leaf module per extraction, not an upward import.** Pulling a child out of a parent invites a real import cycle: `MapView -> PinsPanel -> MapView`, because the panel needed the `Pin` type AND `TIMELINE_STEP_MS` (a VALUE, so not erasable) back from its own parent. Fixed with `lib/map-pins.ts` as a leaf both import. Every block pulled out of the table page will want types and constants that currently live in the table page.
+2. **Do not type an extracted setter prop as `Dispatch<SetStateAction<any>>`.** The `any` collapses the union, every `prev => ...` updater loses its contextual type, and the build fails under `noImplicitAny`. Mirror the parent's real `useState` types instead.
+3. **Do not clean up dead code inside a large move.** HP deliberately left roughly 60 lines of unreachable filter-chip code in MapView (`FILTER_CHIPS_ROW1/ROW2`, `allFiltersActive`, `toggleFilter`, `chipCount`, `regionCount`, `toggleRegion`, plus `setSortMode` and `setPinsVisible` never called), because deleting it inside a 456-line move makes "nothing changed" unverifiable. Correct call. It is free LOC later if MapView needs to shrink further.
 
 ### Follow-up owed AFTER the campaign-sheet pair lands
 
