@@ -1,0 +1,423 @@
+import { test, expect, type Page } from '@playwright/test'
+
+/**
+ * The house VTT frame, MEASURED, across the /v2 section pages.
+ *
+ * Ported from the Mothership reference scripts/test-frame.ts. DELIBERATE
+ * DIFFERENCE: the reference is a STATIC test - it reads app/globals.css as text
+ * and regex-asserts declarations, never opening a browser - so it cannot
+ * produce the numbers this phase is about (used track widths, the frame's
+ * bottom edge, the strip growing on a wrapped tab). This port asserts the same
+ * standard by MEASURING the rendered page, which catches drift the CSS text
+ * would still look correct for: a cascade override, a parent that stops
+ * filling, a wrap that pushes the frame off screen. PORT THE STANDARD, NOT THE
+ * TECHNIQUE.
+ *
+ * LOCALHOST ONLY. Under local-first (Xero 2026-09-16) nothing is live, so /v2
+ * exists on the dev server and nowhere else.
+ *
+ * AN HTTP 200 PROVES NOTHING HERE. LayoutShell returns a blank div server-side
+ * until its auth check resolves, so a Tapestry page's server HTML is the
+ * pre-auth shell. Every check waits for a real element and measures it.
+ *
+ * PHASE-AGNOSTIC BY DESIGN. The right rail (PINS) lands in 1.2b. Until then
+ * every /v2 page is two-column (frame--noright); after, all six are
+ * three-column. Rather than pinning today's shape and going red the day the
+ * lift lands, the geometry is DERIVED from the standard's rail widths and the
+ * shape actually rendered, and the end state has its own test that SKIPS until
+ * the rail exists - so it cannot quietly pass before then either.
+ *
+ * The standard: TheTable/tasks/vtt-frame-standard.md. If a number here changes,
+ * the SPEC changes first and this file follows.
+ */
+
+/* NO LOCAL DEFAULT. Every navigation below is RELATIVE so it follows the
+   config's baseURL. A local default here is not a convenience, it is a silent
+   environment swap: with `E2E_BASE_URL ?? 'http://localhost:3000'` a plain PROD
+   run pointed itself back at the dev server and measured localhost while
+   reporting as part of a prod re-cert. Twenty-six rows of that run were green
+   about an environment nobody had asked them to test (2026-09-16).
+   Relative URLs make the target exactly one value, set in exactly one place. */
+
+/** Xero's set, in his order. Pinned as a LITERAL on purpose: route discovery
+ *  drives coverage, but this pins INTENT, so a silent reorder fails. */
+const EXPECTED_TABS = ['DASHBOARD', 'MY SURVIVORS', 'MY STORIES', 'MY COMMUNITIES', 'THE CAMPFIRE', 'THE RULES']
+
+/** One route per section tab, in strip order (HP, 2026-09-16). The chrome comes
+ *  from ONE shared client shell, so chrome assertions are parameterised over
+ *  these rather than hand-written per page; only the centre differs. Routes not
+ *  yet built SKIP with an explicit message and go green when HP lands them. */
+const ROUTES = [
+  '/v2/dashboard',
+  '/v2/characters',
+  '/v2/stories',
+  '/v2/communities',
+  '/v2/campfire',
+  '/v2/rules',
+]
+
+/** DELIBERATELY GATED, not broken. The /v2 public list is DERIVED from the old
+ *  one by prefixing '/v2', so each /v2 page inherits its original's visibility:
+ *  /characters /stories /campfire /rules are public, /communities is NOT (HP,
+ *  2026-09-16). So a guest being bounced here is the derivation working, and it
+ *  gets a POSITIVE security assertion below rather than a skip - if it ever
+ *  renders as a ghost, a private page has been made public. */
+const GATED_ROUTES = ['/v2/communities']
+/** Measurable by a guest, which is all a localhost run can be (see below). */
+const GUEST_ROUTES = ROUTES.filter(r => !GATED_ROUTES.includes(r))
+
+const LEFT_RAIL = 280
+const RIGHT_RAIL = 260
+const GAP = 1 // the 1px gap IS the divider
+const TITLEBAR = 45
+const STRIP_MIN = 34
+const RAIL_TAB = 28
+const STACK_BREAKPOINT = 820
+
+/** Deep geometry runs on the one route that exists throughout. */
+const PRIMARY = '/v2/dashboard'
+
+/* `stripGrows` rather than an exact grown height, deliberately. The standard
+   says the strip is "34px and GROWS when a name wraps" - it does not fix the
+   grown value, which depends on font metrics and the label text. It was quoted
+   to me as 48px and measures 40px today (13px type, 14px line-height, two
+   wrapped lines plus padding); pinning either would make the test go red when
+   someone rewords a tab, which trains people to edit the test instead of
+   trusting it. The INVARIANT is that it grows above its minimum and the frame
+   still ends exactly at the viewport - that is what the standard promises. */
+interface Case { w: number; h: number; stripGrows: boolean; note: string }
+const CASES: Case[] = [
+  { w: 1920, h: 1080, stripGrows: false, note: 'desktop' },
+  { w: 1280, h: 800, stripGrows: false, note: 'laptop' },
+  { w: 1280, h: 700, stripGrows: false, note: 'SHORT - the height the Table hub found a clip at' },
+  { w: 1024, h: 640, stripGrows: false, note: 'SHORT and narrow' },
+  { w: 900, h: 800, stripGrows: true, note: 'a tab label wraps - the strip GROWS and the frame still ends exactly at the viewport' },
+]
+
+const round = (n: number) => Math.round(n)
+
+async function serves(page: Page, route: string) {
+  const res = await page.request.get(route).catch(() => null)
+  return !!res && res.ok()
+}
+
+async function open(page: Page, route: string) {
+  await page.goto(route, { waitUntil: 'domcontentloaded' })
+  // Proof of RENDER, not of 200.
+  await expect(page.locator('.frame'), 'the frame rendered (200 alone proves nothing here)').toBeVisible({ timeout: 20_000 })
+}
+
+/** Some /v2 routes may sit behind the auth gate, which renders INSTEAD of the
+ *  frame. Distinguish that from a broken page so the skip names a cause rather
+ *  than hiding one. NOTE: the suite's storageStates were captured against the
+ *  PROD domain, so they do not apply on localhost - a local run is effectively
+ *  a guest, and a gated route cannot be measured here at all. */
+async function openOrAuthGate(page: Page, route: string): Promise<'frame' | 'authgate'> {
+  await page.goto(route, { waitUntil: 'domcontentloaded' })
+  try {
+    await page.locator('.frame').waitFor({ state: 'visible', timeout: 15_000 })
+    return 'frame'
+  } catch {
+    if (await page.getByText('Sign in to continue', { exact: false }).count() > 0) return 'authgate'
+    throw new Error(route + ' rendered NEITHER the frame nor the auth gate - the page is broken, not gated')
+  }
+}
+
+/** Everything the standard cares about, read from the live DOM. */
+async function readFrame(page: Page) {
+  return page.evaluate(() => {
+    const scrolls = (el: Element) => {
+      const o = getComputedStyle(el).overflowY
+      return o === 'auto' || o === 'scroll'
+    }
+    const panes = Array.from(document.querySelectorAll('.fcol')).map(el => {
+      const e = el as HTMLElement
+      const rect = e.getBoundingClientRect()
+      /* Lowest edge of anything the COLUMN itself owns. Walk ALL descendants so
+         a deep element escaping the column is caught, but skip any whose chain
+         to the column passes through a scroll container - a part-scrolled list
+         item is healthy, and counting it reads a working rail as a clip. The
+         scroll box is still measured on its own pass. */
+      let lowest = -Infinity
+      let offender = ''
+      for (const node of Array.from(e.querySelectorAll('*'))) {
+        let owned = false
+        for (let p = node.parentElement; p && p !== e; p = p.parentElement) {
+          if (scrolls(p)) { owned = true; break }
+        }
+        if (owned) continue
+        const b = node.getBoundingClientRect().bottom
+        if (b > lowest) { lowest = b; offender = (node.getAttribute('class') || node.tagName).split(/\s+/)[0] }
+      }
+      return {
+        name: e.className.split(/\s+/).find(c => c.startsWith('fcol-')) ?? 'fcol',
+        isCentre: e.classList.contains('fcol-centre'),
+        overflowY: getComputedStyle(e).overflowY,
+        width: rect.width,
+        selfScroll: e.scrollHeight - e.clientHeight,
+        overhang: lowest === -Infinity ? 0 : Math.round(lowest - rect.bottom),
+        offender,
+      }
+    })
+
+    const frameEl = document.querySelector('.frame') as HTMLElement
+    const frameRect = frameEl.getBoundingClientRect()
+
+    /* The real scroller is NOT documentElement: on full-width routes
+       LayoutShell wraps the route in an UNCLASSED div with overflow:auto, and
+       documentElement reports 0 no matter what the page does (verified: 350px
+       scrollable there while documentElement said 0). It has no class, so walk
+       up from .frameroot rather than selecting it - LayoutShell is being
+       rewritten and nothing should depend on its markup. */
+    let s: HTMLElement | null = document.querySelector('.frameroot') as HTMLElement
+    while (s) {
+      if (scrolls(s)) break
+      s = s.parentElement
+    }
+    const scrollerEl = s ?? (document.scrollingElement as HTMLElement)
+
+    return {
+      tabs: Array.from(document.querySelectorAll('.navstrip .navtab')).map(t => ({
+        label: (t.textContent || '').trim().toUpperCase(),
+        width: t.getBoundingClientRect().width,
+        // A tab can be the RIGHT WIDTH while its label is cut off. Every other
+        // assertion here is about widths, so without this the suite passes a
+        // clipped label happily (Table hub, 2026-09-16).
+        clipped: (t as HTMLElement).scrollWidth - (t as HTMLElement).clientWidth,
+      })),
+      titlebar: (document.querySelector('.titlebar') as HTMLElement)?.getBoundingClientRect().height ?? -1,
+      strip: (document.querySelector('.navstrip') as HTMLElement)?.getBoundingClientRect().height ?? -1,
+      stripNoRight: !!document.querySelector('.navstrip--noright'),
+      frameNoRight: !!document.querySelector('.frame.frame--noright'),
+      hasRightRail: !!document.querySelector('.fcol-right'),
+      tracks: getComputedStyle(frameEl).gridTemplateColumns.split(/\s+/).map(t => Math.round(parseFloat(t))),
+      frameBottom: Math.round(frameRect.y + frameRect.height),
+      panes,
+      railTabs: Array.from(document.querySelectorAll('.railtab')).map(t => Math.round(t.getBoundingClientRect().height)),
+      scroller: {
+        tag: scrollerEl.tagName.toLowerCase() + (scrollerEl.getAttribute('class') ? '.' + scrollerEl.getAttribute('class') : '(unclassed)'),
+        y: scrollerEl.scrollHeight - scrollerEl.clientHeight,
+        x: scrollerEl.scrollWidth - scrollerEl.clientWidth,
+      },
+    }
+  })
+}
+
+test.describe('VTT house frame standard - /v2 measured', () => {
+  test.beforeAll(async ({ request }) => {
+    const res = await request.get(PRIMARY).catch(() => null)
+    /* Names the CAUSE, and the cause differs by target. /v2 is unshipped under
+       the local-first policy, so prod 404s it - expected there, and a skip. On
+       localhost the same 404 means the dev server is down or serving a tree
+       without /v2. Both get reported rather than papered over by quietly
+       measuring somewhere else. */
+    test.skip(!res || !res.ok(),
+      PRIMARY + ' is not served by ' + (process.env.E2E_BASE_URL ?? 'the configured baseURL')
+      + ' (HTTP ' + (res ? res.status() : 'no response') + '). /v2 is not deployed to prod yet, so this is expected there;'
+      + ' on localhost it means the dev server is down or lacks /v2.')
+  })
+
+  test('/v2 redirects to the dashboard', async ({ page }) => {
+    await page.goto('/v2', { waitUntil: 'domcontentloaded' })
+    await expect(page).toHaveURL(new RegExp('/v2/dashboard$'), { timeout: 20_000 })
+  })
+
+  /* ---- deep geometry, five viewports, on the route that always exists ---- */
+  for (const c of CASES) {
+    test(`geometry ${c.w}x${c.h} - ${c.note}`, async ({ page }) => {
+      await page.setViewportSize({ width: c.w, height: c.h })
+      await open(page, PRIMARY)
+      const f = await readFrame(page)
+
+      expect(f.tabs.map(t => t.label), 'the six section tabs, in order').toEqual(EXPECTED_TABS)
+      expect(round(f.titlebar), 'title bar is 45px').toBe(TITLEBAR)
+      expect(round(f.strip), 'the strip is never below its 34px minimum').toBeGreaterThanOrEqual(STRIP_MIN)
+      if (c.stripGrows) {
+        expect(round(f.strip), 'a wrapped tab label GROWS the strip above its 34px minimum').toBeGreaterThan(STRIP_MIN)
+      }
+      /* NO exact-34 assertion at the non-wrapping widths, deliberately. Whether
+         a label wraps depends on tab WIDTH, and tab width changes when the 1.2b
+         right rail lands: the middle tabs go 149px -> 121px at 1024, and 124px
+         already wraps today. Asserting "exactly 34" here would turn the suite
+         RED on HP's correct work - the precise failure mode we keep trying to
+         design out. The standard only promises a 34px MINIMUM that grows on
+         wrap, so that is all that is asserted. */
+
+      /* Geometry DERIVED from the standard, not hard-coded per phase, so the
+         same assertions hold before and after the 1.2b right rail lands. */
+      const expectedCentre = c.w - LEFT_RAIL - GAP - (f.hasRightRail ? RIGHT_RAIL + GAP : 0)
+      const expectedTracks = f.hasRightRail
+        ? [LEFT_RAIL, expectedCentre, RIGHT_RAIL]
+        : [LEFT_RAIL, expectedCentre]
+
+      const left = f.panes.find(p => p.name === 'fcol-left')
+      const centre = f.panes.find(p => p.isCentre)
+      expect(round(left!.width), 'left rail is 280px').toBe(LEFT_RAIL)
+      expect(round(centre!.width), 'centre is the viewport minus the rails and gaps (' + expectedCentre + 'px)').toBe(expectedCentre)
+      expect(f.tracks, 'grid tracks match the rendered shape').toEqual(expectedTracks)
+
+      /* The interim shape must be INTERNALLY consistent: no right rail means
+         both the frame and the strip carry --noright, never one without the
+         other. */
+      expect(f.frameNoRight, 'frame--noright matches whether a right rail exists').toBe(!f.hasRightRail)
+      expect(f.stripNoRight, 'navstrip--noright matches whether a right rail exists').toBe(!f.hasRightRail)
+
+      /* First tab over the left rail always; last tab over the right rail ONLY
+         when there is one, otherwise it is an ordinary flexing tab. */
+      expect(round(f.tabs[0].width), 'first tab sits exactly over the 280px left rail').toBe(LEFT_RAIL)
+      if (f.hasRightRail) {
+        expect(round(f.tabs[f.tabs.length - 1].width), 'last tab sits exactly over the 260px right rail').toBe(RIGHT_RAIL)
+      }
+      expect(round(f.tabs.reduce((a, t) => a + t.width, 0)), 'the tabs together span the full width').toBe(c.w)
+
+      /* THE ONE THAT MATTERS: a grown strip takes height FROM the panes and
+         never pushes the frame off screen. */
+      expect(f.frameBottom, 'frame bottom is exactly ' + c.h).toBe(c.h)
+
+      /* The rail rule, structurally - proves the frame CANNOT let a rail scroll
+         tomorrow, not merely that none does today. */
+      const rails = f.panes.filter(p => !p.isCentre)
+      expect(rails.filter(r => r.overflowY !== 'hidden').map(r => r.name + ' has overflow-y:' + r.overflowY).join('; ') || 'none',
+        'every RAIL is overflow:hidden - a long list scrolls in its OWN box').toBe('none')
+      expect(centre!.overflowY, 'the CENTRE is the one pane allowed to scroll').toBe('auto')
+
+      expect(rails.filter(r => r.selfScroll > 0).map(r => r.name + ' scrolls by ' + r.selfScroll + 'px').join('; ') || 'none',
+        'NO rail may scroll').toBe('none')
+
+      /* overflow:hidden CLIPS where auto scrolled, so content past the bottom is
+         silent damage - and out-of-flow children never show up in scrollHeight
+         at all, which is the real reason this check exists. */
+      expect(rails.filter(r => r.overhang > 0).map(r => r.name + ' content runs ' + r.overhang + 'px past the column bottom (CLIPPED) - lowest offender: ' + r.offender).join('; ') || 'none',
+        'no rail CLIPS its content').toBe('none')
+
+      expect(f.scroller.y, 'the page never scrolls vertically while pinned (measured on ' + f.scroller.tag + ', the REAL scroller)').toBeLessThanOrEqual(0)
+      expect(f.scroller.x, 'the page never scrolls horizontally').toBeLessThanOrEqual(0)
+    })
+  }
+
+  /* ---- chrome parity across all six section pages ----
+     The chrome comes from ONE shared client shell, so this is parameterised
+     rather than hand-written six times; only the centre differs. Routes HP has
+     not built yet SKIP explicitly and go green when they land. */
+  for (const route of GUEST_ROUTES) {
+    test(`chrome parity ${route}`, async ({ page }) => {
+      test.skip(!(await serves(page, route)), route + ' is not built yet (HP, 1.3) - this goes green when it lands')
+      await page.setViewportSize({ width: 1280, height: 800 })
+      await open(page, route)
+      const f = await readFrame(page)
+
+      expect(f.tabs.map(t => t.label), 'same six tabs, same order, on every section page').toEqual(EXPECTED_TABS)
+      expect(round(f.titlebar), 'title bar is 45px').toBe(TITLEBAR)
+      expect(round(f.strip), 'section strip is at least its 34px minimum (not pinned exactly - tab widths, and so wrapping, change when the 1.2b rail lands)').toBeGreaterThanOrEqual(STRIP_MIN)
+      expect(round(f.panes.find(p => p.name === 'fcol-left')!.width), 'left rail is 280px').toBe(LEFT_RAIL)
+      expect(round(f.tabs[0].width), 'first tab sits over the left rail').toBe(LEFT_RAIL)
+      expect(f.frameBottom, 'frame bottom is exactly 800').toBe(800)
+
+      const rails = f.panes.filter(p => !p.isCentre)
+      expect(rails.filter(r => r.overflowY !== 'hidden').map(r => r.name).join('; ') || 'none', 'every rail is overflow:hidden').toBe('none')
+      expect(f.panes.find(p => p.isCentre)!.overflowY, 'the centre scrolls').toBe('auto')
+      expect(rails.filter(r => r.selfScroll > 0).map(r => r.name + ' scrolls by ' + r.selfScroll + 'px').join('; ') || 'none', 'no rail scrolls').toBe('none')
+      expect(rails.filter(r => r.overhang > 0).map(r => r.name + ' clipped by ' + r.overhang + 'px (' + r.offender + ')').join('; ') || 'none', 'no rail clips').toBe('none')
+      expect(f.tabs.filter(t => t.clipped > 0).map(t => t.label + ' clipped by ' + t.clipped + 'px').join('; ') || 'none',
+        'no tab LABEL is cut off - a tab can be the right width and still clip its text').toBe('none')
+    })
+  }
+
+  /* ---- COLUMN SHAPE PER SECTION, now that it is DESIGN not staging ----
+     Reversed by the hub 2026-09-16: only /v2/dashboard is three-column. The
+     PINS panel is PORTALED BY MapView because MapView owns its state, and the
+     other five sections render no map, so there is no portal source. Giving
+     them a rail would mean mounting a hidden Leaflet map on THE RULES or a
+     ~25-prop state lift - and worse, on a map-less page the panel's main
+     interaction (click a pin, fly the map to it) is dead, which would ship
+     ~15 rows per page that look clickable and do nothing.
+     So frame--noright on the five is the DESIGN and is ASSERTED, not skipped. */
+  const THREE_COLUMN = ['/v2/dashboard']
+  for (const route of GUEST_ROUTES) {
+    const wantsRight = THREE_COLUMN.includes(route)
+    test(`column shape ${route} - ${wantsRight ? 'three-column with the 260px PINS rail' : 'two-column by design (no map, so no portal source)'}`, async ({ page }) => {
+      test.skip(!(await serves(page, route)), route + ' is not built yet')
+      await page.setViewportSize({ width: 1280, height: 800 })
+      await open(page, route)
+      const f = await readFrame(page)
+      const centre = 1280 - LEFT_RAIL - GAP - (wantsRight ? RIGHT_RAIL + GAP : 0)
+
+      expect(f.hasRightRail, wantsRight ? 'this section has the PINS rail' : 'this section has NO right rail, by design').toBe(wantsRight)
+      expect(f.frameNoRight, 'frame--noright is present exactly when there is no right rail').toBe(!wantsRight)
+      expect(f.stripNoRight, 'navstrip--noright is present exactly when there is no right rail').toBe(!wantsRight)
+      expect(f.tracks, wantsRight ? 'three tracks' : 'two tracks').toEqual(
+        wantsRight ? [LEFT_RAIL, centre, RIGHT_RAIL] : [LEFT_RAIL, centre])
+
+      if (wantsRight) {
+        expect(round(f.panes.find(p => p.name === 'fcol-right')!.width), 'right rail is 260px').toBe(RIGHT_RAIL)
+        expect(round(f.tabs[f.tabs.length - 1].width), 'last tab sits exactly over the 260px right rail').toBe(RIGHT_RAIL)
+      }
+    })
+  }
+
+  /* ---- SECURITY: a gated section must stay gated for a guest ----
+     This is the assertion HP asked for INSTEAD of a skip. /v2/communities
+     inherits PRIVATE from /communities via the derived public list. If it ever
+     renders the frame to a guest, a private page has been made public - so this
+     row should be RED in that case, never quietly skipped. */
+  for (const route of GATED_ROUTES) {
+    test(`a guest is GATED out of ${route}`, async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 })
+      await page.goto(route, { waitUntil: 'domcontentloaded' })
+      // Parsed, not regex-matched: building the pattern by string escaping is
+      // how this assertion silently passed nothing the first time.
+      await page.waitForURL(u => u.pathname === '/login', { timeout: 20_000 })
+      const url = new URL(page.url())
+      expect(url.pathname, 'a guest is bounced to /login').toBe('/login')
+      expect(url.searchParams.get('redirect'), 'the destination is preserved so login can return the user').toBe(route)
+      await expect(page.locator('.frame'), 'the frame must NOT render for a guest on a private page').toHaveCount(0)
+    })
+  }
+
+  /* The PINS rail renders for a guest: header and rows. Its TAB STRIP does not -
+     PinsPanel gates that on userId, exactly as on the live site - so the 28px
+     row below holds rather than failing for the wrong reason. */
+  test('the PINS right rail renders for a guest (header + rows)', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await open(page, PRIMARY)
+    const right = page.locator('.fcol-right')
+    await expect(right, 'the right rail exists once 1.2b has landed').toHaveCount(1)
+    // Case-insensitive: the caps are CSS text-transform, the DOM text is "Pins".
+    await expect(right, 'the PINS panel renders its header for a guest').toContainText(/pins/i, { timeout: 15_000 })
+  })
+
+  /* Stacked, below 820px, the panes must let GO of the viewport height so the
+     page grows and scrolls instead of clipping the columns below the first. The
+     overflow rule INVERTS here - hidden would hide real content. */
+  test('stacked below ' + STACK_BREAKPOINT + 'px - every pane reverts to overflow:visible', async ({ page }) => {
+    await page.setViewportSize({ width: 800, height: 800 })
+    await open(page, PRIMARY)
+    const f = await readFrame(page)
+    expect(f.panes.length, 'panes were found to measure').toBeGreaterThan(0)
+    expect(f.panes.filter(p => p.overflowY !== 'visible').map(p => p.name + ' has overflow-y:' + p.overflowY).join('; ') || 'none',
+      'stacked, panes revert to overflow:visible so the page scrolls instead of clipping').toBe('none')
+
+    /* The Table hub found five tabs claiming flex 1 1 33% here while the last
+       took basis 0 and clipped its label - the 820px media block lost a
+       specificity fight with `.navstrip--noright .navtab:last-child`. HP has
+       since set the basis to 0 for all six; this guards the fix and
+       generalises to any future label that outgrows its tab. */
+    expect(f.tabs.filter(t => t.clipped > 0).map(t => t.label + ' clipped by ' + t.clipped + 'px').join('; ') || 'none',
+      'stacked, no tab LABEL is cut off').toBe('none')
+  })
+
+  /* Rail tabs are 28px from explicit height + line-height, so Tapestry's 13px
+     type floor (vs the reference's 11/10px) must not have moved them.
+     This file runs as a GUEST by design, and the only rail strip on /v2 is
+     gated on userId, so this row holds here and the real measurement lives in
+     v2-pins-rail-signedin.spec.ts, which carries a session. Kept as a live
+     assertion rather than deleted: the moment any strip renders to a guest, it
+     is measured here too, with no edit. */
+  test('rail tab strips are 28px despite the 13px type floor', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    await open(page, PRIMARY)
+    const f = await readFrame(page)
+    test.skip(f.railTabs.length === 0, 'no rail strip is visible to a GUEST - PinsPanel gates the tabs on userId. Not a gap: the 28px measurement is made signed-in in v2-pins-rail-signedin.spec.ts and passes there.')
+    expect(f.railTabs.every(h => h === RAIL_TAB), 'every rail tab is 28px (got ' + f.railTabs.join(', ') + ')').toBe(true)
+  })
+})

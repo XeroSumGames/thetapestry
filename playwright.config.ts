@@ -38,12 +38,12 @@ export default defineConfig({
   },
   projects: [
     // Auto-login: mints/refreshes the 4 storageStates before the tests run.
-    { name: 'setup', testMatch: /auth\.setup\.ts/ },
+    { name: 'setup', testMatch: /(auth|provenance)\.setup\.ts/ },
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       dependencies: ['setup'],
-      testIgnore: /(auth\.setup|global\.teardown)\.ts/,
+      testIgnore: /((auth|provenance)\.setup|global\.teardown)\.ts/,
       // Sweep leftover [E2E] campaigns after the suite (pass or fail). See
       // e2e/global.teardown.ts - catch-all for orphans from runs that threw
       // before their per-spec finally could delete the campaign.
