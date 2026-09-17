@@ -19,11 +19,9 @@
    silent:
 
    1. TOKENS. Mothership's own token names (--panel, --ink, --line-soft, ...)
-      are mapped onto Tapestry's EXISTING palette from app/globals.css instead
-      of importing a second colour system. The geometry rules below are then
-      verbatim. --ink-dim is the one addition: Tapestry has no dim-text token,
-      and AGENTS.md requires #cce0f5 for dim label text rather than a grey that
-      is illegible on these backgrounds.
+      are re-pointed to the palette of the mockup Xero approved, as explicit
+      hex in the .v2frame block below - see the reasoning there. The geometry
+      rules are then verbatim. Only the colours move; not one number does.
 
    2. FONT SIZES. The reference uses 11px section tabs and 10px rail tabs.
       Tapestry's floor is 13px - Xero raised it from 12 for readability and
@@ -34,13 +32,27 @@
       test (plan 1.4) rather than taking this comment's word for it. */
 
 .v2frame {
-  /* Mothership's frame tokens, mapped to Tapestry's palette. */
-  --panel: var(--surface);
-  --line: var(--border);
-  --line-soft: var(--border);
-  --ink: var(--text);
+  /* Mothership's frame tokens, re-pointed to the palette of the MOCKUP XERO
+     APPROVED (hub, 2026-09-16). Explicit hex rather than aliases onto
+     Tapestry's globals.css tokens, because two of the values differ from the
+     nearest existing token and matching the signed-off mockup wins: panel is
+     #141414 where Tapestry's --surface is #1a1a1a (which is the "raised"
+     value here), and the grid divider is the softer #2a2a2a where --border is
+     #2e2e2e. Aliasing would have quietly restyled the frame away from what he
+     already looked at. The ground (#0f0f0f) does come from --bg, which already
+     matches. NO GEOMETRY CHANGED with this restyle - that is the one way this
+     port goes wrong without anyone noticing. */
+  --panel: #141414;
+  --line: #2e2e2e;
+  --line-soft: #2a2a2a;
+  --ink: #f5f2ee;
   --ink-dim: #cce0f5;
+  --accent: #c0392b;
   --f-body: 'Carlito', sans-serif;
+  /* Only .tb-mark uses this, and nothing renders .tb-mark until the 1.2
+     title bar. Distemper matches the live sidebar's brand treatment; the
+     hub's mockup note said "Carlito throughout". Resolved when the title
+     bar is built, not guessed at now. */
   --f-display: 'Distemper', sans-serif;
   --label-weight: 700;
   --track: 0.04em;
