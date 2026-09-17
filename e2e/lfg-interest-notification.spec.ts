@@ -44,13 +44,44 @@ test.describe('LFG interest notification trigger', () => {
       // in the schema but explicit here so RLS lfg_select_approved lets Marv
       // see it (required for the lfg_int_insert policy's NOT EXISTS sub-check).
       const tag = `E2E-LFG-${Date.now().toString(36)}`
-      const lfgInsert = await (await gm.request.post(
+      /* KEEP THE RESPONSE. This call used to go straight to .json(), throwing
+         away the status and body, so every possible cause collapsed into the
+         one useless message "INSERT did not return an id" - which reads like a
+         schema or PostgREST quirk and sent me hunting a column REVOKE that did
+         not exist. The server had said exactly what was wrong; the spec
+         discarded it. A fixture step that can fail must report HOW. */
+      const lfgRes = await gm.request.post(
         `${SUPABASE_URL}/rest/v1/lfg_posts`,
         { headers: { ...H(gmCreds!), 'Content-Type': 'application/json', Prefer: 'return=representation' },
-          data: { author_user_id: gmUserId, kind: 'gm_seeking_players', title: tag, body: 'E2E spec - safe to ignore', moderation_status: 'approved' } },
-      )).json() as Array<{ id: string }>
+          data: { author_user_id: gmUserId, kind: 'gm_seeking_players', title: tag, body: 'E2E spec - safe to ignore', moderation_status: 'approved' } })
+      const lfgStatus = lfgRes.status()
+      const lfgBody = (await lfgRes.text()).slice(0, 400)
+
+      /* How many posts this GM has already made in the CURRENT clock hour, to
+         name the likeliest cause in the failure message rather than leaving the
+         next reader to rediscover it. Approximate ON PURPOSE and labelled as
+         such: check_rate_limit increments its counter BEFORE comparing, so it
+         also counts attempts that were then DENIED - the real budget can be
+         spent while fewer than 5 posts exist. Never assert on this number. */
+      const hourStart = new Date(new Date().setMinutes(0, 0, 0)).toISOString()
+      const thisHour = await gm.request.get(
+        `${SUPABASE_URL}/rest/v1/lfg_posts?author_user_id=eq.${gmUserId}&created_at=gte.${encodeURIComponent(hourStart)}&select=id`,
+        { headers: H(gmCreds!) }).then(r => r.json()).then((r: unknown[]) => r?.length ?? -1).catch(() => -1)
+
+      const RATE_HINT = `
+  The lfg_posts INSERT policy's WITH CHECK includes check_rate_limit('lfg_post', 5):`
+        + ` FIVE per user per CLOCK HOUR. It is the likeliest cause of a 4xx mentioning row-level security here,`
+        + ` and running the suite repeatedly inside one hour will spend the budget. That is the abuse control`
+        + ` WORKING, not a defect - do NOT raise the limit or clear the rate_limits table to go green.`
+        + ` It resets at the top of the hour. Note the counter increments BEFORE it compares, so RETRIES DEEPEN`
+        + ` THE DENIAL rather than escaping it - which is why this surfaces as a hard failure and never as flaky.`
+        + `
+  Posts by this GM in the current hour: ${thisHour} (approximate - denied attempts also consume budget).`
+
+      expect(lfgRes.ok(), `lfg_posts INSERT failed: HTTP ${lfgStatus} ${lfgBody}${RATE_HINT}`).toBeTruthy()
+      const lfgInsert = JSON.parse(lfgBody || '[]') as Array<{ id: string }>
       lfgPostId = lfgInsert?.[0]?.id ?? null
-      expect(lfgPostId, 'lfg_posts INSERT did not return an id').toBeTruthy()
+      expect(lfgPostId, `lfg_posts INSERT returned HTTP ${lfgStatus} but no row: ${lfgBody}${RATE_HINT}`).toBeTruthy()
 
       // Marv REST-INSERT an interest. RLS lfg_int_insert enforces:
       //   interested_user_id = auth.uid() (Marv's session)
