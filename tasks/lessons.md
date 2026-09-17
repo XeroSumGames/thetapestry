@@ -1,5 +1,55 @@
 # Lessons Learned
 
+## The dev server serves ONE tree. Grepping your own worktree to explain it is unsound (2026-09-16)
+
+`localhost:3000` is started from the PRIMARY checkout (`D:\Coding\VTTs\TheTapestry`)
+and serves only that tree. Every lane works in its own worktree, potentially
+hundreds of commits from it, while a third lane commits into the served tree
+live. So **any conclusion a lane draws by grepping its own checkout to explain
+something it observed on :3000 is unsound by construction** - and it fails
+silently, producing confident wrong answers rather than errors.
+
+This produced TWO wrong conclusions in a row in one session, both from the E2E
+lane, neither careless:
+
+1. They grepped their worktree for the pins tab markup and found bare buttons.
+   Their tree was 736 commits behind and **did not contain
+   `components/PinsPanel.tsx`, `components/Frame.tsx` or `app/v2/frame.css` at
+   all.** They were reading one tree and measuring an app built from another.
+2. They then re-measured the live rail, found it correct, and RETRACTED a true
+   finding - asking the hub to kill a real accessibility fix. The fix had landed
+   in between; a post-fix measurement cannot establish the pre-fix state, and
+   from inside the run there was nothing to reveal that.
+
+**Rules:** (1) Anything asserted about RENDERED behaviour comes from the rendered
+page - `ariaSnapshot`, the DOM, a measured computed style - never from a grep of
+your own checkout. (2) Print the SERVED tree's HEAD in the run output, so every
+measurement is attributable to a commit. (3) Before concluding a past finding was
+wrong because a re-measurement disagrees, check `git log` on the file for what
+changed in between. The re-measurement describes today; the finding described
+then. (4) This trap is not E2E's alone - any lane explaining something it saw on
+:3000 by reading its own tree has it.
+
+### Two corollaries earned the same day
+
+**A presence grep answers a different question than the one being asked.**
+Checking the pre-fix `PinsPanel.tsx` for `inRail` returns FOUR hits, which reads
+as "the split existed". It did not - those four were the root-style branch, the
+close-button gate and the prop declaration. The tab block was the one place
+`inRail` had NOT been applied. "The flag appears in this file" is not evidence
+"this control was gated"; only reading the specific block is. Same shape as
+counting `.railtab` on a page where the strip never renders: a true count, a
+false answer.
+
+**A retraction needs a source exactly as much as a claim does - and gets less
+scrutiny because it reads as costly honesty.** A lane withdrawing its own finding
+argues against its own interest, which makes it the most credible-sounding
+message there is, which is precisely why it should be checked rather than
+accepted. One `git show` of the pre-fix file settled this one. Had it been taken
+at face value: a real fix reverted, a real accessibility defect reintroduced, the
+guardrail's rationale falsified, and a worked example already written into the
+SHARED house standard - propagating a false example to three VTTs.
+
 ## Confirmation-seeking dressed as verification - check the OPEN list too (2026-09-16)
 
 HP's phrase, and the sharpest sentence written on this project: *"I checked that
