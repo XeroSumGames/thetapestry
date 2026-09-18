@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-18 18:00 UTC
+
+**Status:** DRIFT (URGENT carry-forward - Q21+Q22 unanswered, ~50h since filed)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** last 5 runs all success (via GitHub MCP)
+
+**Drift:**
+- **URGENT (~50h unresolved):** Non-Thriver players cannot post LFG ads - hard DB error. Fix on branch `fix/moderation-trigger`, NOT applied to live. Q21 (apply fix to live DB?) and Q22 (immediate vs. queue for non-Thriver posts?) in COMMS still unanswered.
+- HOPED-FOR (97+ days): vehicle popout broadcasts (Section B) - vehicle_updated / firing_arc_toggle not 2-client-verified
+- HOPED-FOR (97+ days): Stress Check 12-string narrative - HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured
+- HOPED-FOR (97+ days): FI Insight Die AWARD path (rolling doubles -> insight_dice+1) - never fired in live play
+
+**Action:** Answer Q21+Q22 in COMMS - LFG is broken for every non-Thriver user (the majority). Fix is written and ready. 6th consecutive pulse with no action taken.
+
+---
+
 ## 2026-09-18 15:06 UTC
 
 **Status:** DRIFT (URGENT carry-forward - Q21+Q22 unanswered, ~47h since filed)
