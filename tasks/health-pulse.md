@@ -6,6 +6,26 @@ When you see a new entry: open it, take the action listed, then leave the entry 
 
 ---
 
+## 2026-09-18 21:00 UTC
+
+**Status:** DRIFT (URGENT - ~53h, fix branch LOST)
+
+**Gates:** font-sizes [OK], role-literals [OK], tsc [OK], tests [937 passed / 55 files]
+
+**Audit:** clean (0 high, 0 critical)
+
+**CI:** gh not available in sandbox (skipped)
+
+**Drift:**
+- **URGENT (~53h unresolved, NEW: fix branch gone):** Non-Thriver players cannot post LFG ads - hard DB error. Branch `fix/moderation-trigger` NO LONGER EXISTS (was only local to a prior session, container reclaimed). Fix must be rewritten. Q21/Q22 in COMMS still unanswered.
+- HOPED-FOR (97+ days): vehicle popout broadcasts (Section B) - vehicle_updated / firing_arc_toggle not 2-client-verified
+- HOPED-FOR (97+ days): Stress Check 12-string narrative - HEAL/UNJAM/REPAIR/Gut Instinct/Group Check/DRIVE/BREW/NAVIGATE uncaptured
+- HOPED-FOR (97+ days): FI Insight Die AWARD path (rolling doubles -> insight_dice+1) - never fired in live play
+
+**Action:** CRITICAL - fix branch lost. Answer Q21+Q22 in COMMS, then hub must rewrite and apply the DB fix. LFG broken for all non-Thriver users (majority). 7th consecutive unanswered pulse.
+
+---
+
 ## 2026-09-18 18:00 UTC
 
 **Status:** DRIFT (URGENT carry-forward - Q21+Q22 unanswered, ~50h since filed)
